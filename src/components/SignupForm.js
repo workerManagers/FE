@@ -256,19 +256,19 @@ const schema = yup.object().shape({
   passwordConfirm: yup
     .string()
     .required('비밀번호 확인은 필수 입력값입니다.')
-    .oneOf([yup.ref('password'), null], '비밀번호가 일치하지 않습니다.'),
+    .oneOf([yup.ref('password')], '비밀번호가 일치하지 않습니다.'),
+  userEmail: yup
+    .string()
+    .email('올바른 이메일 형식이 아닙니다.')
+    .required('이메일은 필수 입력값입니다.')
+    .max(50, '이메일은 50자 이내로 입력해주세요.'),
   userSex: yup
     .string()
-    .max(20, '성별은 20자 이내로 입력해주세요.'),
+    .required('성별은 필수 입력값입니다.'),
   userAge: yup
     .number()
     .min(0, '나이는 0보다 작을 수 없습니다.')
     .nullable(),
-  userEmail: yup
-    .string()
-    .email('올바른 이메일 형식이 아닙니다.')
-    .max(20, '이메일은 20자 이내로 입력해주세요.')
-    .required('이메일은 필수 입력값입니다.'),
 });
 
 const SignupForm = () => {
