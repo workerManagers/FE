@@ -1,7 +1,8 @@
 import axios from 'axios';
 
 // API 기본 URL 설정
-const API_BASE_URL = 'https://port-0-workermangers-be-m9ax68es6a756190.sel4.cloudtype.app';
+// const API_BASE_URL = 'https://port-0-workermangers-be-m9ax68es6a756190.sel4.cloudtype.app';
+const API_BASE_URL = 'http://localhost:8080';
 
 // axios 인스턴스 생성
 const api = axios.create({
@@ -86,6 +87,73 @@ export const userApi = {
       throw error;
     }
   },
+};
+
+// 모집 공고 관련 API
+export const jobPostApi = {
+  // 모든 모집 공고 조회
+  getAllJobPosts: async () => {
+    try {
+      const response = await api.get('/job-posts');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching job posts:', error);
+      throw error;
+    }
+  },
+
+  // 특정 모집 공고 조회
+  getJobPostById: async (id) => {
+    try {
+      const response = await api.get(`/job-posts/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching job post:', error);
+      throw error;
+    }
+  },
+
+  // 모집 공고 생성
+  createJobPost: async (data) => {
+    try {
+      const response = await api.post('/job-posts', data);
+      return response.data;
+    } catch (error) {
+      console.error('Error creating job post:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  // 모집 공고 검색
+  searchJobPosts: async (params) => {
+    try {
+      const response = await api.get('/job-posts/search', { params });
+      return response.data;
+    } catch (error) {
+      console.error('Error searching job posts:', error);
+      throw error;
+    }
+  },
+
+  getJobCodes: async () => {
+    try {
+      const response = await api.get('/job-codes');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching job codes:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  getCompanies: async () => {
+    try {
+      const response = await api.get('/companies');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching companies:', error.response?.data || error.message);
+      throw error;
+    }
+  }
 };
 
 export default api; 
