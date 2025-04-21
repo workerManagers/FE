@@ -10,7 +10,7 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
   withCredentials: false,
-  timeout: 5000,
+  timeout: 15000,
 });
 
 // 요청 인터셉터 설정
@@ -20,6 +20,11 @@ api.interceptors.request.use(
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    } else {
+      // 토큰이 없는 경우 로그인 페이지로 리다이렉트
+      if (window.location.pathname !== '/login' && window.location.pathname !== '/signup') {
+        window.location.href = '/login';
+      }
     }
     return config;
   },
@@ -36,13 +41,17 @@ api.interceptors.response.use(
   (error) => {
     // 응답 오류 처리
     if (error.response) {
-      // 서버에서 응답이 왔지만 오류가 있는 경우
+      // 401 또는 403 에러인 경우 로그인 페이지로 리다이렉트
+      if (error.response.status === 401 || error.response.status === 403) {
+        localStorage.removeItem('token'); // 토큰 삭제
+        if (window.location.pathname !== '/login' && window.location.pathname !== '/signup') {
+          window.location.href = '/login';
+        }
+      }
       console.error('API 오류:', error.response.data);
     } else if (error.request) {
-      // 요청은 보냈지만 응답을 받지 못한 경우
       console.error('서버 연결 오류:', error.request);
     } else {
-      // 요청 설정 중 오류가 발생한 경우
       console.error('요청 오류:', error.message);
     }
     return Promise.reject(error);
@@ -94,13 +103,22 @@ export const userApi = {
   // 사용자 정보 조회
   getUserInfo: async () => {
     try {
-      const response = await api.get('/users/me');
-      if (response.data) {
-        localStorage.setItem('userType', response.data.userType);
-        localStorage.setItem('userName', response.data.userName);
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('인증 토큰이 없습니다.');
       }
-      return response.data;
+
+      // 토큰에서 사용자 정보 추출
+      const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+      const userInfo = {
+        userId: tokenPayload.sub,
+        userType: tokenPayload.userType,
+        userName: localStorage.getItem('userName')
+      };
+
+      return userInfo;
     } catch (error) {
+      console.error('사용자 정보 조회 중 오류:', error);
       throw error;
     }
   },
@@ -116,11 +134,15 @@ export const userApi = {
       const response = await api.post('/predict', data, {
         headers: {
           Authorization: `Bearer ${token}`
-        }
+        },
+        timeout: 30000
       });
       return response.data;
     } catch (error) {
       console.error('예측 API 오류:', error);
+      if (error.code === 'ECONNABORTED') {
+        throw new Error('서버 응답 시간이 초과되었습니다. 잠시 후 다시 시도해주세요.');
+      }
       throw error;
     }
   },
