@@ -116,13 +116,110 @@ const SubmitButton = styled(motion.button)`
   }
 `;
 
-const ResultContainer = styled.div`
-  margin-top: 2rem;
-  padding: 1.5rem;
+const ResultCard = styled(motion.div)`
   background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  border-radius: 15px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   text-align: center;
+  margin-top: 2rem;
+  border: 2px solid #4a90e2;
+`;
+
+const ResultTitle = styled.h2`
+  color: #2c3e50;
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+`;
+
+const ResultValue = styled.div`
+  font-size: 3rem;
+  color: #4a90e2;
+  font-weight: 700;
+  margin: 1rem 0;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+`;
+
+const ResultLabel = styled.p`
+  color: #666;
+  font-size: 1.2rem;
+  margin-top: 0.5rem;
+`;
+
+const ModalOverlay = styled(motion.div)`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+`;
+
+const ModalContent = styled(motion.div)`
+  background: white;
+  padding: 2rem;
+  border-radius: 15px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  width: 90%;
+  max-width: 500px;
+  position: relative;
+`;
+
+const CloseButton = styled.button`
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #666;
+  padding: 0.5rem;
+  line-height: 1;
+  
+  &:hover {
+    color: #333;
+  }
+`;
+
+const LoadingSpinner = styled(motion.div)`
+  width: 50px;
+  height: 50px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #4a90e2;
+  border-radius: 50%;
+  margin: 0 auto 1rem;
+`;
+
+const LoadingMessage = styled(motion.p)`
+  color: #666;
+  font-size: 1.2rem;
+  margin-top: 1rem;
+`;
+
+const ActionButton = styled(motion.button)`
+  background: #4a90e2;
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: 2rem;
+  width: 100%;
+  max-width: 300px;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background: #357abd;
+  }
 `;
 
 const DISEASES = [
@@ -301,9 +398,6 @@ const DISEASES = [
 
 const PredictPage = () => {
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filteredDiseases, setFilteredDiseases] = useState([]);
   const [formData, setFormData] = useState({
     disease: '',
     sex: '',
@@ -311,30 +405,51 @@ const PredictPage = () => {
     age: '',
     region: ''
   });
-  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [diseaseList, setDiseaseList] = useState([]);
+  const [predictionResult, setPredictionResult] = useState(null);
+  const [userInfo, setUserInfo] = useState(null);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     const checkAccess = async () => {
       try {
         const token = localStorage.getItem('token');
-        const userType = localStorage.getItem('userType');
-        
         if (!token) {
-          showToast.error('로그인이 필요한 서비스입니다.');
+          showToast.error('로그인이 필요합니다.');
           navigate('/login');
           return;
         }
-        
-        if (userType !== 'COMPANY') {
-          showToast.error('기업 회원만 접근 가능한 서비스입니다.');
-          navigate('/');
-          return;
-        }
 
-        // 사용자 정보 확인 - 이 부분을 제거하고 바로 페이지를 표시
-        setIsLoading(false);
+        try {
+          const userInfo = await userApi.getUserInfo();
+          if (!userInfo) {
+            showToast.error('사용자 정보를 가져올 수 없습니다.');
+            navigate('/login');
+            return;
+          }
+
+          if (userInfo.userType !== 'COMPANY') {
+            showToast.error('기업 회원만 접근 가능한 서비스입니다.');
+            navigate('/');
+            return;
+          }
+
+          setUserInfo(userInfo);
+          setLoading(false);
+        } catch (error) {
+          if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+            showToast.error('세션이 만료되었습니다. 다시 로그인해주세요.');
+            localStorage.removeItem('token');
+            navigate('/login');
+            return;
+          }
+          throw error;
+        }
       } catch (error) {
-        showToast.error('접근 권한을 확인할 수 없습니다.');
+        console.error('접근 확인 중 오류:', error);
+        showToast.error('접근 권한이 없습니다.');
         navigate('/login');
       }
     };
@@ -350,32 +465,88 @@ const PredictPage = () => {
       const filtered = DISEASES.filter(disease =>
         disease.toLowerCase().includes(value.toLowerCase())
       );
-      setFilteredDiseases(filtered);
+      setDiseaseList(filtered);
     } else {
-      setFilteredDiseases([]);
+      setDiseaseList([]);
     }
   };
 
   const handleDiseaseSelect = (disease) => {
     setFormData(prev => ({ ...prev, disease }));
     setSearchTerm(disease);
-    setFilteredDiseases([]);
+    setDiseaseList([]);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
+    
+    // 필수 필드 검증
+    const requiredFields = ['disease', 'sex', 'surgery', 'age', 'region'];
+    const missingFields = requiredFields.filter(field => !formData[field]);
+    
+    if (missingFields.length > 0) {
+      showToast.error('모든 필드를 입력해주세요.');
+      return;
+    }
+
+    setLoading(true);
 
     try {
       const response = await userApi.predict(formData);
-      setResult(response);
-      showToast.success('휴식기간 예측이 완료되었습니다.');
+      setPredictionResult(response);
+      setShowModal(true);
+      showToast.success('요양기간 예측이 완료되었습니다.');
     } catch (error) {
-      showToast.error(error.message || '예측 중 오류가 발생했습니다.');
+      let errorMessage = '예측 중 오류가 발생했습니다.';
+      
+      if (error.response) {
+        errorMessage = error.response.data.message || errorMessage;
+      } else if (error.request) {
+        errorMessage = '서버와 통신할 수 없습니다. 잠시 후 다시 시도해주세요.';
+      } else {
+        errorMessage = error.message || errorMessage;
+      }
+      
+      showToast.error(errorMessage);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
+
+  if (loading) {
+    return (
+      <PageContainer>
+        <ModalOverlay
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          <ModalContent
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.8, opacity: 0 }}
+            transition={{ type: "spring", duration: 0.5 }}
+          >
+            <LoadingSpinner
+              animate={{ rotate: 360 }}
+              transition={{
+                duration: 1,
+                repeat: Infinity,
+                ease: "linear"
+              }}
+            />
+            <LoadingMessage
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+            >
+              예측 중입니다...
+            </LoadingMessage>
+          </ModalContent>
+        </ModalOverlay>
+      </PageContainer>
+    );
+  }
 
   return (
     <PageContainer
@@ -384,108 +555,123 @@ const PredictPage = () => {
       exit={{ opacity: 0 }}
     >
       <Toast />
-      {isLoading ? (
-        <LoadingContainer>
-          <LoadingText>페이지를 불러오는 중입니다...</LoadingText>
-        </LoadingContainer>
-      ) : (
-        <>
-          <Title>요양기간 예측 서비스</Title>
-          <PredictForm onSubmit={handleSubmit}>
-            <FormGroup>
-              <Label>병명</Label>
-              <Input
-                type="text"
-                value={searchTerm}
-                onChange={handleSearchChange}
-                placeholder="병명을 입력하세요"
-              />
-              {filteredDiseases.length > 0 && (
-                <SearchResults>
-                  {filteredDiseases.map((disease, index) => (
-                    <SearchResultItem
-                      key={index}
-                      onClick={() => handleDiseaseSelect(disease)}
-                    >
-                      {disease}
-                    </SearchResultItem>
-                  ))}
-                </SearchResults>
-              )}
-            </FormGroup>
-
-            <FormGroup>
-              <Label>성별</Label>
-              <Select
-                value={formData.sex}
-                onChange={(e) => setFormData(prev => ({ ...prev, sex: e.target.value }))}
-              >
-                <option value="">선택하세요</option>
-                <option value="남자">남자</option>
-                <option value="여자">여자</option>
-              </Select>
-            </FormGroup>
-
-            <FormGroup>
-              <Label>수술여부</Label>
-              <Select
-                value={formData.surgery}
-                onChange={(e) => setFormData(prev => ({ ...prev, surgery: e.target.value }))}
-              >
-                <option value="">선택하세요</option>
-                <option value="예">예</option>
-                <option value="아니오">아니오</option>
-              </Select>
-            </FormGroup>
-
-            <FormGroup>
-              <Label>연령대</Label>
-              <Select
-                value={formData.age}
-                onChange={(e) => setFormData(prev => ({ ...prev, age: e.target.value }))}
-              >
-                <option value="">선택하세요</option>
-                <option value="30세미만">30세미만</option>
-                <option value="30-39세">30-39세</option>
-                <option value="40-49세">40-49세</option>
-                <option value="50-59세">50-59세</option>
-                <option value="60세이상">60세이상</option>
-              </Select>
-            </FormGroup>
-
-            <FormGroup>
-              <Label>지역본부</Label>
-              <Select
-                value={formData.region}
-                onChange={(e) => setFormData(prev => ({ ...prev, region: e.target.value }))}
-              >
-                <option value="">선택하세요</option>
-                <option value="서울지역">서울지역</option>
-                <option value="부산지역">부산지역</option>
-                <option value="대구지역">대구지역</option>
-                <option value="광주지역">광주지역</option>
-                <option value="경인지역">경인지역</option>
-                <option value="대전지역">대전지역</option>
-              </Select>
-            </FormGroup>
-
-            <SubmitButton
-              type="submit"
-              disabled={isLoading}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              {isLoading ? '예측 중...' : '예측하기'}
-            </SubmitButton>
-          </PredictForm>
-
-          {result && (
-            <ResultContainer>
-              <h2>예측 결과</h2>
-              <p>예상 휴식기간: {result.predicted_value}일</p>
-            </ResultContainer>
+      <Title>요양기간 예측 서비스</Title>
+      <PredictForm onSubmit={handleSubmit}>
+        <FormGroup>
+          <Label>병명</Label>
+          <Input
+            type="text"
+            value={searchTerm}
+            onChange={handleSearchChange}
+            placeholder="병명을 입력하세요"
+          />
+          {diseaseList.length > 0 && (
+            <SearchResults>
+              {diseaseList.map((disease, index) => (
+                <SearchResultItem
+                  key={index}
+                  onClick={() => handleDiseaseSelect(disease)}
+                >
+                  {disease}
+                </SearchResultItem>
+              ))}
+            </SearchResults>
           )}
-        </>
+        </FormGroup>
+
+        <FormGroup>
+          <Label>성별</Label>
+          <Select
+            value={formData.sex}
+            onChange={(e) => setFormData(prev => ({ ...prev, sex: e.target.value }))}
+          >
+            <option value="">선택하세요</option>
+            <option value="남자">남자</option>
+            <option value="여자">여자</option>
+          </Select>
+        </FormGroup>
+
+        <FormGroup>
+          <Label>수술여부</Label>
+          <Select
+            value={formData.surgery}
+            onChange={(e) => setFormData(prev => ({ ...prev, surgery: e.target.value }))}
+          >
+            <option value="">선택하세요</option>
+            <option value="예">예</option>
+            <option value="아니오">아니오</option>
+          </Select>
+        </FormGroup>
+
+        <FormGroup>
+          <Label>연령대</Label>
+          <Select
+            value={formData.age}
+            onChange={(e) => setFormData(prev => ({ ...prev, age: e.target.value }))}
+          >
+            <option value="">선택하세요</option>
+            <option value="30세미만">30세미만</option>
+            <option value="30-39세">30-39세</option>
+            <option value="40-49세">40-49세</option>
+            <option value="50-59세">50-59세</option>
+            <option value="60세이상">60세이상</option>
+          </Select>
+        </FormGroup>
+
+        <FormGroup>
+          <Label>지역</Label>
+          <Select
+            value={formData.region}
+            onChange={(e) => setFormData(prev => ({ ...prev, region: e.target.value }))}
+          >
+            <option value="">선택하세요</option>
+            <option value="부산지역">부산지역</option>
+            <option value="대구지역">대구지역</option>
+            <option value="광주지역">광주지역</option>
+            <option value="서울지역">서울지역</option>
+            <option value="경인지역">경인지역</option>
+            <option value="대전지역">대전지역</option>
+          
+          </Select>
+        </FormGroup>
+
+        <SubmitButton
+          type="submit"
+          disabled={loading}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+        >
+          {loading ? '예측 중...' : '예측하기'}
+        </SubmitButton>
+      </PredictForm>
+
+      {showModal && predictionResult && (
+        <ModalOverlay
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={() => setShowModal(false)}
+        >
+          <ModalContent
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.8, opacity: 0 }}
+            transition={{ type: "spring", duration: 0.5 }}
+            onClick={e => e.stopPropagation()}
+          >
+            <CloseButton onClick={() => setShowModal(false)}>×</CloseButton>
+            <ResultTitle>예측 결과</ResultTitle>
+            <ResultValue>{predictionResult.predicted_value}일</ResultValue>
+            <ResultLabel>예상 휴식기간</ResultLabel>
+            <ActionButton
+              onClick={() => navigate('/substitute')}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              대체 인력 구하러 가기
+            </ActionButton>
+          </ModalContent>
+        </ModalOverlay>
       )}
     </PageContainer>
   );
