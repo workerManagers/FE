@@ -73,10 +73,6 @@ const JobPostDetail = () => {
             <span className={styles.infoLabel}>근무기간</span>
             <span className={styles.infoValue}>{post.jobPeriod}</span>
           </div>
-          <div className={styles.infoItem}>
-            <span className={styles.infoLabel}>산업재해 유형</span>
-            <span className={styles.infoValue}>{post.industrialAccidentName}</span>
-          </div>
         </div>
 
         <div className={styles.descriptionCard}>

@@ -222,8 +222,7 @@ const LoginForm = () => {
 
     try {
       const response = await userApi.login(data);
-      // 로그인 성공 시 토큰과 사용자 이름 저장
-      localStorage.setItem('token', response.accessToken);
+      // 로그인 성공 시 사용자 이름만 저장 (토큰은 api.js에서 저장됨)
       localStorage.setItem('userName', response.userName);
       showToast.success(`${response.userName}님 안녕하세요!`);
       
@@ -235,7 +234,11 @@ const LoginForm = () => {
       let errorMessage = '로그인 중 오류가 발생했습니다.';
       
       if (error.response) {
-        errorMessage = error.response.data.error || errorMessage;
+        if (error.response.status === 401) {
+          errorMessage = '이메일 또는 비밀번호가 올바르지 않습니다.';
+        } else {
+          errorMessage = error.response.data.error || errorMessage;
+        }
       } else if (error.request) {
         errorMessage = '서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.';
       }

@@ -10,7 +10,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: false,
+  withCredentials: true,
   timeout: 5000,
 });
 
@@ -21,6 +21,9 @@ api.interceptors.request.use(
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      config.headers['X-Requested-With'] = 'XMLHttpRequest';
+      // 모든 요청에 대해 credentials 포함
+      config.withCredentials = true;
     }
     return config;
   },
@@ -32,11 +35,26 @@ api.interceptors.request.use(
 // 응답 인터셉터 설정
 api.interceptors.response.use(
   (response) => {
+    // 응답 헤더에서 새로운 토큰이 있는지 확인
+    const newToken = response.headers['x-access-token'] || response.headers['authorization'];
+    if (newToken) {
+      const token = newToken.startsWith('Bearer ') ? newToken.substring(7) : newToken;
+      localStorage.setItem('token', token);
+    }
     return response;
   },
   (error) => {
     // 응답 오류 처리
     if (error.response) {
+      // 토큰 만료 처리
+      if (error.response.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('userName');
+        // 현재 페이지가 로그인 페이지가 아닌 경우에만 리다이렉트
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
+      }
       // 서버에서 응답이 왔지만 오류가 있는 경우
       console.error('API 오류:', error.response.data);
     } else if (error.request) {
@@ -67,8 +85,11 @@ export const userApi = {
     try {
       const response = await api.post('/users/login', credentials);
       // 로그인 성공 시 토큰 저장
-      if (response.data.token) {
-        localStorage.setItem('token', response.data.token);
+      if (response.data.accessToken) {
+        localStorage.setItem('token', response.data.accessToken);
+        if (response.data.userName) {
+          localStorage.setItem('userName', response.data.userName);
+        }
       }
       return response.data;
     } catch (error) {
@@ -80,10 +101,14 @@ export const userApi = {
   logout: async () => {
     try {
       const response = await api.post('/users/logout');
-      // 로그아웃 시 토큰 제거
+      // 로그아웃 시 모든 로컬 스토리지 데이터 제거
       localStorage.removeItem('token');
+      localStorage.removeItem('userName');
       return response.data;
     } catch (error) {
+      // 로그아웃 실패 시에도 로컬 스토리지 데이터 제거
+      localStorage.removeItem('token');
+      localStorage.removeItem('userName');
       throw error;
     }
   },
@@ -127,7 +152,18 @@ export const jobPostApi = {
   // 모집 공고 검색
   searchJobPosts: async (params) => {
     try {
-      const response = await api.get('/job-posts/search', { params });
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('로그인이 필요합니다.');
+      }
+
+      const response = await api.get('/job-posts/search', { 
+        params,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      });
       return response.data;
     } catch (error) {
       console.error('Error searching job posts:', error);

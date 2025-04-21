@@ -2,92 +2,40 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from '../styles/JobPost.module.css';
 import { jobPostApi } from '../services/api';
+import { showToast } from '../components/common/Toast';
+import Toast from '../components/common/Toast';
 
 const NewJobPost = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
+    companyName: '',
     jobName: '',
     jobPostDescription: '',
+    mainTasks: '',
+    qualifications: '',
+    preferredQualifications: '',
+    idealCandidate: '',
     jobPeriod: '',
-    deadline: '',
-    companyName: '',
-    companyRegion: '',
-    industrialAccidentName: ''
+    jobRegion: '',
+    deadline: ''
   });
-
-  const [jobCodes, setJobCodes] = useState([]);
   const [companies, setCompanies] = useState([]);
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // 토큰 확인
-    const token = localStorage.getItem('token');
-    if (!token) {
-      alert('로그인이 필요합니다.');
-      navigate('/login');
-      return;
-    }
-
-    const fetchData = async () => {
+    const fetchCompanies = async () => {
       try {
-        const [jobCodesData, companiesData] = await Promise.all([
-          jobPostApi.getJobCodes(),
-          jobPostApi.getCompanies()
-        ]);
-        setJobCodes(jobCodesData);
-        setCompanies(companiesData);
+        const data = await jobPostApi.getCompanies();
+        setCompanies(data);
       } catch (error) {
-        console.error('Error fetching data:', error);
-        if (error.response?.status === 401 || error.response?.status === 403) {
-          alert('세션이 만료되었습니다. 다시 로그인해주세요.');
-          navigate('/login');
-        }
+        console.error('Error fetching companies:', error);
+        showToast.error('회사 목록을 불러오는 중 오류가 발생했습니다.');
       }
     };
 
-    fetchData();
-  }, [navigate]);
-
-  const validateForm = () => {
-    const newErrors = {};
-    
-    if (!formData.jobName) {
-      newErrors.jobName = '직종 이름을 입력해주세요.';
-    } else if (formData.jobName.length > 100) {
-      newErrors.jobName = '직종 이름은 100자 이내로 입력해주세요.';
-    }
-
-    if (!formData.jobPostDescription) {
-      newErrors.jobPostDescription = '모집공고 설명을 입력해주세요.';
-    } else if (formData.jobPostDescription.length > 500) {
-      newErrors.jobPostDescription = '모집공고 설명은 500자 이내로 입력해주세요.';
-    }
-
-    if (!formData.jobPeriod) {
-      newErrors.jobPeriod = '근무 기간을 입력해주세요.';
-    } else if (formData.jobPeriod.length > 50) {
-      newErrors.jobPeriod = '근무 기간은 50자 이내로 입력해주세요.';
-    }
-
-    if (!formData.deadline) {
-      newErrors.deadline = '마감일을 선택해주세요.';
-    }
-
-    if (!formData.companyName) {
-      newErrors.companyName = '회사 이름을 입력해주세요.';
-    } else if (formData.companyName.length > 100) {
-      newErrors.companyName = '회사 이름은 100자 이내로 입력해주세요.';
-    }
-
-    if (!formData.industrialAccidentName) {
-      newErrors.industrialAccidentName = '산업재해 이름을 입력해주세요.';
-    } else if (formData.industrialAccidentName.length > 100) {
-      newErrors.industrialAccidentName = '산업재해 이름은 100자 이내로 입력해주세요.';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+    fetchCompanies();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -98,7 +46,7 @@ const NewJobPost = () => {
       setFormData(prev => ({
         ...prev,
         companyName: value,
-        companyRegion: selectedCompany ? selectedCompany.companyRegion : ''
+        jobRegion: selectedCompany ? selectedCompany.companyRegion : ''
       }));
     } else {
       setFormData(prev => ({
@@ -107,7 +55,6 @@ const NewJobPost = () => {
       }));
     }
 
-    // 입력 시 에러 메시지 제거
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -116,63 +63,62 @@ const NewJobPost = () => {
     }
   };
 
+  const validateForm = () => {
+    const newErrors = {};
+    if (!formData.companyName) newErrors.companyName = '회사명을 입력해주세요';
+    if (!formData.jobName) newErrors.jobName = '직무명을 입력해주세요';
+    if (!formData.jobPostDescription) newErrors.jobPostDescription = '모집공고 설명을 입력해주세요';
+    if (!formData.mainTasks) newErrors.mainTasks = '주요 업무를 입력해주세요';
+    if (!formData.qualifications) newErrors.qualifications = '자격요건을 입력해주세요';
+    if (!formData.jobPeriod) newErrors.jobPeriod = '고용형태를 선택해주세요';
+    if (!formData.jobRegion) newErrors.jobRegion = '근무지역을 선택해주세요';
+    if (!formData.deadline) newErrors.deadline = '마감일을 선택해주세요';
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
 
-    // 토큰 확인
-    const token = localStorage.getItem('token');
-    if (!token) {
-      alert('로그인이 필요합니다.');
-      navigate('/login');
-      return;
-    }
-
+    setLoading(true);
     try {
-      const response = await jobPostApi.createJobPost(formData);
-      if (response.message) {
-        alert(response.message);
-      } else {
-        alert('모집공고가 성공적으로 등록되었습니다.');
-      }
+      // 마감일 형식 변환
+      const deadlineDate = new Date(formData.deadline);
+      deadlineDate.setHours(23, 59, 59);
+      
+      const postData = {
+        ...formData,
+        deadline: deadlineDate.toISOString()
+      };
+
+      console.log('Sending job post data:', postData);
+      await jobPostApi.createJobPost(postData);
       navigate('/jobpost');
     } catch (error) {
       console.error('Error creating job post:', error);
       if (error.response?.status === 401 || error.response?.status === 403) {
-        alert('세션이 만료되었습니다. 다시 로그인해주세요.');
-        navigate('/login');
+        localStorage.removeItem('token');
+        navigate('/login', { 
+          replace: true,
+          state: { message: '세션이 만료되었습니다. 다시 로그인해주세요.', type: 'error' }
+        });
       } else {
-        const errorMessage = error.response?.data?.message || '모집공고 등록 중 오류가 발생했습니다. 다시 시도해주세요.';
-        alert(errorMessage);
+        setErrors({ submit: '공고 등록 중 오류가 발생했습니다.' });
       }
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className={styles.container}>
-      <h1>새 공고 작성</h1>
+      <Toast />
+      <h1 className={styles.title}>새 공고 작성</h1>
       <form onSubmit={handleSubmit} className={styles.form}>
         <div className={styles.formGroup}>
-          <label htmlFor="jobName">직종 이름 *</label>
-          <select
-            id="jobName"
-            name="jobName"
-            value={formData.jobName}
-            onChange={handleChange}
-            className={styles.select}
-          >
-            <option value="">직종을 선택하세요</option>
-            {jobCodes.map(job => (
-              <option key={job.jobCodeId} value={job.jobName}>
-                {job.jobName}
-              </option>
-            ))}
-          </select>
-          {errors.jobName && <span className={styles.error}>{errors.jobName}</span>}
-        </div>
-
-        <div className={styles.formGroup}>
-          <label htmlFor="companyName">회사 이름 *</label>
+          <label htmlFor="companyName">회사명</label>
           <select
             id="companyName"
             name="companyName"
@@ -191,82 +137,130 @@ const NewJobPost = () => {
         </div>
 
         <div className={styles.formGroup}>
-          <label htmlFor="companyRegion">근무지역 *</label>
+          <label htmlFor="jobRegion">근무지역</label>
           <input
             type="text"
-            id="companyRegion"
-            name="companyRegion"
-            value={formData.companyRegion}
+            id="jobRegion"
+            name="jobRegion"
+            value={formData.jobRegion}
             onChange={handleChange}
+            className={styles.input}
             readOnly
-            className={styles.readOnlyInput}
           />
-          {errors.companyRegion && <span className={styles.error}>{errors.companyRegion}</span>}
+          {errors.jobRegion && <span className={styles.error}>{errors.jobRegion}</span>}
         </div>
 
         <div className={styles.formGroup}>
-          <label htmlFor="industrialAccidentName">산업재해 이름 *</label>
+          <label htmlFor="jobName">직무명</label>
           <input
             type="text"
-            id="industrialAccidentName"
-            name="industrialAccidentName"
-            value={formData.industrialAccidentName}
+            id="jobName"
+            name="jobName"
+            value={formData.jobName}
             onChange={handleChange}
-            maxLength={100}
-            placeholder="산업재해 이름을 입력하세요"
+            className={styles.input}
           />
-          {errors.industrialAccidentName && <span className={styles.error}>{errors.industrialAccidentName}</span>}
+          {errors.jobName && <span className={styles.error}>{errors.jobName}</span>}
         </div>
 
         <div className={styles.formGroup}>
-          <label htmlFor="jobPeriod">근무 기간 *</label>
+          <label htmlFor="jobPostDescription">모집공고 설명</label>
+          <textarea
+            id="jobPostDescription"
+            name="jobPostDescription"
+            value={formData.jobPostDescription}
+            onChange={handleChange}
+            className={styles.textarea}
+            rows="3"
+          />
+          {errors.jobPostDescription && <span className={styles.error}>{errors.jobPostDescription}</span>}
+        </div>
+
+        <div className={styles.formGroup}>
+          <label htmlFor="mainTasks">주요 업무</label>
+          <textarea
+            id="mainTasks"
+            name="mainTasks"
+            value={formData.mainTasks}
+            onChange={handleChange}
+            className={styles.textarea}
+            rows="3"
+          />
+          {errors.mainTasks && <span className={styles.error}>{errors.mainTasks}</span>}
+        </div>
+
+        <div className={styles.formGroup}>
+          <label htmlFor="qualifications">자격요건</label>
+          <textarea
+            id="qualifications"
+            name="qualifications"
+            value={formData.qualifications}
+            onChange={handleChange}
+            className={styles.textarea}
+            rows="3"
+          />
+          {errors.qualifications && <span className={styles.error}>{errors.qualifications}</span>}
+        </div>
+
+        <div className={styles.formGroup}>
+          <label htmlFor="preferredQualifications">우대사항</label>
+          <textarea
+            id="preferredQualifications"
+            name="preferredQualifications"
+            value={formData.preferredQualifications}
+            onChange={handleChange}
+            className={styles.textarea}
+            rows="3"
+          />
+        </div>
+
+        <div className={styles.formGroup}>
+          <label htmlFor="idealCandidate">인재상</label>
+          <textarea
+            id="idealCandidate"
+            name="idealCandidate"
+            value={formData.idealCandidate}
+            onChange={handleChange}
+            className={styles.textarea}
+            rows="3"
+          />
+        </div>
+
+        <div className={styles.formGroup}>
+          <label htmlFor="jobPeriod">근무 기간</label>
           <input
             type="text"
             id="jobPeriod"
             name="jobPeriod"
             value={formData.jobPeriod}
             onChange={handleChange}
-            maxLength={50}
-            placeholder="근무 기간을 입력하세요"
+            className={styles.input}
+            placeholder="예: 2년"
           />
           {errors.jobPeriod && <span className={styles.error}>{errors.jobPeriod}</span>}
         </div>
 
         <div className={styles.formGroup}>
-          <label htmlFor="deadline">마감일 *</label>
+          <label htmlFor="deadline">마감일</label>
           <input
             type="date"
             id="deadline"
             name="deadline"
             value={formData.deadline}
             onChange={handleChange}
+            className={styles.input}
           />
           {errors.deadline && <span className={styles.error}>{errors.deadline}</span>}
         </div>
 
-        <div className={styles.formGroup}>
-          <label htmlFor="jobPostDescription">모집공고 설명 *</label>
-          <textarea
-            id="jobPostDescription"
-            name="jobPostDescription"
-            value={formData.jobPostDescription}
-            onChange={handleChange}
-            maxLength={500}
-            rows="5"
-            placeholder="모집공고 설명을 입력하세요"
-          />
-          <div className={styles.charCount}>
-            {formData.jobPostDescription.length}/500
-          </div>
-          {errors.jobPostDescription && <span className={styles.error}>{errors.jobPostDescription}</span>}
-        </div>
+        {errors.submit && <div className={styles.error}>{errors.submit}</div>}
 
         <div className={styles.buttonGroup}>
           <button type="button" onClick={() => navigate('/jobpost')} className={styles.cancelButton}>
             취소
           </button>
-          <button type="submit" className={styles.submitButton}>
-            등록
+          <button type="submit" className={styles.submitButton} disabled={loading}>
+            {loading ? '등록 중...' : '등록'}
           </button>
         </div>
       </form>
