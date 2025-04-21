@@ -65,9 +65,11 @@ export const userApi = {
   login: async (credentials) => {
     try {
       const response = await api.post('/users/login', credentials);
-      // 로그인 성공 시 토큰 저장
+      // 로그인 성공 시 토큰과 사용자 정보 저장
       if (response.data.token) {
         localStorage.setItem('token', response.data.token);
+        localStorage.setItem('userType', response.data.userType);
+        localStorage.setItem('userName', response.data.userName);
       }
       return response.data;
     } catch (error) {
@@ -79,10 +81,46 @@ export const userApi = {
   logout: async () => {
     try {
       const response = await api.post('/users/logout');
-      // 로그아웃 시 토큰 제거
+      // 로그아웃 시 모든 사용자 정보 제거
       localStorage.removeItem('token');
+      localStorage.removeItem('userType');
+      localStorage.removeItem('userName');
       return response.data;
     } catch (error) {
+      throw error;
+    }
+  },
+
+  // 사용자 정보 조회
+  getUserInfo: async () => {
+    try {
+      const response = await api.get('/users/me');
+      if (response.data) {
+        localStorage.setItem('userType', response.data.userType);
+        localStorage.setItem('userName', response.data.userName);
+      }
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // 예측 API
+  predict: async (data) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('인증 토큰이 없습니다.');
+      }
+
+      const response = await api.post('/predict', data, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('예측 API 오류:', error);
       throw error;
     }
   },
