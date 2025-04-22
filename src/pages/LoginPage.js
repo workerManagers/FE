@@ -7,8 +7,8 @@ const PageContainer = styled(motion.div)`
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 100vh;
-  background-color: #f5f5f5;
+  min-height: calc(100vh - 60px);
+  background-color: white;
   padding: 1rem;
   
   @media (max-width: 480px) {

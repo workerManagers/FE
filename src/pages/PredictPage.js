@@ -10,83 +10,169 @@ const PageContainer = styled(motion.div)`
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background-color: #f5f5f5;
-  padding: 2rem;
+  background-color: white;
+  padding:6rem;
 `;
 
 const Title = styled.h1`
-  color: #2c3e50;
-  font-size: 2rem;
-  margin-bottom: 2rem;
+  color: #000000;
+  font-size: 2.2rem;
+  margin-bottom: 2.5rem;
   text-align: center;
+  font-weight: 600;
+  position: relative;
+
+  &:after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: -10px;
+    width: 60px;
+    height: 3px;
+    background-color: #000000;
+    transform: translateX(-50%);
+    transition: width 0.3s ease;
+  }
+
+  &:hover:after {
+    width: 120px;
+  }
 `;
 
 const PredictForm = styled.form`
-  background: white;
-  padding: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  padding: 2.5rem;
+  border: 3px solid rgba(0, 0, 0, 0.3);
+  border-radius: 24px;
   max-width: 800px;
   margin: 0 auto;
   width: 100%;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15),
+              inset 0 0 32px 0 rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+
+  &:hover {
+    transform: translateY(-5px);
+    border: 3px solid rgba(0, 0, 0, 0.4);
+    box-shadow: 0 12px 48px 0 rgba(0, 0, 0, 0.2),
+                inset 0 0 32px 0 rgba(0, 0, 0, 0.1);
+  }
 `;
 
 const FormGroup = styled.div`
-  margin-bottom: 1.5rem;
+  flex: 1 1 calc(50% - 1rem);
+  min-width: 250px;
+  position: relative;
+
+  &:first-child {
+    flex: 1 1 100%;
+  }
+
+  @media (max-width: 768px) {
+    flex: 1 1 100%;
+  }
 `;
 
 const Label = styled.label`
   display: block;
-  margin-bottom: 0.5rem;
-  color: #2c3e50;
+  margin-bottom: 0.8rem;
+  color: #000000;
   font-weight: 500;
+  font-size: 1rem;
 `;
 
 const Input = styled.input`
   width: 100%;
   padding: 0.8rem;
-  border: 1px solid #ddd;
-  border-radius: 6px;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
   font-size: 1rem;
+  background: white;
+  transition: all 0.2s ease;
 
   &:focus {
     outline: none;
-    border-color: #4a90e2;
+    border-color: #000000;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+  }
+
+  &::placeholder {
+    color: rgba(0, 0, 0, 0.4);
   }
 `;
 
 const Select = styled.select`
   width: 100%;
   padding: 0.8rem;
-  border: 1px solid #ddd;
-  border-radius: 6px;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
   font-size: 1rem;
   background: white;
+  transition: all 0.2s ease;
+  cursor: pointer;
 
   &:focus {
     outline: none;
-    border-color: #4a90e2;
+    border-color: #000000;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+  }
+
+  option {
+    color: #000000;
+    background: white;
+    padding: 0.5rem;
   }
 `;
 
 const SearchResults = styled.ul`
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
   list-style: none;
   padding: 0;
-  margin: 0.5rem 0;
+  margin: 0.2rem 0 0;
   max-height: 200px;
   overflow-y: auto;
-  border: 1px solid #ddd;
-  border-radius: 6px;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
   background: white;
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+
+  /* 스크롤바 스타일링 */
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+    
+    &:hover {
+      background: rgba(0, 0, 0, 0.3);
+    }
+  }
 `;
 
 const SearchResultItem = styled.li`
   padding: 0.8rem;
   cursor: pointer;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
 
   &:hover {
-    background: #f5f5f5;
+    background: rgba(0, 0, 0, 0.05);
+    padding-left: 1rem;
   }
 
   &:last-child {
@@ -94,57 +180,153 @@ const SearchResultItem = styled.li`
   }
 `;
 
+const SubmitButtonWrapper = styled.div`
+  flex: 1 1 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: 0.5rem;
+`;
+
 const SubmitButton = styled(motion.button)`
-  width: 100%;
+  width: 200px;
   padding: 1rem;
-  background: #4a90e2;
+  background: rgba(0, 0, 0, 0.8);
   color: white;
   border: none;
-  border-radius: 6px;
-  font-size: 1rem;
+  border-radius: 12px;
+  font-size: 1.1rem;
   font-weight: 500;
   cursor: pointer;
-  margin-top: 1rem;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  transition: all 0.3s ease;
 
-  &:hover {
-    background: #357abd;
+  &:hover:not(:disabled) {
+    background: rgba(0, 0, 0, 0.9);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.3);
   }
 
   &:disabled {
-    background: #ccc;
+    opacity: 0.6;
     cursor: not-allowed;
   }
 `;
 
 const ResultCard = styled(motion.div)`
   background: white;
-  padding: 2rem;
-  border-radius: 15px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  padding: 2.5rem;
+  border-radius: 24px;
+  border: 3px solid rgba(0, 0, 0, 0.3);
   text-align: center;
   margin-top: 2rem;
-  border: 2px solid #4a90e2;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
 `;
 
 const ResultTitle = styled.h2`
-  color: #2c3e50;
+  color: #000000;
   font-size: 1.8rem;
   margin-bottom: 1.5rem;
   font-weight: 600;
+  position: relative;
+  display: inline-block;
+
+  &:after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: -8px;
+    width: 40px;
+    height: 3px;
+    background-color: #000000;
+    transform: translateX(-50%);
+    transition: width 0.3s ease;
+  }
+
+  &:hover:after {
+    width: 100%;
+  }
 `;
 
 const ResultValue = styled.div`
-  font-size: 3rem;
-  color: #4a90e2;
+  font-size: 3.5rem;
   font-weight: 700;
-  margin: 1rem 0;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+  margin: 1.5rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: default;
+
+  .number {
+    background: linear-gradient(135deg, #000000, #2d2d2d);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: fadeInUp 0.6s ease forwards, pulse 2s ease-in-out infinite;
+    transition: all 0.3s ease;
+    display: inline-block;
+    position: relative;
+    padding: 0 0.2rem;
+
+    &:hover {
+      transform: translateY(-5px) scale(1.1);
+      background: linear-gradient(135deg, #000000, #4a4a4a);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: bounce 0.5s ease infinite alternate;
+    }
+  }
+
+  span {
+    font-size: 1.8rem;
+    opacity: 0.7;
+    color: #000;
+    transition: all 0.3s ease;
+  }
+
+  &:hover span {
+    transform: translateY(-2px);
+    opacity: 0.9;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes pulse {
+    0% {
+      text-shadow: 0 0 0 rgba(0, 0, 0, 0);
+    }
+    50% {
+      text-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    }
+    100% {
+      text-shadow: 0 0 0 rgba(0, 0, 0, 0);
+    }
+  }
+
+  @keyframes bounce {
+    from {
+      transform: translateY(-5px) scale(1.1);
+    }
+    to {
+      transform: translateY(2px) scale(1.1);
+    }
+  }
 `;
 
 const ResultLabel = styled.p`
-  color: #666;
+  color: rgba(0, 0, 0, 0.6);
   font-size: 1.2rem;
-  margin-top: 0.5rem;
+  margin: 0.5rem 0 2rem;
 `;
 
 const ModalOverlay = styled(motion.div)`
@@ -153,7 +335,8 @@ const ModalOverlay = styled(motion.div)`
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(5px);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -162,13 +345,14 @@ const ModalOverlay = styled(motion.div)`
 
 const ModalContent = styled(motion.div)`
   background: white;
-  padding: 2rem;
-  border-radius: 15px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  padding: 2.5rem;
+  border-radius: 24px;
+  border: 3px solid rgba(0, 0, 0, 0.3);
   text-align: center;
   width: 90%;
   max-width: 500px;
   position: relative;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
 `;
 
 const CloseButton = styled.button`
@@ -189,36 +373,110 @@ const CloseButton = styled.button`
 `;
 
 const LoadingSpinner = styled(motion.div)`
-  width: 50px;
-  height: 50px;
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #4a90e2;
+  width: 60px;
+  height: 60px;
+  border: 3px solid rgba(0, 0, 0, 0.1);
+  border-top: 3px solid #000;
+  border-right: 3px solid #000;
   border-radius: 50%;
-  margin: 0 auto 1rem;
+  margin: 0 auto;
+  position: relative;
+
+  &:before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    right: -10px;
+    bottom: -10px;
+    border: 3px solid rgba(0, 0, 0, 0.05);
+    border-radius: 50%;
+  }
 `;
 
-const LoadingMessage = styled(motion.p)`
-  color: #666;
-  font-size: 1.2rem;
-  margin-top: 1rem;
+const LoadingMessage = styled(motion.div)`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  margin-top: 2rem;
+`;
+
+const LoadingTitle = styled(motion.p)`
+  color: #000;
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin: 0;
+  opacity: 0.8;
+`;
+
+const LoadingSubText = styled(motion.p)`
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 1rem;
+  margin: 0;
+  text-align: center;
+  max-width: 80%;
+  line-height: 1.5;
+`;
+
+const LoadingOverlay = styled(motion.div)`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+`;
+
+const LoadingBox = styled(motion.div)`
+  background: white;
+  padding: 3rem;
+  border-radius: 24px;
+  border: 3px solid rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 300px;
 `;
 
 const ActionButton = styled(motion.button)`
-  background: #4a90e2;
+  background: rgba(0, 0, 0, 0.8);
   color: white;
   border: none;
-  padding: 1rem 2rem;
-  border-radius: 8px;
+  padding: 1rem 2.5rem;
+  border-radius: 12px;
   font-size: 1.1rem;
   font-weight: 500;
   cursor: pointer;
-  margin-top: 2rem;
-  width: 100%;
-  max-width: 300px;
-  transition: background-color 0.3s ease;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
 
   &:hover {
-    background: #357abd;
+    background: rgba(0, 0, 0, 0.9);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.3);
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
+    transition: transform 0.3s ease;
+  }
+
+  &:hover svg {
+    transform: translateX(4px);
   }
 `;
 
@@ -516,34 +774,45 @@ const PredictPage = () => {
   if (loading) {
     return (
       <PageContainer>
-        <ModalOverlay
+        <LoadingOverlay
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
         >
-          <ModalContent
-            initial={{ scale: 0.8, opacity: 0 }}
+          <LoadingBox
+            initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.8, opacity: 0 }}
             transition={{ type: "spring", duration: 0.5 }}
           >
             <LoadingSpinner
-              animate={{ rotate: 360 }}
-              transition={{
-                duration: 1,
-                repeat: Infinity,
-                ease: "linear"
+              animate={{ 
+                rotate: 360,
+                transition: {
+                  duration: 1.5,
+                  ease: "linear",
+                  repeat: Infinity
+                }
               }}
             />
-            <LoadingMessage
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
-            >
-              예측 중입니다...
+            <LoadingMessage>
+              <LoadingTitle
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                예측 분석 중
+              </LoadingTitle>
+              <LoadingSubText
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+              >
+                정확한 예측을 위해 데이터를 분석하고 있습니다.
+                <br />잠시만 기다려주세요.
+              </LoadingSubText>
             </LoadingMessage>
-          </ModalContent>
-        </ModalOverlay>
+          </LoadingBox>
+        </LoadingOverlay>
       </PageContainer>
     );
   }
@@ -631,18 +900,19 @@ const PredictPage = () => {
             <option value="서울지역">서울지역</option>
             <option value="경인지역">경인지역</option>
             <option value="대전지역">대전지역</option>
-          
           </Select>
         </FormGroup>
 
-        <SubmitButton
-          type="submit"
-          disabled={loading}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-        >
-          {loading ? '예측 중...' : '예측하기'}
-        </SubmitButton>
+        <SubmitButtonWrapper>
+          <SubmitButton
+            type="submit"
+            disabled={loading}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            {loading ? '예측 중...' : '예측하기'}
+          </SubmitButton>
+        </SubmitButtonWrapper>
       </PredictForm>
 
       {showModal && predictionResult && (
@@ -660,15 +930,44 @@ const PredictPage = () => {
             onClick={e => e.stopPropagation()}
           >
             <CloseButton onClick={() => setShowModal(false)}>×</CloseButton>
-            <ResultTitle>예측 결과</ResultTitle>
-            <ResultValue>{predictionResult.predicted_value}일</ResultValue>
-            <ResultLabel>예상 휴식기간</ResultLabel>
+            <ResultTitle>예상 요양 기간</ResultTitle>
+            <ResultValue>
+              <motion.div 
+                className="number"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ 
+                  duration: 0.6,
+                  delay: 0.2,
+                  ease: "easeOut"
+                }}
+                whileHover={{
+                  scale: 1.1,
+                  y: -5,
+                  transition: { type: "spring", stiffness: 300 }
+                }}
+              >
+                {predictionResult.predicted_value}
+              </motion.div>
+              <span>일</span>
+            </ResultValue>
             <ActionButton
               onClick={() => navigate('/substitute')}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
               대체 인력 구하러 가기
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round"
+              >
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
             </ActionButton>
           </ModalContent>
         </ModalOverlay>
@@ -676,17 +975,5 @@ const PredictPage = () => {
     </PageContainer>
   );
 };
-
-const LoadingContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 50vh;
-`;
-
-const LoadingText = styled.p`
-  font-size: 1.2rem;
-  color: #666;
-`;
 
 export default PredictPage; 
