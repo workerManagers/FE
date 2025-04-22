@@ -1,13 +1,13 @@
 @font-face {
-  font-family: 'SBL';
-  src: url('./assets/fonts/SBL.ttf') format('truetype');
+  font-family: 'LR';
+  src: url('./assets/fonts/LR.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
 }
 
 body {
   margin: 0;
-  font-family: 'SBL','SBB','SBM';
+  font-family: 'SBL','SBB','SBM','LR';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
