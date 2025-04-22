@@ -6,14 +6,13 @@ import SignupForm from '../components/SignupForm';
 const PageContainer = styled(motion.div)`
   display: flex;
   justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  background-color: #f5f5f5;
-  padding: 1rem;
+  align-items: flex-start;
+  min-height: calc(100vh - 60px);
+  background-color: white;
+  padding-top: -4rem;
   
   @media (max-width: 480px) {
-    padding: 0.5rem;
-    align-items: flex-start;
+    padding-top: -2rem;
   }
 `;
 
