@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -9,236 +9,200 @@ import { userApi } from '../services/api';
 import { showToast } from './common/Toast';
 import Toast from './common/Toast';
 
+const PageWrapper = styled.div`
+  min-height: 100vh;
+  background-color: transparent;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1% 2%;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+`;
+
 const FormContainer = styled(motion.form)`
-  background: white;
-  padding: 2.5rem;
-  border-radius: 15px;
+  display: flex;
+  gap: 1.5%;
+  background: rgba(211, 220, 239, 0.68);
+  padding: 1.5%;
+  border-radius: 12px;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 400px;
+  width: ${props => props.isCompany ? '60%' : '25%'};
   position: relative;
-  overflow: hidden;
-  margin: 1rem;
+  margin-bottom: 100px;
 
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(to right, #4a90e2, #357abd);
-  }
-
-  @media (max-width: 480px) {
-    padding: 1.5rem;
-    margin: 0.5rem;
-    border-radius: 10px;
+  @media (max-width: 768px) {
+    flex-direction: column;
+    padding: 3%;
+    gap: 2%;
+    width: 95%;
   }
 `;
 
-const Title = styled(motion.h1)`
-  text-align: center;
-  color: #2c3e50;
-  margin-bottom: 2rem;
-  font-size: 1.8rem;
+const MainSection = styled.div`
+  flex: ${props => props.isCompany ? '0 0 48%' : '1'};
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  width: 100%;
+  align-items: ${props => props.isCompany ? 'stretch' : 'flex-start'};
+
+  @media (max-width: 768px) {
+    flex: 1;
+    gap: 0.8rem;
+    align-items: stretch;
+  }
+`;
+
+const CompanySection = styled.div`
+  flex: 0 0 48%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  padding-left: 1.5%;
+  border-left: 1px solid rgba(0, 0, 0, 0.1);
+  width: 100%;
+
+  @media (max-width: 768px) {
+    padding-left: 0;
+    padding-top: 1.2rem;
+    border-left: none;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+  }
+`;
+
+const Title = styled.h1`
+  color: #333;
+  font-size: clamp(1rem, 1.6vw, 1.2rem);
   font-weight: 600;
+  margin-bottom: 1rem;
+  width: ${props => props.isCompany ? '90%' : '300px'};
 
-  @media (max-width: 480px) {
-    font-size: 1.5rem;
-    margin-bottom: 1.5rem;
+  @media (max-width: 768px) {
+    width: 100%;
   }
 `;
 
-const InputGroup = styled(motion.div)`
-  margin-bottom: 2rem;
-  position: relative;
-
-  @media (max-width: 480px) {
-    margin-bottom: 1.5rem;
+const UserTypeSelector = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  width: ${props => props.isCompany ? '90%' : '300px'};
+  
+  @media (max-width: 768px) {
+    width: 100%;
+    margin-bottom: 1rem;
   }
 `;
 
-const Label = styled(motion.label)`
-  display: block;
-  margin-bottom: 0.5rem;
-  color: #34495e;
+const UserTypeButton = styled(motion.button)`
+  padding: 0.4rem 1.2rem;
+  border: 1px solid ${props => props.active ? '#4a90e2' : '#ccc'};
+  border-radius: 6px;
+  background: ${props => props.active ? '#4a90e2' : 'transparent'};
+  color: ${props => props.active ? 'white' : '#666'};
   font-weight: 500;
-  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: clamp(0.8rem, 1.2vw, 0.9rem);
 
-  @media (max-width: 480px) {
-    font-size: 0.85rem;
+  &:hover {
+    background: ${props => props.active ? '#4a90e2' : '#f5f5f5'};
   }
 `;
 
-const Input = styled(motion.input)`
+const InputGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  width: ${props => props.isCompany ? '90%' : '300px'};
+  margin-bottom: 0.6rem;
+
+  @media (max-width: 768px) {
+    width: 100%;
+  }
+`;
+
+const Label = styled.label`
+  color: #333;
+  font-size: clamp(0.8rem, 1.2vw, 0.9rem);
+  font-weight: 500;
+`;
+
+const Input = styled.input`
   width: 100%;
-  padding: 0.75rem 1rem;
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
-  font-size: 1rem;
-  transition: all 0.3s ease;
-  background-color: #f8f9fa;
-  box-sizing: border-box;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
+  padding: clamp(0.3rem, 1vw, 0.5rem);
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: clamp(0.8rem, 1.2vw, 0.9rem);
+  background: white;
 
   &:focus {
     outline: none;
     border-color: #4a90e2;
-    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
-    background-color: white;
   }
 
   &::placeholder {
-    color: #95a5a6;
-  }
-
-  &[type="number"] {
-    -moz-appearance: textfield;
-    &::-webkit-outer-spin-button,
-    &::-webkit-inner-spin-button {
-      -webkit-appearance: none;
-      margin: 0;
-    }
-  }
-
-  @media (max-width: 480px) {
-    padding: 0.6rem 0.8rem;
-    font-size: 0.9rem;
+    color: #aaa;
   }
 `;
 
 const RadioGroup = styled.div`
   display: flex;
-  gap: 1rem;
-  margin-top: 0.5rem;
-
+  gap: 1.2rem;
+  width: ${props => props.isCompany ? '90%' : '300px'};
+  
   @media (max-width: 480px) {
-    gap: 0.5rem;
+    gap: 1rem;
+    width: 100%;
   }
 `;
 
 const RadioLabel = styled.label`
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
+  color: #333;
   cursor: pointer;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  background-color: #f8f9fa;
-  transition: all 0.3s ease;
-
-  &:hover {
-    background-color: #e9ecef;
-  }
-
-  @media (max-width: 480px) {
-    padding: 0.4rem 0.8rem;
-    font-size: 0.9rem;
-  }
+  font-size: clamp(0.8rem, 1.2vw, 0.9rem);
 `;
 
-const RadioInput = styled.input`
-  margin: 0;
-  cursor: pointer;
-`;
-
-const SuccessMessage = styled(motion.div)`
-  color: #27ae60;
-  background-color: #d4edda;
-  border: 1px solid #c3e6cb;
-  padding: 0.75rem 1.25rem;
-  margin-bottom: 1rem;
-  border-radius: 8px;
-  font-size: 0.9rem;
-  text-align: center;
-`;
-
-const ErrorMessage = styled(motion.span)`
-  color: #e74c3c;
-  font-size: 0.875rem;
-  margin-top: 0.25rem;
-  display: block;
+const ButtonContainer = styled.div`
   position: absolute;
-  bottom: -1.5rem;
-  font-weight: 500;
-
-  @media (max-width: 480px) {
-    font-size: 0.8rem;
-    bottom: -1.2rem;
-  }
-`;
-
-const ApiErrorMessage = styled(motion.div)`
-  color: #e74c3c;
-  background-color: #f8d7da;
-  border: 1px solid #f5c6cb;
-  padding: 0.75rem 1.25rem;
-  margin-bottom: 1rem;
-  border-radius: 8px;
-  font-size: 0.9rem;
-  text-align: center;
+  left: 50%;
+  bottom: -30px;
+  transform: translateX(-50%);
+  width: clamp(100px, 15%, 140px);
+  margin-bottom: -25px;
 `;
 
 const SubmitButton = styled(motion.button)`
   width: 100%;
-  padding: 1rem;
-  background: linear-gradient(to right, #4a90e2, #357abd);
+  padding: clamp(0.2rem, 1vw, 0.7rem);
+  background: #4a90e2;
   color: white;
   border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 600;
+  border-radius: 6px;
+  font-size: clamp(0.8rem, 1.2vw, 0.9rem);
+  font-weight: 500;
   cursor: pointer;
-  margin-top: 1rem;
-  position: relative;
-  overflow: hidden;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+    background: #357abd;
   }
 
-  &:active {
-    transform: translateY(0);
+  &:disabled {
+    background: #ccc;
+    cursor: not-allowed;
   }
+`;
 
-  &::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 5px;
-    height: 5px;
-    background: rgba(255, 255, 255, 0.5);
-    opacity: 0;
-    border-radius: 100%;
-    transform: scale(1, 1) translate(-50%);
-    transform-origin: 50% 50%;
-  }
-
-  &:focus:not(:active)::after {
-    animation: ripple 1s ease-out;
-  }
-
-  @keyframes ripple {
-    0% {
-      transform: scale(0, 0);
-      opacity: 0.5;
-    }
-    100% {
-      transform: scale(20, 20);
-      opacity: 0;
-    }
-  }
-
-  @media (max-width: 480px) {
-    padding: 0.8rem;
-    font-size: 0.9rem;
-  }
+const ErrorMessage = styled.span`
+  color: #e74c3c;
+  font-size: clamp(0.7rem, 1vw, 0.8rem);
+  margin-top: 0.2rem;
 `;
 
 const schema = yup.object().shape({
@@ -267,30 +231,63 @@ const schema = yup.object().shape({
     .required('성별은 필수 입력값입니다.'),
   userAge: yup
     .number()
-    .min(0, '나이는 0보다 작을 수 없습니다.')
-    .nullable(),
+    .transform((value) => (isNaN(value) ? undefined : value))
+    .nullable()
+    .min(0, '나이는 0보다 작을 수 없습니다.'),
+  userType: yup
+    .string()
+    .required('사용자 유형은 필수 입력값입니다.'),
+  companyInfo: yup.object().when('userType', {
+    is: 'COMPANY',
+    then: () => yup.object({
+      companyName: yup.string().required('회사명은 필수 입력값입니다.'),
+      companyRegion: yup.string().required('회사 지역은 필수 입력값입니다.'),
+      companyCode: yup.string().required('사업자 등록번호는 필수 입력값입니다.')
+    }),
+    otherwise: () => yup.object().nullable()
+  })
 });
 
 const SignupForm = () => {
   const navigate = useNavigate();
+  const [userType, setUserType] = useState('INDIVIDUAL');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
+    setValue,
     watch,
   } = useForm({
     resolver: yupResolver(schema),
+    defaultValues: {
+      userType: 'INDIVIDUAL'
+    }
   });
 
-  const password = watch('password');
+  const handleUserTypeChange = (type) => {
+    setUserType(type);
+    setValue('userType', type);
+  };
 
   const onSubmit = async (data) => {
     setIsSubmitting(true);
 
     try {
-      await userApi.signup(data);
+      const submitData = {
+        ...data,
+        userType: userType,
+        ...(userType === 'COMPANY' && {
+          companyInfo: {
+            companyName: data.companyInfo.companyName,
+            companyRegion: data.companyInfo.companyRegion,
+            companyCode: data.companyInfo.companyCode
+          }
+        })
+      };
+
+      await userApi.signup(submitData);
       showToast.success('회원가입이 완료되었습니다! 로그인 페이지로 이동합니다.');
       
       setTimeout(() => {
@@ -341,183 +338,181 @@ const SignupForm = () => {
   };
 
   return (
-    <>
+    <PageWrapper>
       <Toast />
       <FormContainer
         variants={containerVariants}
         initial="hidden"
         animate="visible"
         onSubmit={handleSubmit(onSubmit)}
+        isCompany={userType === 'COMPANY'}
       >
-        <Title
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          회원가입
-        </Title>
+        <MainSection isCompany={userType === 'COMPANY'}>
+          <Title isCompany={userType === 'COMPANY'}>회원가입</Title>
+          <UserTypeSelector isCompany={userType === 'COMPANY'}>
+            <UserTypeButton
+              type="button"
+              active={userType === 'INDIVIDUAL'}
+              onClick={() => handleUserTypeChange('INDIVIDUAL')}
+            >
+              일반 회원
+            </UserTypeButton>
+            <UserTypeButton
+              type="button"
+              active={userType === 'COMPANY'}
+              onClick={() => handleUserTypeChange('COMPANY')}
+            >
+              기업 회원
+            </UserTypeButton>
+          </UserTypeSelector>
 
-        <InputGroup variants={itemVariants}>
-          <Label>이름</Label>
-          <Input
-            type="text"
-            {...register('userName')}
-            placeholder="이름을 입력하세요"
-            whileFocus={{ scale: 1.02 }}
-            disabled={isSubmitting}
-          />
-          <AnimatePresence>
+          <InputGroup isCompany={userType === 'COMPANY'}>
+            <Label>이름</Label>
+            <Input
+              type="text"
+              {...register('userName')}
+              placeholder="이름을 입력하세요"
+              disabled={isSubmitting}
+            />
             {errors.userName && (
-              <ErrorMessage
-                variants={errorVariants}
-                initial="hidden"
-                animate="visible"
-                exit="hidden"
-              >
-                {errors.userName.message}
-              </ErrorMessage>
+              <ErrorMessage>{errors.userName.message}</ErrorMessage>
             )}
-          </AnimatePresence>
-        </InputGroup>
+          </InputGroup>
 
-        <InputGroup variants={itemVariants}>
-          <Label>이메일</Label>
-          <Input
-            type="email"
-            {...register('userEmail')}
-            placeholder="이메일을 입력하세요"
-            whileFocus={{ scale: 1.02 }}
-            disabled={isSubmitting}
-          />
-          <AnimatePresence>
+          <InputGroup isCompany={userType === 'COMPANY'}>
+            <Label>이메일</Label>
+            <Input
+              type="email"
+              {...register('userEmail')}
+              placeholder="이메일을 입력하세요"
+              disabled={isSubmitting}
+            />
             {errors.userEmail && (
-              <ErrorMessage
-                variants={errorVariants}
-                initial="hidden"
-                animate="visible"
-                exit="hidden"
-              >
-                {errors.userEmail.message}
-              </ErrorMessage>
+              <ErrorMessage>{errors.userEmail.message}</ErrorMessage>
             )}
-          </AnimatePresence>
-        </InputGroup>
+          </InputGroup>
 
-        <InputGroup variants={itemVariants}>
-          <Label>비밀번호</Label>
-          <Input
-            type="password"
-            {...register('password')}
-            placeholder="비밀번호를 입력하세요"
-            whileFocus={{ scale: 1.02 }}
-            disabled={isSubmitting}
-          />
-          <AnimatePresence>
+          <InputGroup isCompany={userType === 'COMPANY'}>
+            <Label>비밀번호</Label>
+            <Input
+              type="password"
+              {...register('password')}
+              placeholder="비밀번호를 입력하세요"
+              disabled={isSubmitting}
+            />
             {errors.password && (
-              <ErrorMessage
-                variants={errorVariants}
-                initial="hidden"
-                animate="visible"
-                exit="hidden"
-              >
-                {errors.password.message}
-              </ErrorMessage>
+              <ErrorMessage>{errors.password.message}</ErrorMessage>
             )}
-          </AnimatePresence>
-        </InputGroup>
+          </InputGroup>
 
-        <InputGroup variants={itemVariants}>
-          <Label>비밀번호 확인</Label>
-          <Input
-            type="password"
-            {...register('passwordConfirm')}
-            placeholder="비밀번호를 다시 입력하세요"
-            whileFocus={{ scale: 1.02 }}
-            disabled={isSubmitting}
-          />
-          <AnimatePresence>
+          <InputGroup isCompany={userType === 'COMPANY'}>
+            <Label>비밀번호 확인</Label>
+            <Input
+              type="password"
+              {...register('passwordConfirm')}
+              placeholder="비밀번호를 다시 입력하세요"
+              disabled={isSubmitting}
+            />
             {errors.passwordConfirm && (
-              <ErrorMessage
-                variants={errorVariants}
-                initial="hidden"
-                animate="visible"
-                exit="hidden"
-              >
-                {errors.passwordConfirm.message}
-              </ErrorMessage>
+              <ErrorMessage>{errors.passwordConfirm.message}</ErrorMessage>
             )}
-          </AnimatePresence>
-        </InputGroup>
+          </InputGroup>
 
-        <InputGroup variants={itemVariants}>
-          <Label>성별</Label>
-          <RadioGroup>
-            <RadioLabel>
-              <RadioInput
-                type="radio"
-                value="male"
-                {...register('userSex')}
-                disabled={isSubmitting}
-              />
-              남성
-            </RadioLabel>
-            <RadioLabel>
-              <RadioInput
-                type="radio"
-                value="female"
-                {...register('userSex')}
-                disabled={isSubmitting}
-              />
-              여성
-            </RadioLabel>
-          </RadioGroup>
-          <AnimatePresence>
+          <InputGroup isCompany={userType === 'COMPANY'}>
+            <Label>성별</Label>
+            <RadioGroup isCompany={userType === 'COMPANY'}>
+              <RadioLabel>
+                <input
+                  type="radio"
+                  value="남"
+                  {...register('userSex')}
+                  disabled={isSubmitting}
+                />
+                남성
+              </RadioLabel>
+              <RadioLabel>
+                <input
+                  type="radio"
+                  value="여"
+                  {...register('userSex')}
+                  disabled={isSubmitting}
+                />
+                여성
+              </RadioLabel>
+            </RadioGroup>
             {errors.userSex && (
-              <ErrorMessage
-                variants={errorVariants}
-                initial="hidden"
-                animate="visible"
-                exit="hidden"
-              >
-                {errors.userSex.message}
-              </ErrorMessage>
+              <ErrorMessage>{errors.userSex.message}</ErrorMessage>
             )}
-          </AnimatePresence>
-        </InputGroup>
+          </InputGroup>
 
-        <InputGroup variants={itemVariants}>
-          <Label>나이</Label>
-          <Input
-            type="number"
-            {...register('userAge')}
-            placeholder="나이를 입력하세요 (선택사항)"
-            whileFocus={{ scale: 1.02 }}
-            disabled={isSubmitting}
-          />
-          <AnimatePresence>
+          <InputGroup isCompany={userType === 'COMPANY'}>
+            <Label>나이</Label>
+            <Input
+              type="number"
+              {...register('userAge')}
+              placeholder="나이를 입력하세요"
+              disabled={isSubmitting}
+            />
             {errors.userAge && (
-              <ErrorMessage
-                variants={errorVariants}
-                initial="hidden"
-                animate="visible"
-                exit="hidden"
-              >
-                {errors.userAge.message}
-              </ErrorMessage>
+              <ErrorMessage>{errors.userAge.message}</ErrorMessage>
             )}
-          </AnimatePresence>
-        </InputGroup>
+          </InputGroup>
+        </MainSection>
 
-        <SubmitButton
-          type="submit"
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? '처리 중...' : '가입하기'}
-        </SubmitButton>
+        {userType === 'COMPANY' && (
+          <CompanySection>
+            <Title isCompany={true}>기업 정보</Title>
+            <InputGroup isCompany={true}>
+              <Label>회사명</Label>
+              <Input
+                type="text"
+                {...register('companyInfo.companyName')}
+                placeholder="회사명을 입력하세요"
+                disabled={isSubmitting}
+              />
+              {errors.companyInfo?.companyName && (
+                <ErrorMessage>{errors.companyInfo.companyName.message}</ErrorMessage>
+              )}
+            </InputGroup>
+
+            <InputGroup isCompany={true}>
+              <Label>회사 지역</Label>
+              <Input
+                type="text"
+                {...register('companyInfo.companyRegion')}
+                placeholder="회사 지역을 입력하세요"
+                disabled={isSubmitting}
+              />
+              {errors.companyInfo?.companyRegion && (
+                <ErrorMessage>{errors.companyInfo.companyRegion.message}</ErrorMessage>
+              )}
+            </InputGroup>
+
+            <InputGroup isCompany={true}>
+              <Label>사업자 등록번호</Label>
+              <Input
+                type="text"
+                {...register('companyInfo.companyCode')}
+                placeholder="사업자 등록번호를 입력하세요"
+                disabled={isSubmitting}
+              />
+              {errors.companyInfo?.companyCode && (
+                <ErrorMessage>{errors.companyInfo.companyCode.message}</ErrorMessage>
+              )}
+            </InputGroup>
+          </CompanySection>
+        )}
+
+        <ButtonContainer>
+          <SubmitButton
+            type="submit"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? '처리 중...' : '가입하기'}
+          </SubmitButton>
+        </ButtonContainer>
       </FormContainer>
-    </>
+    </PageWrapper>
   );
 };
 

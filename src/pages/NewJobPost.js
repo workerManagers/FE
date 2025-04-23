@@ -1,11 +1,94 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import styles from '../styles/JobPost.module.css';
-import { jobPostApi } from '../services/api';
+import styled from 'styled-components';
+import jobPostApi from '../api/jobPostApi';
 import { showToast } from '../components/common/Toast';
 import Toast from '../components/common/Toast';
 
-const NewJobPost = () => {
+const Container = styled.div`
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+`;
+
+const Title = styled.h1`
+  font-size: 2rem;
+  margin-bottom: 2rem;
+  color: #333;
+`;
+
+const Form = styled.form`
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+`;
+
+const FormGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+`;
+
+const Label = styled.label`
+  font-size: 1rem;
+  color: #666;
+`;
+
+const Input = styled.input`
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  &:focus {
+    outline: none;
+    border-color: #007bff;
+  }
+`;
+
+const Select = styled.select`
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  &:focus {
+    outline: none;
+    border-color: #007bff;
+  }
+`;
+
+const TextArea = styled.textarea`
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  min-height: 100px;
+  resize: vertical;
+  &:focus {
+    outline: none;
+    border-color: #007bff;
+  }
+`;
+
+const Button = styled.button`
+  padding: 1rem;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  &:hover {
+    background-color: #0056b3;
+  }
+`;
+
+const ErrorMessage = styled.div`
+  color: #dc3545;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+`;
+
+function NewJobPost() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     companyName: '',
@@ -19,8 +102,9 @@ const NewJobPost = () => {
     jobRegion: '',
     deadline: ''
   });
-  const [companies, setCompanies] = useState([]);
   const [errors, setErrors] = useState({});
+  const [companies, setCompanies] = useState([]);
+  const [jobCodes, setJobCodes] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -30,29 +114,37 @@ const NewJobPost = () => {
         setCompanies(data);
       } catch (error) {
         console.error('Error fetching companies:', error);
-        showToast.error('회사 목록을 불러오는 중 오류가 발생했습니다.');
+      }
+    };
+
+    const fetchJobCodes = async () => {
+      try {
+        const data = await jobPostApi.getJobCodes();
+        setJobCodes(data);
+      } catch (error) {
+        console.error('Error fetching job codes:', error);
       }
     };
 
     fetchCompanies();
+    fetchJobCodes();
   }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+
     if (name === 'companyName') {
-      // 회사 선택 시 해당 회사의 지역 정보를 찾아서 설정
       const selectedCompany = companies.find(company => company.companyName === value);
-      setFormData(prev => ({
-        ...prev,
-        companyName: value,
-        jobRegion: selectedCompany ? selectedCompany.companyRegion : ''
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value
-      }));
+      if (selectedCompany) {
+        setFormData(prev => ({
+          ...prev,
+          jobRegion: selectedCompany.companyRegion
+        }));
+      }
     }
 
     if (errors[name]) {
@@ -63,209 +155,187 @@ const NewJobPost = () => {
     }
   };
 
-  const validateForm = () => {
-    const newErrors = {};
-    if (!formData.companyName) newErrors.companyName = '회사명을 입력해주세요';
-    if (!formData.jobName) newErrors.jobName = '직무명을 입력해주세요';
-    if (!formData.jobPostDescription) newErrors.jobPostDescription = '모집공고 설명을 입력해주세요';
-    if (!formData.mainTasks) newErrors.mainTasks = '주요 업무를 입력해주세요';
-    if (!formData.qualifications) newErrors.qualifications = '자격요건을 입력해주세요';
-    if (!formData.jobPeriod) newErrors.jobPeriod = '고용형태를 선택해주세요';
-    if (!formData.jobRegion) newErrors.jobRegion = '근무지역을 선택해주세요';
-    if (!formData.deadline) newErrors.deadline = '마감일을 선택해주세요';
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validateForm()) return;
+    
+    // 필수 필드 검증
+    if (!formData.companyName) {
+      showToast.error('회사명을 입력해주세요.');
+      return;
+    }
+    if (!formData.jobName) {
+      showToast.error('직무명을 입력해주세요.');
+      return;
+    }
+    if (!formData.jobPostDescription) {
+      showToast.error('모집공고 설명을 입력해주세요.');
+      return;
+    }
+    if (!formData.mainTasks) {
+      showToast.error('주요 업무를 입력해주세요.');
+      return;
+    }
+    if (!formData.qualifications) {
+      showToast.error('자격요건을 입력해주세요.');
+      return;
+    }
+    if (!formData.jobPeriod) {
+      showToast.error('고용 기간을 입력해주세요.');
+      return;
+    }
+    if (!formData.jobRegion) {
+      showToast.error('근무지역을 입력해주세요.');
+      return;
+    }
+    if (!formData.deadline) {
+      showToast.error('마감일을 선택해주세요.');
+      return;
+    }
 
-    setLoading(true);
     try {
-      // 마감일 형식 변환
-      const deadlineDate = new Date(formData.deadline);
-      deadlineDate.setHours(23, 59, 59);
-      
-      const postData = {
-        ...formData,
-        deadline: deadlineDate.toISOString()
-      };
-
-      console.log('Sending job post data:', postData);
-      await jobPostApi.createJobPost(postData);
-      navigate('/jobpost');
+      await jobPostApi.createJobPost(formData);
+      showToast.success('채용공고가 등록되었습니다.');
+      setTimeout(() => {
+        navigate('/jobpost');
+      }, 2000);
     } catch (error) {
       console.error('Error creating job post:', error);
-      if (error.response?.status === 401 || error.response?.status === 403) {
-        localStorage.removeItem('token');
-        navigate('/login', { 
-          replace: true,
-          state: { message: '세션이 만료되었습니다. 다시 로그인해주세요.', type: 'error' }
-        });
-      } else {
-        setErrors({ submit: '공고 등록 중 오류가 발생했습니다.' });
-      }
-    } finally {
-      setLoading(false);
+      showToast.error('채용공고 등록 중 오류가 발생했습니다.');
     }
   };
 
   return (
-    <div className={styles.container}>
+    <Container>
       <Toast />
-      <h1 className={styles.title}>새 공고 작성</h1>
-      <form onSubmit={handleSubmit} className={styles.form}>
-        <div className={styles.formGroup}>
-          <label htmlFor="companyName">회사명</label>
-          <select
-            id="companyName"
+      <Title>새 채용공고 등록</Title>
+      
+      <Form onSubmit={handleSubmit}>
+        <FormGroup>
+          <Label>회사명</Label>
+          <Select
             name="companyName"
             value={formData.companyName}
             onChange={handleChange}
-            className={styles.select}
           >
-            <option value="">회사를 선택하세요</option>
+            <option value="">회사 선택</option>
             {companies.map(company => (
               <option key={company.companyId} value={company.companyName}>
                 {company.companyName}
               </option>
             ))}
-          </select>
-          {errors.companyName && <span className={styles.error}>{errors.companyName}</span>}
-        </div>
+          </Select>
+          {errors.companyName && <ErrorMessage>{errors.companyName}</ErrorMessage>}
+        </FormGroup>
 
-        <div className={styles.formGroup}>
-          <label htmlFor="jobRegion">근무지역</label>
-          <input
+        <FormGroup>
+          <Label>근무지역</Label>
+          <Input
             type="text"
-            id="jobRegion"
             name="jobRegion"
             value={formData.jobRegion}
-            onChange={handleChange}
-            className={styles.input}
             readOnly
           />
-          {errors.jobRegion && <span className={styles.error}>{errors.jobRegion}</span>}
-        </div>
+          {errors.jobRegion && <ErrorMessage>{errors.jobRegion}</ErrorMessage>}
+        </FormGroup>
 
-        <div className={styles.formGroup}>
-          <label htmlFor="jobName">직무명</label>
-          <input
-            type="text"
-            id="jobName"
+        <FormGroup>
+          <Label>직무명</Label>
+          <Select
             name="jobName"
             value={formData.jobName}
             onChange={handleChange}
-            className={styles.input}
-          />
-          {errors.jobName && <span className={styles.error}>{errors.jobName}</span>}
-        </div>
+          >
+            <option value="">직무 선택</option>
+            {jobCodes.map(jobCode => (
+              <option key={jobCode.jobCodeId} value={jobCode.jobName}>
+                {jobCode.jobName}
+              </option>
+            ))}
+          </Select>
+          {errors.jobName && <ErrorMessage>{errors.jobName}</ErrorMessage>}
+        </FormGroup>
 
-        <div className={styles.formGroup}>
-          <label htmlFor="jobPostDescription">모집공고 설명</label>
-          <textarea
-            id="jobPostDescription"
+        <FormGroup>
+          <Label>모집공고 설명</Label>
+          <TextArea
             name="jobPostDescription"
             value={formData.jobPostDescription}
             onChange={handleChange}
-            className={styles.textarea}
-            rows="3"
           />
-          {errors.jobPostDescription && <span className={styles.error}>{errors.jobPostDescription}</span>}
-        </div>
+          {errors.jobPostDescription && <ErrorMessage>{errors.jobPostDescription}</ErrorMessage>}
+        </FormGroup>
 
-        <div className={styles.formGroup}>
-          <label htmlFor="mainTasks">주요 업무</label>
-          <textarea
-            id="mainTasks"
+        <FormGroup>
+          <Label>주요 업무</Label>
+          <TextArea
             name="mainTasks"
             value={formData.mainTasks}
             onChange={handleChange}
-            className={styles.textarea}
-            rows="3"
           />
-          {errors.mainTasks && <span className={styles.error}>{errors.mainTasks}</span>}
-        </div>
+          {errors.mainTasks && <ErrorMessage>{errors.mainTasks}</ErrorMessage>}
+        </FormGroup>
 
-        <div className={styles.formGroup}>
-          <label htmlFor="qualifications">자격요건</label>
-          <textarea
-            id="qualifications"
+        <FormGroup>
+          <Label>자격요건</Label>
+          <TextArea
             name="qualifications"
             value={formData.qualifications}
             onChange={handleChange}
-            className={styles.textarea}
-            rows="3"
           />
-          {errors.qualifications && <span className={styles.error}>{errors.qualifications}</span>}
-        </div>
+          {errors.qualifications && <ErrorMessage>{errors.qualifications}</ErrorMessage>}
+        </FormGroup>
 
-        <div className={styles.formGroup}>
-          <label htmlFor="preferredQualifications">우대사항</label>
-          <textarea
-            id="preferredQualifications"
+        <FormGroup>
+          <Label>우대사항</Label>
+          <TextArea
             name="preferredQualifications"
             value={formData.preferredQualifications}
             onChange={handleChange}
-            className={styles.textarea}
-            rows="3"
           />
-        </div>
+          {errors.preferredQualifications && <ErrorMessage>{errors.preferredQualifications}</ErrorMessage>}
+        </FormGroup>
 
-        <div className={styles.formGroup}>
-          <label htmlFor="idealCandidate">인재상</label>
-          <textarea
-            id="idealCandidate"
+        <FormGroup>
+          <Label>인재상</Label>
+          <TextArea
             name="idealCandidate"
             value={formData.idealCandidate}
             onChange={handleChange}
-            className={styles.textarea}
-            rows="3"
           />
-        </div>
+          {errors.idealCandidate && <ErrorMessage>{errors.idealCandidate}</ErrorMessage>}
+        </FormGroup>
 
-        <div className={styles.formGroup}>
-          <label htmlFor="jobPeriod">근무 기간</label>
-          <input
+        <FormGroup>
+          <Label>고용 기간</Label>
+          <Input
             type="text"
-            id="jobPeriod"
             name="jobPeriod"
             value={formData.jobPeriod}
             onChange={handleChange}
-            className={styles.input}
             placeholder="예: 2년"
           />
-          {errors.jobPeriod && <span className={styles.error}>{errors.jobPeriod}</span>}
-        </div>
+          {errors.jobPeriod && <ErrorMessage>{errors.jobPeriod}</ErrorMessage>}
+        </FormGroup>
 
-        <div className={styles.formGroup}>
-          <label htmlFor="deadline">마감일</label>
-          <input
+        <FormGroup>
+          <Label>마감일</Label>
+          <Input
             type="date"
-            id="deadline"
             name="deadline"
             value={formData.deadline}
             onChange={handleChange}
-            className={styles.input}
           />
-          {errors.deadline && <span className={styles.error}>{errors.deadline}</span>}
-        </div>
+          {errors.deadline && <ErrorMessage>{errors.deadline}</ErrorMessage>}
+        </FormGroup>
 
-        {errors.submit && <div className={styles.error}>{errors.submit}</div>}
+        {errors.submit && <ErrorMessage>{errors.submit}</ErrorMessage>}
 
-        <div className={styles.buttonGroup}>
-          <button type="button" onClick={() => navigate('/jobpost')} className={styles.cancelButton}>
-            취소
-          </button>
-          <button type="submit" className={styles.submitButton} disabled={loading}>
-            {loading ? '등록 중...' : '등록'}
-          </button>
-        </div>
-      </form>
-    </div>
+        <Button type="submit" disabled={loading}>
+          {loading ? '등록 중...' : '작성 완료'}
+        </Button>
+      </Form>
+    </Container>
   );
-};
+}
 
 export default NewJobPost; 
