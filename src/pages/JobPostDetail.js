@@ -100,6 +100,44 @@ const ApplyButton = styled(Button)`
   color: white;
 `;
 
+const Loading = styled.div`
+  text-align: center;
+  padding: 2rem;
+`;
+
+const Error = styled.div`
+  text-align: center;
+  padding: 2rem;
+  color: red;
+`;
+
+const Header = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+`;
+
+const CompanyName = styled.span`
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #333;
+`;
+
+const Content = styled.div`
+  // Add any necessary styles for the content section
+`;
+
+const Section = styled.div`
+  margin-bottom: 2rem;
+`;
+
+const SectionTitle = styled.h3`
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  color: #333;
+`;
+
 function JobPostDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -187,57 +225,63 @@ function JobPostDetail() {
   return (
     <Container>
       <Toast />
-      <Title>채용공고 상세</Title>
-      
-      <DetailSection>
-        <InfoGrid>
-          <InfoItem>
-            <InfoLabel>회사명</InfoLabel>
-            <InfoValue>{jobPost.companyName}</InfoValue>
-          </InfoItem>
-          <InfoItem>
-            <InfoLabel>직무명</InfoLabel>
-            <InfoValue>{jobPost.jobName}</InfoValue>
-          </InfoItem>
-          <InfoItem>
-            <InfoLabel>근무지역</InfoLabel>
-            <InfoValue>{jobPost.jobRegion}</InfoValue>
-          </InfoItem>
-          <InfoItem>
-            <InfoLabel>고용 기간</InfoLabel>
-            <InfoValue>{jobPost.jobPeriod}</InfoValue>
-          </InfoItem>
-          <InfoItem>
-            <InfoLabel>마감일</InfoLabel>
-            <InfoValue>{formatDate(jobPost.deadline)}</InfoValue>
-          </InfoItem>
-        </InfoGrid>
-      </DetailSection>
+      <Header>
+        <Title>{jobPost.jobName}</Title>
+        <CompanyName>{jobPost.companyName}</CompanyName>
+      </Header>
 
-      <DetailSection>
-        <DetailTitle>모집공고 설명</DetailTitle>
-        <DetailContent>{jobPost.jobPostDescription}</DetailContent>
-      </DetailSection>
+      <Content>
+        <Section>
+          <SectionTitle>기본 정보</SectionTitle>
+          <InfoGrid>
+            <InfoItem>
+              <InfoLabel>근무지역</InfoLabel>
+              <InfoValue>{jobPost.jobRegion}</InfoValue>
+            </InfoItem>
+            <InfoItem>
+              <InfoLabel>고용형태</InfoLabel>
+              <InfoValue>{jobPost.jobPeriod}</InfoValue>
+            </InfoItem>
+            <InfoItem>
+              <InfoLabel>경력 유형</InfoLabel>
+              <InfoValue>
+                {jobPost.careerType === 'NEWCOMER' ? '신입' :
+                 jobPost.careerType === 'EXPERIENCED' ? '경력' :
+                 jobPost.careerType === 'ANY' ? '신입/경력' : jobPost.careerType}
+              </InfoValue>
+            </InfoItem>
+            <InfoItem>
+              <InfoLabel>마감일</InfoLabel>
+              <InfoValue>{formatDate(jobPost.deadline)}</InfoValue>
+            </InfoItem>
+          </InfoGrid>
+        </Section>
 
-      <DetailSection>
-        <DetailTitle>주요 업무</DetailTitle>
-        <DetailContent>{jobPost.mainTasks}</DetailContent>
-      </DetailSection>
+        <DetailSection>
+          <DetailTitle>모집공고 설명</DetailTitle>
+          <DetailContent>{jobPost.jobPostDescription}</DetailContent>
+        </DetailSection>
 
-      <DetailSection>
-        <DetailTitle>자격요건</DetailTitle>
-        <DetailContent>{jobPost.qualifications}</DetailContent>
-      </DetailSection>
+        <DetailSection>
+          <DetailTitle>주요 업무</DetailTitle>
+          <DetailContent>{jobPost.mainTasks}</DetailContent>
+        </DetailSection>
 
-      <DetailSection>
-        <DetailTitle>우대사항</DetailTitle>
-        <DetailContent>{jobPost.preferredQualifications}</DetailContent>
-      </DetailSection>
+        <DetailSection>
+          <DetailTitle>자격요건</DetailTitle>
+          <DetailContent>{jobPost.qualifications}</DetailContent>
+        </DetailSection>
 
-      <DetailSection>
-        <DetailTitle>인재상</DetailTitle>
-        <DetailContent>{jobPost.idealCandidate}</DetailContent>
-      </DetailSection>
+        <DetailSection>
+          <DetailTitle>우대사항</DetailTitle>
+          <DetailContent>{jobPost.preferredQualifications}</DetailContent>
+        </DetailSection>
+
+        <DetailSection>
+          <DetailTitle>인재상</DetailTitle>
+          <DetailContent>{jobPost.idealCandidate}</DetailContent>
+        </DetailSection>
+      </Content>
 
       <ButtonGroup>
         <EditButton onClick={handleEdit}>수정</EditButton>

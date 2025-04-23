@@ -79,6 +79,13 @@ const CancelButton = styled(Button)`
   color: white;
 `;
 
+const Select = styled.select`
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+`;
+
 function EditJobPost() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -95,7 +102,8 @@ function EditJobPost() {
     idealCandidate: '',
     jobPeriod: '',
     jobRegion: '',
-    deadline: ''
+    deadline: '',
+    careerType: 'ANY'
   });
 
   useEffect(() => {
@@ -120,7 +128,8 @@ function EditJobPost() {
           idealCandidate: data.idealCandidate,
           jobPeriod: data.jobPeriod,
           jobRegion: data.jobRegion,
-          deadline: data.deadline
+          deadline: data.deadline,
+          careerType: data.careerType || 'ANY'
         });
         setError(null);
       } catch (error) {
@@ -170,17 +179,8 @@ function EditJobPost() {
       }
 
       const updateData = {
-        companyName: formData.companyName,
-        jobName: formData.jobName,
-        jobCodeId: formData.jobCodeId || 1,
-        jobPostDescription: formData.jobPostDescription,
-        mainTasks: formData.mainTasks,
-        qualifications: formData.qualifications,
-        preferredQualifications: formData.preferredQualifications,
-        idealCandidate: formData.idealCandidate,
-        jobPeriod: formData.jobPeriod,
-        jobRegion: formData.jobRegion,
-        deadline: formData.deadline
+        ...formData,
+        careerType: formData.careerType
       };
 
       await jobPostApi.updateJobPost(id, updateData);
@@ -190,10 +190,11 @@ function EditJobPost() {
       }, 2000);
     } catch (error) {
       console.error('Error updating job post:', error);
-      if (error.response?.status === 403) {
-        showToast.error('권한이 없습니다. 다시 로그인해주세요.');
-        localStorage.removeItem('token');
-        navigate('/login');
+      if (error.message === '토큰이 만료되었거나 유효하지 않습니다. 다시 로그인해주세요.') {
+        showToast.error(error.message);
+        setTimeout(() => {
+          navigate('/login');
+        }, 2000);
       } else {
         showToast.error('채용공고 수정 중 오류가 발생했습니다.');
       }
@@ -240,6 +241,20 @@ function EditJobPost() {
             onChange={handleChange}
             required
           />
+        </FormGroup>
+
+        <FormGroup>
+          <Label>경력 유형</Label>
+          <Select
+            name="careerType"
+            value={formData.careerType}
+            onChange={handleChange}
+            required
+          >
+            <option value="NEWCOMER">신입</option>
+            <option value="EXPERIENCED">경력</option>
+            <option value="ANY">신입/경력</option>
+          </Select>
         </FormGroup>
 
         <FormGroup>

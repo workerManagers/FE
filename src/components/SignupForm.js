@@ -11,7 +11,7 @@ import Toast from './common/Toast';
 
 const PageWrapper = styled.div`
   min-height: 100vh;
-  background-color: transparent;
+  background-color: white;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -23,63 +23,96 @@ const PageWrapper = styled.div`
 
 const FormContainer = styled(motion.form)`
   display: flex;
-  gap: 1.5%;
-  background: rgba(211, 220, 239, 0.68);
-  padding: 1.5%;
-  border-radius: 12px;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-  width: ${props => props.isCompany ? '60%' : '25%'};
+  gap: 2rem;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  padding: 2.5rem;
+  border: 3px solid rgba(0, 0, 0, 0.3);
+  border-radius: 24px;
+  width: ${props => props.isCompany ? '80%' : '35%'};
   position: relative;
-  margin-bottom: 100px;
+  margin-bottom: 80px;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15),
+              inset 0 0 32px 0 rgba(31, 38, 135, 0.05);
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 48px 0 rgba(31, 38, 135, 0.2),
+                inset 0 0 32px 0 rgba(31, 38, 135, 0.1);
+    border: 3px solid rgba(0, 0, 0, 0.4);
+  }
 
   @media (max-width: 768px) {
     flex-direction: column;
-    padding: 3%;
-    gap: 2%;
     width: 95%;
+    padding: 1.5rem;
+    gap: 1.5rem;
+    margin-bottom: 60px;
+    box-shadow: 0 4px 16px 0 rgba(31, 38, 135, 0.15),
+                inset 0 0 16px 0 rgba(31, 38, 135, 0.05);
+
+    &:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 24px 0 rgba(31, 38, 135, 0.2),
+                  inset 0 0 16px 0 rgba(31, 38, 135, 0.1);
+    }
   }
 `;
 
 const MainSection = styled.div`
-  flex: ${props => props.isCompany ? '0 0 48%' : '1'};
+  flex: ${props => props.isCompany ? '1' : '1'};
   display: flex;
   flex-direction: column;
-  gap: 0.8rem;
+  gap: 0.6rem;
   width: 100%;
-  align-items: ${props => props.isCompany ? 'stretch' : 'flex-start'};
+  padding-right: ${props => props.isCompany ? '2rem' : '0'};
+  border-right: ${props => props.isCompany ? '1px solid rgba(0, 0, 0, 0.3)' : 'none'};
 
   @media (max-width: 768px) {
-    flex: 1;
-    gap: 0.8rem;
-    align-items: stretch;
+    padding-right: 0;
+    border-right: none;
+    gap: 0.6rem;
   }
 `;
 
 const CompanySection = styled.div`
-  flex: 0 0 48%;
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.8rem;
-  padding-left: 1.5%;
-  border-left: 1px solid rgba(0, 0, 0, 0.1);
-  width: 100%;
+  gap: 0.6rem;
+  padding-left: 2rem;
+  border-left: 1px solid rgba(0, 0, 0, 0.3);
 
   @media (max-width: 768px) {
     padding-left: 0;
     padding-top: 1.2rem;
     border-left: none;
-    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    border-top: 1px solid rgba(0, 0, 0, 0.3);
   }
 `;
 
 const Title = styled.h1`
-  color: #333;
-  font-size: clamp(1rem, 1.6vw, 1.2rem);
+  color: #000000;
+  font-size: clamp(1.2rem, 1.8vw, 1.4rem);
   font-weight: 600;
-  margin-bottom: 1rem;
-  width: ${props => props.isCompany ? '90%' : '300px'};
+  margin-bottom: 0.8rem;
+  width: 100%;
+  position: relative;
+  display: inline-block;
 
-  @media (max-width: 768px) {
+  &:after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -4px;
+    width: 40px;
+    height: 2px;
+    background-color: #000000;
+    transition: width 0.3s ease;
+  }
+
+  &:hover:after {
     width: 100%;
   }
 `;
@@ -87,28 +120,23 @@ const Title = styled.h1`
 const UserTypeSelector = styled.div`
   display: flex;
   gap: 0.5rem;
-  margin-bottom: 1rem;
-  width: ${props => props.isCompany ? '90%' : '300px'};
-  
-  @media (max-width: 768px) {
-    width: 100%;
-    margin-bottom: 1rem;
-  }
+  margin-bottom: 0.8rem;
+  width: 100%;
 `;
 
 const UserTypeButton = styled(motion.button)`
   padding: 0.4rem 1.2rem;
-  border: 1px solid ${props => props.active ? '#4a90e2' : '#ccc'};
+  border: 2px solid #000000;
   border-radius: 6px;
-  background: ${props => props.active ? '#4a90e2' : 'transparent'};
-  color: ${props => props.active ? 'white' : '#666'};
+  background: ${props => props.active ? '#000000' : 'white'};
+  color: ${props => props.active ? 'white' : '#000000'};
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
   font-size: clamp(0.8rem, 1.2vw, 0.9rem);
 
   &:hover {
-    background: ${props => props.active ? '#4a90e2' : '#f5f5f5'};
+    background: ${props => props.active ? '#000000' : '#f5f5f5'};
   }
 `;
 
@@ -116,16 +144,12 @@ const InputGroup = styled.div`
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
-  width: ${props => props.isCompany ? '90%' : '300px'};
-  margin-bottom: 0.6rem;
-
-  @media (max-width: 768px) {
-    width: 100%;
-  }
+  width: 100%;
+  margin-bottom: 0.4rem;
 `;
 
 const Label = styled.label`
-  color: #333;
+  color: #000000;
   font-size: clamp(0.8rem, 1.2vw, 0.9rem);
   font-weight: 500;
 `;
@@ -133,18 +157,20 @@ const Label = styled.label`
 const Input = styled.input`
   width: 100%;
   padding: clamp(0.3rem, 1vw, 0.5rem);
-  border: 1px solid #ddd;
+  border: 2px solid #000000;
   border-radius: 6px;
   font-size: clamp(0.8rem, 1.2vw, 0.9rem);
   background: white;
+  color: #000000;
 
   &:focus {
     outline: none;
-    border-color: #4a90e2;
+    border-color: #000000;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
   }
 
   &::placeholder {
-    color: #aaa;
+    color: #666666;
   }
 `;
 
@@ -163,7 +189,7 @@ const RadioLabel = styled.label`
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  color: #333;
+  color: #000000;
   cursor: pointer;
   font-size: clamp(0.8rem, 1.2vw, 0.9rem);
 `;
@@ -171,36 +197,41 @@ const RadioLabel = styled.label`
 const ButtonContainer = styled.div`
   position: absolute;
   left: 50%;
-  bottom: -30px;
+  bottom: -85px;
   transform: translateX(-50%);
-  width: clamp(100px, 15%, 140px);
-  margin-bottom: -25px;
+  width: 140px;
+  z-index: 10;
 `;
 
 const SubmitButton = styled(motion.button)`
-  width: 100%;
-  padding: clamp(0.2rem, 1vw, 0.7rem);
-  background: #4a90e2;
+  width: 140px;
+  padding: 0.8rem 0;
+  background: rgba(0, 0, 0, 0.8);
   color: white;
   border: none;
-  border-radius: 6px;
-  font-size: clamp(0.8rem, 1.2vw, 0.9rem);
+  border-radius: 12px;
+  font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  border: 1px solid rgba(255, 255, 255, 0.18);
 
-  &:hover {
-    background: #357abd;
+  &:hover:not(:disabled) {
+    background: rgba(0, 0, 0, 0.9);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 40px 0 rgba(31, 38, 135, 0.4);
   }
 
   &:disabled {
-    background: #ccc;
+    opacity: 0.6;
     cursor: not-allowed;
   }
 `;
 
 const ErrorMessage = styled.span`
-  color: #e74c3c;
+  color: #ff0000;
   font-size: clamp(0.7rem, 1vw, 0.8rem);
   margin-top: 0.2rem;
 `;

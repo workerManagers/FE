@@ -46,7 +46,8 @@ const createJobPost = async (jobPostData) => {
       idealCandidate: jobPostData.idealCandidate,
       jobPeriod: jobPostData.jobPeriod,
       jobRegion: jobPostData.jobRegion,
-      deadline: jobPostData.deadline + 'T23:59:59' // 마감일 시간 추가
+      deadline: jobPostData.deadline + 'T23:59:59', // 마감일 시간 추가
+      careerType: jobPostData.careerType // careerType 추가
     };
 
     const response = await axios.post(`${API_BASE_URL}/job-posts`, formattedData, {
@@ -128,7 +129,12 @@ const updateJobPost = async (jobPostId, jobPostData) => {
     console.log('Request URL:', `${API_BASE_URL}/job-posts/${jobPostId}`);
     console.log('Token:', token);
 
-    const response = await axios.put(`${API_BASE_URL}/job-posts/${jobPostId}`, jobPostData, {
+    const formattedData = {
+      ...jobPostData,
+      deadline: jobPostData.deadline + 'T23:59:59' // 마감일 시간 추가
+    };
+
+    const response = await axios.put(`${API_BASE_URL}/job-posts/${jobPostId}`, formattedData, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
@@ -143,6 +149,12 @@ const updateJobPost = async (jobPostId, jobPostData) => {
       console.error('Response data:', error.response.data);
       console.error('Response status:', error.response.status);
       console.error('Response headers:', error.response.headers);
+      
+      if (error.response.status === 403) {
+        // 토큰이 만료되었거나 유효하지 않은 경우
+        localStorage.removeItem('token');
+        throw new Error('토큰이 만료되었거나 유효하지 않습니다. 다시 로그인해주세요.');
+      }
     }
     throw error;
   }
@@ -178,11 +190,75 @@ const deleteJobPost = async (jobPostId) => {
   }
 };
 
+const getJobPosts = async () => {
+  const token = localStorage.getItem('token');
+  console.log('API - Current token:', token);
+
+  if (!token) {
+    throw new Error('로그인이 필요합니다.');
+  }
+
+  try {
+    const response = await axios.get(`${API_BASE_URL}/job-posts`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (response.status === 200) {
+      return response.data;
+    }
+    throw new Error('채용공고를 불러오는데 실패했습니다.');
+  } catch (error) {
+    console.error('API Error:', error);
+    if (error.response?.status === 403) {
+      const currentToken = localStorage.getItem('token');
+      console.log('API - Token before removal:', currentToken);
+      localStorage.removeItem('token');
+      console.log('API - Token after removal:', localStorage.getItem('token'));
+      throw new Error('세션이 만료되었습니다. 다시 로그인해주세요.');
+    }
+    throw error;
+  }
+};
+
+const getJobCodeByJobName = async (jobName) => {
+  const token = localStorage.getItem('token');
+  console.log('getJobCodeByJobName - Current token:', token);
+
+  if (!token) {
+    console.log('getJobCodeByJobName - No token found');
+    return null;
+  }
+
+  try {
+    const response = await axios.get(`${API_BASE_URL}/job-codes/name/${encodeURIComponent(jobName)}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    return response.data || null;
+  } catch (error) {
+    console.error('getJobCodeByJobName - Error:', error);
+    if (error.response?.status === 403) {
+      console.log('getJobCodeByJobName - Token expired or invalid');
+      localStorage.removeItem('token');
+      return null;
+    }
+    return null;
+  }
+};
+
 export default {
   getCompanies,
   getJobCodes,
   createJobPost,
   getJobPost,
   updateJobPost,
-  deleteJobPost
+  deleteJobPost,
+  getJobPosts,
+  getJobCodeByJobName
 }; 

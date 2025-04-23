@@ -2,23 +2,37 @@ import { createGlobalStyle } from 'styled-components';
 
 export const GlobalStyle = createGlobalStyle`
   @font-face {
-    font-family: 'SBL';
-    src: url('../assets/fonts/SBL.ttf') format('truetype');
+    font-family: 'HB';
+    src: url('../assets/fonts/HB.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
   }
 
   @font-face {
-    font-family: 'SBM';
-    src: url('../assets/fonts/SBM.ttf') format('truetype');
+    font-family: 'HM';
+    src: url('../assets/fonts/HM.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
   }
 
   @font-face {
-    font-family: 'SBB';
-    src: url('../assets/fonts/SBB.ttf') format('truetype');
-    font-weight: bold;
+    font-family: 'HR';
+    src: url('../assets/fonts/HR.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+  }
+
+  @font-face {
+    font-family: 'HSB';
+    src: url('../assets/fonts/HSB.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+  }
+
+  @font-face {
+    font-family: 'LR';
+    src: url('../assets/fonts/LR.ttf') format('truetype');
+    font-weight: normal;
     font-style: normal;
   }
 
@@ -29,7 +43,7 @@ export const GlobalStyle = createGlobalStyle`
   }
 
   body {
-    font-family: 'SBL';
+    font-family: 'LR';
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     line-height: 1.5;
@@ -37,11 +51,11 @@ export const GlobalStyle = createGlobalStyle`
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'SBL';
+    font-family: 'LR';
     font-weight: bold;
   }
 
   button {
-    font-family: 'SBL';
+    font-family: 'LR';
   }
 `; 

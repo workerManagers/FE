@@ -12,34 +12,23 @@ import Toast from './common/Toast';
 const FormContainer = styled(motion.form)`
   background: white;
   padding: 2.5rem;
-  border-radius: 15px;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  border: 2px solid #000000;
+  border-radius: 10px;
   width: 100%;
   max-width: 400px;
   position: relative;
   overflow: hidden;
   margin: 1rem;
 
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(to right, #4a90e2, #357abd);
-  }
-
   @media (max-width: 480px) {
     padding: 1.5rem;
     margin: 0.5rem;
-    border-radius: 10px;
   }
 `;
 
 const Title = styled(motion.h1)`
   text-align: center;
-  color: #2c3e50;
+  color: #000000;
   margin-bottom: 2rem;
   font-size: 1.8rem;
   font-weight: 600;
@@ -62,7 +51,7 @@ const InputGroup = styled(motion.div)`
 const Label = styled(motion.label)`
   display: block;
   margin-bottom: 0.5rem;
-  color: #34495e;
+  color: #000000;
   font-weight: 500;
   font-size: 0.9rem;
 
@@ -74,25 +63,21 @@ const Label = styled(motion.label)`
 const Input = styled(motion.input)`
   width: 100%;
   padding: 0.75rem 1rem;
-  border: 2px solid #e0e0e0;
+  border: 2px solid #000000;
   border-radius: 8px;
   font-size: 1rem;
   transition: all 0.3s ease;
-  background-color: #f8f9fa;
-  box-sizing: border-box;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
+  background-color: white;
+  color: #000000;
 
   &:focus {
     outline: none;
-    border-color: #4a90e2;
-    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
-    background-color: white;
+    border-color: #000000;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
   }
 
   &::placeholder {
-    color: #95a5a6;
+    color: #666666;
   }
 
   @media (max-width: 480px) {
@@ -102,71 +87,38 @@ const Input = styled(motion.input)`
 `;
 
 const ErrorMessage = styled(motion.span)`
-  color: #e74c3c;
+  color: #ff0000;
   font-size: 0.875rem;
   margin-top: 0.25rem;
   display: block;
-  position: absolute;
-  bottom: -1.5rem;
   font-weight: 500;
 
   @media (max-width: 480px) {
     font-size: 0.8rem;
-    bottom: -1.2rem;
   }
 `;
 
 const SubmitButton = styled(motion.button)`
   width: 100%;
   padding: 1rem;
-  background: linear-gradient(to right, #4a90e2, #357abd);
+  background: #000000;
   color: white;
-  border: none;
+  border: 2px solid #000000;
   border-radius: 8px;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
   margin-top: 1rem;
-  position: relative;
-  overflow: hidden;
   transition: all 0.3s ease;
 
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+  &:hover:not(:disabled) {
+    background: white;
+    color: #000000;
   }
 
-  &:active {
-    transform: translateY(0);
-  }
-
-  &::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 5px;
-    height: 5px;
-    background: rgba(255, 255, 255, 0.5);
-    opacity: 0;
-    border-radius: 100%;
-    transform: scale(1, 1) translate(-50%);
-    transform-origin: 50% 50%;
-  }
-
-  &:focus:not(:active)::after {
-    animation: ripple 1s ease-out;
-  }
-
-  @keyframes ripple {
-    0% {
-      transform: scale(0, 0);
-      opacity: 0.5;
-    }
-    100% {
-      transform: scale(20, 20);
-      opacity: 0;
-    }
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 
   @media (max-width: 480px) {
@@ -178,18 +130,17 @@ const SubmitButton = styled(motion.button)`
 const SignupLink = styled(motion.div)`
   text-align: center;
   margin-top: 1.5rem;
-  color: #7f8c8d;
+  color: #000000;
   font-size: 0.9rem;
 
   a {
-    color: #4a90e2;
+    color: #000000;
     text-decoration: none;
-    font-weight: 500;
+    font-weight: 600;
     margin-left: 0.5rem;
-    transition: color 0.3s ease;
+    transition: all 0.3s ease;
 
     &:hover {
-      color: #357abd;
       text-decoration: underline;
     }
   }

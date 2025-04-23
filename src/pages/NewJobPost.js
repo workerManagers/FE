@@ -100,7 +100,8 @@ function NewJobPost() {
     idealCandidate: '',
     jobPeriod: '',
     jobRegion: '',
-    deadline: ''
+    deadline: '',
+    careerType: 'ANY'
   });
   const [errors, setErrors] = useState({});
   const [companies, setCompanies] = useState([]);
@@ -159,63 +160,58 @@ function NewJobPost() {
     e.preventDefault();
     
     // 필수 필드 검증
-    if (!formData.companyName) {
-      showToast.error('회사명을 입력해주세요.');
-      return;
-    }
-    if (!formData.jobName) {
-      showToast.error('직무명을 입력해주세요.');
-      return;
-    }
-    if (!formData.jobPostDescription) {
-      showToast.error('모집공고 설명을 입력해주세요.');
-      return;
-    }
-    if (!formData.mainTasks) {
-      showToast.error('주요 업무를 입력해주세요.');
-      return;
-    }
-    if (!formData.qualifications) {
-      showToast.error('자격요건을 입력해주세요.');
-      return;
-    }
-    if (!formData.jobPeriod) {
-      showToast.error('고용 기간을 입력해주세요.');
-      return;
-    }
-    if (!formData.jobRegion) {
-      showToast.error('근무지역을 입력해주세요.');
-      return;
-    }
-    if (!formData.deadline) {
-      showToast.error('마감일을 선택해주세요.');
+    if (!formData.companyName || !formData.jobName || !formData.jobPostDescription || 
+        !formData.mainTasks || !formData.qualifications || !formData.jobPeriod || 
+        !formData.jobRegion || !formData.deadline || !formData.careerType) {
+      showToast.error('모든 필수 항목을 입력해주세요.');
       return;
     }
 
     try {
-      await jobPostApi.createJobPost(formData);
-      showToast.success('채용공고가 등록되었습니다.');
+      const token = localStorage.getItem('token');
+      if (!token) {
+        showToast.error('로그인이 필요합니다.');
+        navigate('/login');
+        return;
+      }
+
+      // careerType이 선택되었는지 확인
+      if (!formData.careerType) {
+        showToast.error('경력 유형을 선택해주세요.');
+        return;
+      }
+
+      const jobPostData = {
+        ...formData,
+        careerType: formData.careerType
+      };
+
+      console.log('Sending job post data:', jobPostData); // 디버깅을 위한 로그 추가
+
+      const response = await jobPostApi.createJobPost(jobPostData, token);
+      showToast.success('채용 공고가 등록되었습니다.');
       setTimeout(() => {
         navigate('/jobpost');
       }, 2000);
     } catch (error) {
       console.error('Error creating job post:', error);
-      showToast.error('채용공고 등록 중 오류가 발생했습니다.');
+      showToast.error('채용 공고 등록에 실패했습니다.');
     }
   };
 
   return (
     <Container>
       <Toast />
-      <Title>새 채용공고 등록</Title>
+      <Title>새 채용 공고 등록</Title>
       
       <Form onSubmit={handleSubmit}>
         <FormGroup>
-          <Label>회사명</Label>
+          <Label>회사명 *</Label>
           <Select
             name="companyName"
             value={formData.companyName}
             onChange={handleChange}
+            required
           >
             <option value="">회사 선택</option>
             {companies.map(company => (
@@ -239,11 +235,12 @@ function NewJobPost() {
         </FormGroup>
 
         <FormGroup>
-          <Label>직무명</Label>
+          <Label>직무명 *</Label>
           <Select
             name="jobName"
             value={formData.jobName}
             onChange={handleChange}
+            required
           >
             <option value="">직무 선택</option>
             {jobCodes.map(jobCode => (
@@ -253,6 +250,21 @@ function NewJobPost() {
             ))}
           </Select>
           {errors.jobName && <ErrorMessage>{errors.jobName}</ErrorMessage>}
+        </FormGroup>
+
+        <FormGroup>
+          <Label>경력 유형 *</Label>
+          <Select
+            name="careerType"
+            value={formData.careerType}
+            onChange={handleChange}
+            required
+          >
+            <option value="">선택하세요</option>
+            <option value="NEWCOMER">신입</option>
+            <option value="EXPERIENCED">경력</option>
+            <option value="ANY">신입/경력</option>
+          </Select>
         </FormGroup>
 
         <FormGroup>
