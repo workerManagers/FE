@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
+import { useLocation } from 'react-router-dom';
 import LoginForm from '../components/LoginForm';
+import { showToast } from '../components/common/Toast';
 
 const PageContainer = styled(motion.div)`
   display: flex;
@@ -18,6 +20,18 @@ const PageContainer = styled(motion.div)`
 `;
 
 const LoginPage = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.state?.message) {
+      if (location.state.type === 'error') {
+        showToast.error(location.state.message);
+      } else {
+        showToast.success(location.state.message);
+      }
+    }
+  }, [location]);
+
   return (
     <PageContainer
       initial={{ opacity: 0 }}

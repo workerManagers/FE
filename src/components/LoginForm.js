@@ -173,25 +173,42 @@ const LoginForm = () => {
 
     try {
       const response = await userApi.login(data);
-      // 로그인 성공 시 토큰과 사용자 이름 저장
-      localStorage.setItem('token', response.accessToken);
-      localStorage.setItem('userName', response.userName);
-      showToast.success(`${response.userName}님 안녕하세요!`);
+      console.log('Login Response:', response);
       
-      setTimeout(() => {
-        navigate('/'); // 로그인 후 메인 페이지로 이동
-      }, 1500);
-    } catch (error) {
-      console.error('로그인 오류:', error);
-      let errorMessage = '로그인 중 오류가 발생했습니다.';
-      
-      if (error.response) {
-        errorMessage = error.response.data.error || errorMessage;
-      } else if (error.request) {
-        errorMessage = '서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.';
+      // 토큰 저장
+      if (response.token) {
+        localStorage.setItem('token', response.token);
       }
       
-      showToast.error(errorMessage);
+      // 사용자 정보 저장
+      if (response.userType) {
+        console.log('Saving userType:', response.userType);
+        localStorage.setItem('userType', response.userType);
+      }
+
+      // 사용자 정보 조회
+      const userData = await userApi.getUserInfo();
+      console.log('User Info:', userData);
+      
+      // userType 추가
+      const userInfoWithType = {
+        ...userData,
+        userType: response.userType
+      };
+      console.log('UserInfo with type:', userInfoWithType);
+      
+      showToast.success('로그인되었습니다.');
+      
+      // 메인 페이지로 이동하면서 userInfo 전달
+      navigate('/', { 
+        replace: true,
+        state: { 
+          userInfo: userInfoWithType
+        }
+      });
+    } catch (error) {
+      console.error('Login Error:', error);
+      showToast.error('로그인에 실패했습니다.');
     } finally {
       setIsSubmitting(false);
     }
