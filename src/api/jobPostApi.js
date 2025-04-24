@@ -224,15 +224,12 @@ const getJobPosts = async () => {
 };
 
 const getJobCodeByJobName = async (jobName) => {
-  const token = localStorage.getItem('token');
-  console.log('getJobCodeByJobName - Current token:', token);
-
-  if (!token) {
-    console.log('getJobCodeByJobName - No token found');
-    return null;
-  }
-
   try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('No token found');
+    }
+
     const response = await axios.get(`${API_BASE_URL}/job-codes/name/${encodeURIComponent(jobName)}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -240,15 +237,22 @@ const getJobCodeByJobName = async (jobName) => {
       }
     });
 
-    return response.data || null;
+    if (response.data && response.data.jobCodeId) {
+      return {
+        jobCodeId: response.data.jobCodeId,
+        jobCode: response.data.jobCode,
+        jobName: response.data.jobName,
+        industryCategory: response.data.industryCategory,
+        industrySubcategory: response.data.industrySubcategory
+      };
+    }
+    return null;
   } catch (error) {
     console.error('getJobCodeByJobName - Error:', error);
     if (error.response?.status === 403) {
-      console.log('getJobCodeByJobName - Token expired or invalid');
-      localStorage.removeItem('token');
-      return null;
+      console.error('getJobCodeByJobName - Token expired or invalid');
     }
-    return null;
+    throw error;
   }
 };
 

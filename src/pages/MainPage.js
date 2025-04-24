@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { userApi } from '../services/api';
 import { showToast } from '../components/common/Toast';
 import Toast from '../components/common/Toast';
@@ -10,102 +10,6 @@ import { FaUserCircle, FaSearch } from 'react-icons/fa';
 const PageContainer = styled(motion.div)`
   min-height: 100vh;
   background-color: #f8f9fa;
-`;
-
-const Header = styled.header`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 2rem;
-  background: linear-gradient(135deg,rgb(0, 0, 0) 0%,rgb(0, 0, 0) 100%);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 1000;
-`;
-
-const LogoSection = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 2rem;
-`;
-
-const Logo = styled.h1`
-  color: white;
-  font-size: 1.8rem;
-  font-weight: 700;
-  margin: 0;
-  cursor: pointer;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-`;
-
-const NavMenu = styled.nav`
-  display: flex;
-  gap: 1rem;
-`;
-
-const NavLink = styled.a`
-  color: rgba(255, 255, 255, 0.9);
-  text-decoration: none;
-  font-size: 1rem;
-  font-weight: 500;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    color: white;
-  }
-
-  &.active {
-    color: white;
-    background-color: rgba(255, 255, 255, 0.15);
-    font-weight: 600;
-  }
-`;
-
-const UserSection = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-`;
-
-const ProfileButton = styled.button`
-  background: none;
-  border: none;
-  color: white;
-  font-size: 1.5rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  padding: 0.5rem;
-  border-radius: 50%;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-  }
-`;
-
-const AuthButton = styled(motion.button)`
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 4px;
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-  background-color: ${props => props.variant === 'login' ? 'white' : 'rgba(255, 255, 255, 0.1)'};
-  color: ${props => props.variant === 'login' ? '#1a237e' : 'white'};
-  transition: all 0.2s ease;
-
-  &:hover {
-    background-color: ${props => props.variant === 'login' ? '#f8f9fa' : 'rgba(255, 255, 255, 0.2)'};
-    transform: translateY(-1px);
-  }
 `;
 
 const MainContent = styled.main`
@@ -291,122 +195,73 @@ const MOCK_JOBS = [
 
 const MainPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchTerm, setSearchTerm] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userInfo, setUserInfo] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    const checkLoginStatus = async () => {
-      const token = localStorage.getItem('token');
-      if (token) {
+    const token = localStorage.getItem('token');
+    if (token) {
+      const fetchUserInfo = async () => {
         try {
-          const userInfo = await userApi.getUserInfo();
-          setUserInfo(userInfo);
+          const userData = await userApi.getUserInfo();
+          const userType = localStorage.getItem('userType');
+          
+          if (userType) {
+            const userInfoWithType = {
+              ...userData,
+              userType: userType
+            };
+            setUserInfo(userInfoWithType);
+          } else {
+            setUserInfo(userData);
+          }
           setIsLoggedIn(true);
         } catch (error) {
-          console.error('사용자 정보 조회 중 오류:', error);
+          console.error('사용자 정보 조회 실패:', error);
           localStorage.removeItem('token');
+          localStorage.removeItem('userType');
           setIsLoggedIn(false);
           setUserInfo(null);
-          showToast.error('세션이 만료되었습니다. 다시 로그인해주세요.');
-          navigate('/login');
         }
-      } else {
-        setIsLoggedIn(false);
-        setUserInfo(null);
-      }
-    };
-
-    checkLoginStatus();
-  }, [navigate]);
-
-  const handleLogout = async () => {
-    try {
-      await userApi.logout();
-      localStorage.removeItem('token');
-      setIsLoggedIn(false);
-      setUserInfo(null);
-      showToast.success('로그아웃되었습니다.');
-      navigate('/login');
-    } catch (error) {
-      console.error('로그아웃 중 오류:', error);
-      showToast.error('로그아웃 중 오류가 발생했습니다.');
+      };
+      fetchUserInfo();
     }
-  };
 
-  const handleLogin = () => {
-    navigate('/login');
-  };
+    // 로그인 후 전달된 사용자 정보가 있는 경우
+    if (location.state?.userInfo) {
+      setUserInfo(location.state.userInfo);
+      setIsLoggedIn(true);
+    }
+  }, [location]);
 
   const handleJobClick = (jobId) => {
-    // 채용공고 상세 페이지로 이동
     navigate(`/jobs/${jobId}`);
+  };
+
+  const handleJobPostClick = () => {
+    navigate('/jobpost', {
+      state: {
+        userInfo: userInfo,
+        isLoggedIn: isLoggedIn
+      }
+    });
   };
 
   return (
     <PageContainer>
       <Toast />
-      <Header>
-        <LogoSection>
-          <Logo onClick={() => navigate('/')}>급구당</Logo>
-          <NavMenu>
-            {isLoggedIn && userInfo?.userType === 'COMPANY' && (
-              <>
-                <NavLink onClick={() => navigate('/predict')}>요양기간 예측</NavLink>
-                <NavLink onClick={() => navigate('/matching')}>대체인력 매칭</NavLink>
-              </>
-            )}
-            {isLoggedIn && userInfo?.userType === 'INDIVIDUAL' && (
-              <>
-                <NavLink onClick={() => navigate('/jobs')}>채용공고</NavLink>
-                <NavLink onClick={() => navigate('/profile')}>내 프로필</NavLink>
-              </>
-            )}
-          </NavMenu>
-        </LogoSection>
-        <UserSection>
-          {isLoggedIn ? (
-            <>
-              <ProfileButton>
-                <FaUserCircle />
-              </ProfileButton>
-              <AuthButton
-                variant="logout"
-                onClick={handleLogout}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                로그아웃
-              </AuthButton>
-            </>
-          ) : (
-            <AuthButton
-              variant="login"
-              onClick={handleLogin}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              로그인
-            </AuthButton>
-          )}
-        </UserSection>
-      </Header>
       <MainContent>
         <SearchSection>
           <SearchTitle>
-            {isLoggedIn && userInfo?.userType === 'COMPANY'
-              ? '필요한 대체인력을 찾아보세요'
-              : '원하는 직무, 회사를 검색해보세요'}
+            원하는 직무, 회사를 검색해보세요
           </SearchTitle>
           <SearchBox>
             <SearchIcon />
             <SearchInput
               type="text"
-              placeholder={
-                isLoggedIn && userInfo?.userType === 'COMPANY'
-                  ? '직무, 지역을 검색해 주세요'
-                  : '직무, 회사를 검색해 주세요'
-              }
+              placeholder="직무, 회사를 검색해 주세요"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />

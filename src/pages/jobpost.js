@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 import jobPostApi from '../api/jobPostApi';
+import { userApi } from '../services/api';
 import { showToast } from '../components/common/Toast';
 import Toast from '../components/common/Toast';
 
@@ -115,17 +116,79 @@ const NewPostButton = styled.button`
   }
 `;
 
+const CATEGORIES = [
+  { id: 'all', name: '전체' },
+  { id: 'PRODUCTION_CONSTRUCTION_LABOR', name: '생산·건설·노무' },
+  { id: 'DRIVING_DELIVERY', name: '운전·배달' },
+  { id: 'HOSPITAL_NURSING_RESEARCH', name: '병원·간호·연구' }
+];
+
+const CAREER_TYPES = [
+  { id: 'ALL', name: '전체' },
+  { id: 'NEWCOMER', name: '신입' },
+  { id: 'EXPERIENCED', name: '경력' },
+  { id: 'ANY', name: '신입/경력' }
+];
+
+const INDUSTRY_SUBCATEGORIES = {
+  // 생산·건설·노무 하위 카테고리
+  'PRODUCTION_CONSTRUCTION_LABOR': [
+    { id: 'FOOD_BEVERAGE', name: '식품·음수식품' },
+    { id: 'TEXTILE_APPAREL', name: '섬유·의류' },
+    { id: 'ASSEMBLY_PRODUCTION', name: '조립·생산직' },
+    { id: 'MACHINERY_EQUIPMENT', name: '기계·장비' },
+    { id: 'CONSTRUCTION_CIVIL', name: '토목·플랜트·건설' },
+    { id: 'MANUFACTURING_PRODUCTION', name: '제조·가공' },
+    { id: 'PRINTING_PUBLISHING', name: '인쇄·출판' },
+    { id: 'WAREHOUSE_MATERIALS', name: '입출고·창고관리' },
+    { id: 'ELECTRICAL_FACILITY', name: '전기·시설관리' },
+    { id: 'SEMICONDUCTOR_DISPLAY', name: '반도체·전자부품생산' },
+    { id: 'QUALITY_AS', name: '정비·수리·설치·A/S' },
+    { id: 'ELECTRICAL_CONTROL', name: '전기·제어·배관공사' },
+    { id: 'PUBLIC_CONSTRUCTION', name: '공사·건설현장' },
+    { id: 'AUTOMOBILE', name: '자동차' },
+    { id: 'SHIPBUILDING_CONSTRUCTION', name: '조선·선원' },
+    { id: 'PRODUCTION_OTHER', name: '생산·건설·노무 기타' }
+  ],
+  // 운전·배달 하위 카테고리
+  'DRIVING_DELIVERY': [
+    { id: 'DELIVERY_TOTAL', name: '운전·배달 전체' },
+    { id: 'DELIVERY_DRIVER', name: '납품기사' },
+    { id: 'SUBSTITUTE_DRIVER', name: '대리·수행기사' },
+    { id: 'FOOD_DELIVERY', name: '배달대행·음식배달' },
+    { id: 'HEAVY_EQUIPMENT', name: '중장비·특수차' },
+    { id: 'BUS_TAXI', name: '버스·택시·승합차' },
+    { id: 'WALKING_DELIVERY', name: '도보배달' },
+    { id: 'QUICK_SERVICE', name: '퀵서비스' },
+    { id: 'LOCATION_BASED', name: '지입·차량용역' },
+    { id: 'DRIVING_OTHER', name: '운전·배달 기타' }
+  ],
+  // 병원·간호·연구 하위 카테고리
+  'HOSPITAL_NURSING_RESEARCH': [
+    { id: 'HOSPITAL_NURSE_RESEARCH', name: '병원·간호·연구 전체' },
+    { id: 'NURSE_CARE', name: '간호·요양보호사' },
+    { id: 'CLINICAL_RESEARCH', name: '실험·연구보조' },
+    { id: 'MEDICAL_TECHNICIAN', name: '의료기사' },
+    { id: 'COORDINATOR', name: '간호조무사·간호사' },
+    { id: 'HOSPITAL_COORDINATOR', name: '원무·코디네이터' },
+    { id: 'LIFE_HEALTH', name: '생동성·임상시험' },
+    { id: 'HOSPITAL_OTHER', name: '병원·간호·연구 기타' }
+  ]
+};
+
 function JobPost() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedSubcategory, setSelectedSubcategory] = useState('all');
+  const [selectedCareerType, setSelectedCareerType] = useState('ALL');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userInfo, setUserInfo] = useState(null);
   const [jobPosts, setJobPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [jobCategories, setJobCategories] = useState({});
-  const [filters, setFilters] = useState({
-    careerType: 'ALL',
-    industryCategory: 'ALL',
-    industrySubcategory: 'ALL'
-  });
 
   const industryCategories = {
     'PRODUCTION_CONSTRUCTION_LABOR': '생산·건설·노무',
@@ -176,83 +239,142 @@ function JobPost() {
   };
 
   useEffect(() => {
+    // 메인 페이지에서 전달받은 로그인 상태 확인
+    if (location.state?.userInfo && location.state?.isLoggedIn) {
+      setUserInfo(location.state.userInfo);
+      setIsLoggedIn(location.state.isLoggedIn);
+    } else {
+      // 전달받은 상태가 없는 경우 localStorage에서 확인
+      const token = localStorage.getItem('token');
+      if (token) {
+        const fetchUserInfo = async () => {
+          try {
+            const userData = await userApi.getUserInfo();
+            const userType = localStorage.getItem('userType');
+            
+            if (userType) {
+              const userInfoWithType = {
+                ...userData,
+                userType: userType
+              };
+              setUserInfo(userInfoWithType);
+            } else {
+              setUserInfo(userData);
+            }
+            setIsLoggedIn(true);
+          } catch (error) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('userType');
+            setIsLoggedIn(false);
+            setUserInfo(null);
+            navigate('/login');
+          }
+        };
+        fetchUserInfo();
+      } else {
+        setIsLoggedIn(false);
+        setUserInfo(null);
+        navigate('/login');
+      }
+    }
+  }, [navigate, location]);
+
+  useEffect(() => {
     const fetchJobPosts = async () => {
       try {
         const token = localStorage.getItem('token');
-        console.log('JobPost - Initial token:', token);
-
         if (!token) {
           setError('로그인이 필요합니다.');
-          setTimeout(() => {
-            navigate('/login');
-          }, 2000);
+          navigate('/login');
           return;
         }
 
         const data = await jobPostApi.getJobPosts();
         setJobPosts(data);
-        
-        // 카테고리 정보를 병렬로 가져오기
-        const categoryPromises = data.map(async (post) => {
-          try {
-            const jobCode = await jobPostApi.getJobCodeByJobName(post.jobName);
-            return { jobName: post.jobName, jobCode };
-          } catch (error) {
-            console.error(`Error fetching category for ${post.jobName}:`, error);
-            return { jobName: post.jobName, jobCode: null };
-          }
-        });
-
-        const categoryResults = await Promise.all(categoryPromises);
-        const categories = {};
-        categoryResults.forEach(({ jobName, jobCode }) => {
-          if (jobCode) {
-            categories[jobName] = jobCode;
-          }
-        });
-        
-        setJobCategories(categories);
         setError(null);
       } catch (error) {
-        console.error('Error fetching job posts:', error);
-        const token = localStorage.getItem('token');
-        console.log('JobPost - Token after error:', token);
-
-        if (error.message.includes('세션이 만료되었습니다') || !token) {
-          setError('세션이 만료되었습니다. 다시 로그인해주세요.');
+        console.error('채용공고 조회 실패:', error);
+        if (error.message.includes('세션이 만료되었습니다')) {
           localStorage.removeItem('token');
-          setTimeout(() => {
-            navigate('/login');
-          }, 2000);
+          localStorage.removeItem('userType');
+          setIsLoggedIn(false);
+          setUserInfo(null);
+          navigate('/login');
         } else {
           setError('채용공고를 불러오는 중 오류가 발생했습니다.');
         }
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
 
-    fetchJobPosts();
-  }, [navigate]);
+    if (isLoggedIn) {
+      fetchJobPosts();
+    }
+  }, [navigate, isLoggedIn]);
 
-  const handleFilterChange = (e) => {
-    const { name, value } = e.target;
-    setFilters(prev => ({
-      ...prev,
-      [name]: value
-    }));
+  useEffect(() => {
+    const fetchJobCategories = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+
+      const categories = {};
+      for (const post of jobPosts) {
+        try {
+          const jobCode = await jobPostApi.getJobCodeByJobName(post.jobName);
+          if (jobCode) {
+            categories[post.jobName] = jobCode;
+          }
+        } catch (error) {
+          console.error(`Error fetching job code for ${post.jobName}:`, error);
+        }
+      }
+      setJobCategories(categories);
+    };
+
+    if (jobPosts.length > 0 && isLoggedIn) {
+      fetchJobCategories();
+    }
+  }, [jobPosts, isLoggedIn, navigate]);
+
+  const handleCategoryClick = (category) => {
+    setSelectedCategory(category);
+    setSelectedSubcategory('all'); // 카테고리 변경 시 세부 카테고리 초기화
+  };
+
+  const handleSubcategoryClick = (subcategory) => {
+    setSelectedSubcategory(subcategory);
+  };
+
+  const handleCareerTypeChange = (careerType) => {
+    setSelectedCareerType(careerType);
   };
 
   const filteredJobPosts = jobPosts.filter(post => {
-    if (filters.careerType !== 'ALL' && post.careerType !== filters.careerType) {
+    const jobCategory = jobCategories[post.jobName];
+    
+    // 카테고리 필터링
+    if (selectedCategory !== 'all') {
+      if (!jobCategory || jobCategory.industryCategory !== selectedCategory) {
+        return false;
+      }
+    }
+
+    // 세부 카테고리 필터링
+    if (selectedSubcategory !== 'all') {
+      if (!jobCategory || jobCategory.industrySubcategory !== selectedSubcategory) {
+        return false;
+      }
+    }
+
+    // 경력 유형 필터링
+    if (selectedCareerType !== 'ALL' && post.careerType !== selectedCareerType) {
       return false;
     }
-    if (filters.industryCategory !== 'ALL' && post.industryCategory !== filters.industryCategory) {
-      return false;
-    }
-    if (filters.industrySubcategory !== 'ALL' && post.industrySubcategory !== filters.industrySubcategory) {
-      return false;
-    }
+
     return true;
   });
 
@@ -283,37 +405,36 @@ function JobPost() {
 
   // 서브 카테고리 필터링을 위한 함수
   const getFilteredSubcategories = () => {
-    if (filters.industryCategory === 'ALL') {
-      return Object.entries(industrySubcategories);
+    if (selectedCategory === 'industry' && selectedSubcategory !== 'all') {
+      return Object.entries(industrySubcategories).filter(([key, value]) => {
+        if (selectedSubcategory === 'PRODUCTION_CONSTRUCTION_LABOR') {
+          return key === 'FOOD_BEVERAGE' || key === 'TEXTILE_APPAREL' || 
+                 key === 'ASSEMBLY_PRODUCTION' || key === 'MACHINERY_EQUIPMENT' ||
+                 key === 'CONSTRUCTION_CIVIL' || key === 'MANUFACTURING_PRODUCTION' ||
+                 key === 'PRINTING_PUBLISHING' || key === 'WAREHOUSE_MATERIALS' ||
+                 key === 'ELECTRICAL_FACILITY' || key === 'SEMICONDUCTOR_DISPLAY' ||
+                 key === 'QUALITY_AS' || key === 'ELECTRICAL_CONTROL' ||
+                 key === 'PUBLIC_CONSTRUCTION' || key === 'AUTOMOBILE' ||
+                 key === 'SHIPBUILDING_CONSTRUCTION' || key === 'PRODUCTION_OTHER';
+        } else if (selectedSubcategory === 'DRIVING_DELIVERY') {
+          return key === 'DELIVERY_TOTAL' || key === 'DELIVERY_DRIVER' ||
+                 key === 'SUBSTITUTE_DRIVER' || key === 'FOOD_DELIVERY' ||
+                 key === 'HEAVY_EQUIPMENT' || key === 'BUS_TAXI' ||
+                 key === 'WALKING_DELIVERY' || key === 'QUICK_SERVICE' ||
+                 key === 'LOCATION_BASED' || key === 'DRIVING_OTHER';
+        } else if (selectedSubcategory === 'HOSPITAL_NURSING_RESEARCH') {
+          return key === 'HOSPITAL_NURSE_RESEARCH' || key === 'NURSE_CARE' ||
+                 key === 'CLINICAL_RESEARCH' || key === 'MEDICAL_TECHNICIAN' ||
+                 key === 'COORDINATOR' || key === 'HOSPITAL_COORDINATOR' ||
+                 key === 'LIFE_HEALTH' || key === 'HOSPITAL_OTHER';
+        }
+        return false;
+      });
     }
-    // 선택된 카테고리에 해당하는 서브 카테고리만 필터링
-    return Object.entries(industrySubcategories).filter(([key, value]) => {
-      if (filters.industryCategory === 'PRODUCTION_CONSTRUCTION_LABOR') {
-        return key === 'FOOD_BEVERAGE' || key === 'TEXTILE_APPAREL' || 
-               key === 'ASSEMBLY_PRODUCTION' || key === 'MACHINERY_EQUIPMENT' ||
-               key === 'CONSTRUCTION_CIVIL' || key === 'MANUFACTURING_PRODUCTION' ||
-               key === 'PRINTING_PUBLISHING' || key === 'WAREHOUSE_MATERIALS' ||
-               key === 'ELECTRICAL_FACILITY' || key === 'SEMICONDUCTOR_DISPLAY' ||
-               key === 'QUALITY_AS' || key === 'ELECTRICAL_CONTROL' ||
-               key === 'PUBLIC_CONSTRUCTION' || key === 'AUTOMOBILE' ||
-               key === 'SHIPBUILDING_CONSTRUCTION' || key === 'PRODUCTION_OTHER';
-      } else if (filters.industryCategory === 'DRIVING_DELIVERY') {
-        return key === 'DELIVERY_TOTAL' || key === 'DELIVERY_DRIVER' ||
-               key === 'SUBSTITUTE_DRIVER' || key === 'FOOD_DELIVERY' ||
-               key === 'HEAVY_EQUIPMENT' || key === 'BUS_TAXI' ||
-               key === 'WALKING_DELIVERY' || key === 'QUICK_SERVICE' ||
-               key === 'LOCATION_BASED' || key === 'DRIVING_OTHER';
-      } else if (filters.industryCategory === 'HOSPITAL_NURSING_RESEARCH') {
-        return key === 'HOSPITAL_NURSE_RESEARCH' || key === 'NURSE_CARE' ||
-               key === 'CLINICAL_RESEARCH' || key === 'MEDICAL_TECHNICIAN' ||
-               key === 'COORDINATOR' || key === 'HOSPITAL_COORDINATOR' ||
-               key === 'LIFE_HEALTH' || key === 'HOSPITAL_OTHER';
-      }
-      return false;
-    });
+    return [];
   };
 
-  if (loading) {
+  if (isLoading) {
     return <Container>Loading...</Container>;
   }
 
@@ -333,50 +454,43 @@ function JobPost() {
 
       <FilterSection>
         <FilterGroup>
-          <FilterLabel>경력 유형</FilterLabel>
+          <FilterLabel>카테고리</FilterLabel>
           <FilterSelect
-            name="careerType"
-            value={filters.careerType}
-            onChange={handleFilterChange}
+            value={selectedCategory}
+            onChange={(e) => handleCategoryClick(e.target.value)}
           >
-            <option value="ALL">전체</option>
-            <option value="NEWCOMER">신입</option>
-            <option value="EXPERIENCED">경력</option>
-            <option value="ANY">신입/경력</option>
-          </FilterSelect>
-        </FilterGroup>
-
-        <FilterGroup>
-          <FilterLabel>산업 카테고리</FilterLabel>
-          <FilterSelect
-            name="industryCategory"
-            value={filters.industryCategory}
-            onChange={(e) => {
-              handleFilterChange(e);
-              // 카테고리 변경 시 서브 카테고리 초기화
-              setFilters(prev => ({
-                ...prev,
-                industrySubcategory: 'ALL'
-              }));
-            }}
-          >
-            <option value="ALL">전체</option>
-            {Object.entries(industryCategories).map(([key, value]) => (
-              <option key={key} value={key}>{value}</option>
+            {CATEGORIES.map((category) => (
+              <option key={category.id} value={category.id}>{category.name}</option>
             ))}
           </FilterSelect>
         </FilterGroup>
 
         <FilterGroup>
-          <FilterLabel>산업 서브 카테고리</FilterLabel>
+          <FilterLabel>세부 카테고리</FilterLabel>
           <FilterSelect
-            name="industrySubcategory"
-            value={filters.industrySubcategory}
-            onChange={handleFilterChange}
+            value={selectedSubcategory}
+            onChange={(e) => handleSubcategoryClick(e.target.value)}
           >
-            <option value="ALL">전체</option>
-            {getFilteredSubcategories().map(([key, value]) => (
-              <option key={key} value={key}>{value}</option>
+            <option value="all">전체</option>
+            {selectedCategory !== 'all' &&
+              INDUSTRY_SUBCATEGORIES[selectedCategory]?.map((subcategory) => (
+                <option key={subcategory.id} value={subcategory.id}>
+                  {subcategory.name}
+                </option>
+              ))}
+          </FilterSelect>
+        </FilterGroup>
+      </FilterSection>
+
+      <FilterSection>
+        <FilterGroup>
+          <FilterLabel>경력 유형</FilterLabel>
+          <FilterSelect
+            value={selectedCareerType}
+            onChange={(e) => handleCareerTypeChange(e.target.value)}
+          >
+            {CAREER_TYPES.map((type) => (
+              <option key={type.id} value={type.id}>{type.name}</option>
             ))}
           </FilterSelect>
         </FilterGroup>
@@ -390,15 +504,13 @@ function JobPost() {
               <JobTitle>{post.jobName}</JobTitle>
               <CompanyName>{post.companyName}</CompanyName>
               <JobInfo>
-                <InfoTag>{getCareerTypeLabel(post.careerType)}</InfoTag>
                 {jobCategory && (
                   <>
                     <InfoTag>{industryCategories[jobCategory.industryCategory]}</InfoTag>
                     <InfoTag>{industrySubcategories[jobCategory.industrySubcategory]}</InfoTag>
                   </>
                 )}
-                <InfoTag>{post.jobRegion}</InfoTag>
-                <InfoTag>{post.jobPeriod}</InfoTag>
+                <InfoTag>{getCareerTypeLabel(post.careerType)}</InfoTag>
               </JobInfo>
               <Deadline>마감일: {formatDate(post.deadline)}</Deadline>
             </JobCard>

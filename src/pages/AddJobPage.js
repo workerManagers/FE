@@ -1,0 +1,277 @@
+import React, { useState } from 'react';
+import styled from 'styled-components';
+import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import { showToast } from '../components/common/Toast';
+import api from '../services/api';
+import 'react-toastify/dist/ReactToastify.css';
+
+// 카테고리 상수 정의
+const INDUSTRY_CATEGORIES = {
+  PRODUCTION_CONSTRUCTION_LABOR: '생산·건설·노무',
+  DRIVING_DELIVERY: '운전·배달',
+  HOSPITAL_NURSING_RESEARCH: '병원·간호·연구'
+};
+
+const INDUSTRY_SUBCATEGORIES = {
+  // 생산·건설·노무 하위 카테고리
+  FOOD_BEVERAGE: { name: '식품·음수식품', category: 'PRODUCTION_CONSTRUCTION_LABOR' },
+  TEXTILE_APPAREL: { name: '섬유·의류', category: 'PRODUCTION_CONSTRUCTION_LABOR' },
+  ASSEMBLY_PRODUCTION: { name: '조립·생산직', category: 'PRODUCTION_CONSTRUCTION_LABOR' },
+  MACHINERY_EQUIPMENT: { name: '기계·장비', category: 'PRODUCTION_CONSTRUCTION_LABOR' },
+  CONSTRUCTION_CIVIL: { name: '토목·플랜트·건설', category: 'PRODUCTION_CONSTRUCTION_LABOR' },
+  MANUFACTURING_PRODUCTION: { name: '제조·가공', category: 'PRODUCTION_CONSTRUCTION_LABOR' },
+  PRINTING_PUBLISHING: { name: '인쇄·출판', category: 'PRODUCTION_CONSTRUCTION_LABOR' },
+  WAREHOUSE_MATERIALS: { name: '입출고·창고관리', category: 'PRODUCTION_CONSTRUCTION_LABOR' },
+  ELECTRICAL_FACILITY: { name: '전기·시설관리', category: 'PRODUCTION_CONSTRUCTION_LABOR' },
+  SEMICONDUCTOR_DISPLAY: { name: '반도체·전자부품생산', category: 'PRODUCTION_CONSTRUCTION_LABOR' },
+  QUALITY_AS: { name: '정비·수리·설치·A/S', category: 'PRODUCTION_CONSTRUCTION_LABOR' },
+  ELECTRICAL_CONTROL: { name: '전기·제어·배관공사', category: 'PRODUCTION_CONSTRUCTION_LABOR' },
+  PUBLIC_CONSTRUCTION: { name: '공사·건설현장', category: 'PRODUCTION_CONSTRUCTION_LABOR' },
+  AUTOMOBILE: { name: '자동차', category: 'PRODUCTION_CONSTRUCTION_LABOR' },
+  SHIPBUILDING_CONSTRUCTION: { name: '조선·선원', category: 'PRODUCTION_CONSTRUCTION_LABOR' },
+  PRODUCTION_OTHER: { name: '생산·건설·노무 기타', category: 'PRODUCTION_CONSTRUCTION_LABOR' },
+
+  // 운전·배달 하위 카테고리
+  DELIVERY_TOTAL: { name: '운전·배달 전체', category: 'DRIVING_DELIVERY' },
+  DELIVERY_DRIVER: { name: '납품기사', category: 'DRIVING_DELIVERY' },
+  SUBSTITUTE_DRIVER: { name: '대리·수행기사', category: 'DRIVING_DELIVERY' },
+  FOOD_DELIVERY: { name: '배달대행·음식배달', category: 'DRIVING_DELIVERY' },
+  HEAVY_EQUIPMENT: { name: '중장비·특수차', category: 'DRIVING_DELIVERY' },
+  BUS_TAXI: { name: '버스·택시·승합차', category: 'DRIVING_DELIVERY' },
+  WALKING_DELIVERY: { name: '도보배달', category: 'DRIVING_DELIVERY' },
+  QUICK_SERVICE: { name: '퀵서비스', category: 'DRIVING_DELIVERY' },
+  LOCATION_BASED: { name: '지입·차량용역', category: 'DRIVING_DELIVERY' },
+  DRIVING_OTHER: { name: '운전·배달 기타', category: 'DRIVING_DELIVERY' },
+
+  // 병원·간호·연구 하위 카테고리
+  HOSPITAL_NURSE_RESEARCH: { name: '병원·간호·연구 전체', category: 'HOSPITAL_NURSING_RESEARCH' },
+  NURSE_CARE: { name: '간호·요양보호사', category: 'HOSPITAL_NURSING_RESEARCH' },
+  CLINICAL_RESEARCH: { name: '실험·연구보조', category: 'HOSPITAL_NURSING_RESEARCH' },
+  MEDICAL_TECHNICIAN: { name: '의료기사', category: 'HOSPITAL_NURSING_RESEARCH' },
+  COORDINATOR: { name: '간호조무사·간호사', category: 'HOSPITAL_NURSING_RESEARCH' },
+  HOSPITAL_COORDINATOR: { name: '원무·코디네이터', category: 'HOSPITAL_NURSING_RESEARCH' },
+  LIFE_HEALTH: { name: '생동성·임상시험', category: 'HOSPITAL_NURSING_RESEARCH' },
+  HOSPITAL_OTHER: { name: '병원·간호·연구 기타', category: 'HOSPITAL_NURSING_RESEARCH' }
+};
+
+const PageContainer = styled(motion.div)`
+  padding: 2rem;
+  max-width: 800px;
+  margin: 0 auto;
+`;
+
+const Title = styled.h1`
+  color: #000000;
+  font-size: 2rem;
+  margin-bottom: 2rem;
+  text-align: center;
+`;
+
+const Form = styled.form`
+  background: white;
+  padding: 2rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+`;
+
+const FormGroup = styled.div`
+  margin-bottom: 1.5rem;
+`;
+
+const Label = styled.label`
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #000000;
+  font-weight: 500;
+`;
+
+const Input = styled.input`
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+
+  &:focus {
+    outline: none;
+    border-color: #000000;
+  }
+`;
+
+const Select = styled.select`
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  background-color: white;
+
+  &:focus {
+    outline: none;
+    border-color: #000000;
+  }
+`;
+
+const Button = styled(motion.button)`
+  background: #000000;
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 1rem;
+
+  &:hover {
+    background: #333333;
+  }
+`;
+
+const AddJobPage = () => {
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    jobCode: '',
+    jobName: '',
+    industryCategory: '',
+    industrySubcategory: ''
+  });
+
+  const [filteredSubcategories, setFilteredSubcategories] = useState([]);
+
+  const handleCategoryChange = (e) => {
+    const category = e.target.value;
+    setFormData(prev => ({
+      ...prev,
+      industryCategory: category,
+      industrySubcategory: '' // 카테고리 변경 시 서브카테고리 초기화
+    }));
+
+    // 선택된 카테고리에 해당하는 서브카테고리 필터링
+    const subcategories = Object.entries(INDUSTRY_SUBCATEGORIES)
+      .filter(([_, value]) => value.category === category)
+      .map(([key, value]) => ({ key, name: value.name }));
+    
+    setFilteredSubcategories(subcategories);
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await api.post('/job-codes', formData);
+      console.log('직무 등록 응답:', response);
+      
+      // 토스트 메시지 표시
+      showToast.success('직무 추가가 완료되었습니다.', {
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      
+      // 2초 후 페이지 이동
+      setTimeout(() => {
+        navigate('/');
+      }, 2000);
+    } catch (error) {
+      console.error('직무 등록 중 오류:', error);
+      showToast.error('직무 등록 중 오류가 발생했습니다.', {
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+    }
+  };
+
+  return (
+    <PageContainer
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <Title>직무 추가</Title>
+      <Form onSubmit={handleSubmit}>
+        <FormGroup>
+          <Label>산업 카테고리</Label>
+          <Select
+            name="industryCategory"
+            value={formData.industryCategory}
+            onChange={handleCategoryChange}
+            required
+          >
+            <option value="">카테고리 선택</option>
+            {Object.entries(INDUSTRY_CATEGORIES).map(([key, value]) => (
+              <option key={key} value={key}>{value}</option>
+            ))}
+          </Select>
+        </FormGroup>
+
+        <FormGroup>
+          <Label>산업 서브카테고리</Label>
+          <Select
+            name="industrySubcategory"
+            value={formData.industrySubcategory}
+            onChange={handleChange}
+            required
+            disabled={!formData.industryCategory}
+          >
+            <option value="">서브카테고리 선택</option>
+            {filteredSubcategories.map(({ key, name }) => (
+              <option key={key} value={key}>{name}</option>
+            ))}
+          </Select>
+        </FormGroup>
+
+        <FormGroup>
+          <Label>직무 코드</Label>
+          <Input
+            type="text"
+            name="jobCode"
+            value={formData.jobCode}
+            onChange={handleChange}
+            placeholder="예: FOOD001"
+            required
+          />
+        </FormGroup>
+        
+        <FormGroup>
+          <Label>직무 이름</Label>
+          <Input
+            type="text"
+            name="jobName"
+            value={formData.jobName}
+            onChange={handleChange}
+            placeholder="예: 식품생산직"
+            required
+          />
+        </FormGroup>
+
+        <Button
+          type="submit"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+        >
+          직무 등록
+        </Button>
+      </Form>
+    </PageContainer>
+  );
+};
+
+export default AddJobPage; 
