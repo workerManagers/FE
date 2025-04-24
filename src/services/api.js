@@ -10,20 +10,17 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true,
-  timeout: 5000,
+  withCredentials: false,
+  timeout: 15000,
 });
 
 // 요청 인터셉터 설정
 api.interceptors.request.use(
   (config) => {
-    // 요청 전에 수행할 작업 (예: 토큰 추가)
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      config.headers['X-Requested-With'] = 'XMLHttpRequest';
     } else {
-      // 토큰이 없는 경우 로그인 페이지로 리다이렉트
       if (window.location.pathname !== '/login' && window.location.pathname !== '/signup') {
         window.location.href = '/login';
       }
@@ -38,21 +35,12 @@ api.interceptors.request.use(
 // 응답 인터셉터 설정
 api.interceptors.response.use(
   (response) => {
-    // 응답 헤더에서 새로운 토큰이 있는지 확인
-    const newToken = response.headers['x-access-token'] || response.headers['authorization'];
-    if (newToken) {
-      const token = newToken.startsWith('Bearer ') ? newToken.substring(7) : newToken;
-      localStorage.setItem('token', token);
-    }
     return response;
   },
   (error) => {
-    // 응답 오류 처리
     if (error.response) {
-      // 401 또는 403 에러인 경우 로그인 페이지로 리다이렉트
       if (error.response.status === 401 || error.response.status === 403) {
         localStorage.removeItem('token');
-        localStorage.removeItem('userName');
         if (window.location.pathname !== '/login' && window.location.pathname !== '/signup') {
           window.location.href = '/login';
         }
@@ -66,6 +54,14 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+const getToken = () => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    throw new Error('인증 토큰이 없습니다.');
+  }
+  return token;
+};
 
 // 사용자 관련 API
 export const userApi = {
@@ -84,11 +80,10 @@ export const userApi = {
     try {
       const response = await api.post('/users/login', credentials);
       // 로그인 성공 시 토큰과 사용자 정보 저장
-      if (response.data.accessToken) {
-        localStorage.setItem('token', response.data.accessToken);
-        if (response.data.userName) {
-          localStorage.setItem('userName', response.data.userName);
-        }
+      if (response.data.token) {
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('userType', response.data.userType);
+        localStorage.setItem('userName', response.data.userName);
       }
       return response.data;
     } catch (error) {
@@ -100,14 +95,12 @@ export const userApi = {
   logout: async () => {
     try {
       const response = await api.post('/users/logout');
-      // 로그아웃 시 모든 로컬 스토리지 데이터 제거
+      // 로그아웃 시 모든 사용자 정보 제거
       localStorage.removeItem('token');
+      localStorage.removeItem('userType');
       localStorage.removeItem('userName');
       return response.data;
     } catch (error) {
-      // 로그아웃 실패 시에도 로컬 스토리지 데이터 제거
-      localStorage.removeItem('token');
-      localStorage.removeItem('userName');
       throw error;
     }
   },
@@ -124,6 +117,7 @@ export const userApi = {
       const tokenPayload = JSON.parse(atob(token.split('.')[1]));
       const userInfo = {
         userId: tokenPayload.sub,
+        userType: tokenPayload.userType,
         userName: localStorage.getItem('userName')
       };
 
@@ -159,68 +153,142 @@ export const userApi = {
   },
 };
 
-// 모집 공고 관련 API
+// 채용공고 관련 API
 export const jobPostApi = {
-  // 모든 모집 공고 조회
-  getAllJobPosts: async () => {
-    try {
-      const response = await api.get('/job-posts');
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching job posts:', error);
-      throw error;
-    }
-  },
-
-  // 특정 모집 공고 조회
-  getJobPostById: async (id) => {
-    try {
-      const response = await api.get(`/job-posts/${id}`);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching job post:', error);
-      throw error;
-    }
-  },
-
-  // 모집 공고 생성
-  createJobPost: async (data) => {
-    try {
-      const response = await api.post('/job-posts', data);
-      return response.data;
-    } catch (error) {
-      console.error('Error creating job post:', error.response?.data || error.message);
-      throw error;
-    }
-  },
-
-  // 모집 공고 검색
-  searchJobPosts: async (params) => {
-    try {
-      const response = await api.get('/job-posts/search', { params });
-      return response.data;
-    } catch (error) {
-      console.error('Error searching job posts:', error);
-      throw error;
-    }
-  },
-
-  getJobCodes: async () => {
-    try {
-      const response = await api.get('/job-codes');
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching job codes:', error.response?.data || error.message);
-      throw error;
-    }
-  },
-
+  // 회사 목록 조회
   getCompanies: async () => {
     try {
       const response = await api.get('/companies');
       return response.data;
     } catch (error) {
-      console.error('Error fetching companies:', error.response?.data || error.message);
+      console.error('회사 목록 조회 실패:', error);
+      throw error;
+    }
+  },
+
+  // 직종 코드 목록 조회
+  getJobCodes: async () => {
+    try {
+      const response = await api.get('/job-codes');
+      return response.data;
+    } catch (error) {
+      console.error('직종 코드 조회 실패:', error);
+      throw error;
+    }
+  },
+
+  // 채용공고 생성
+  createJobPost: async (jobPostData) => {
+    try {
+      const formattedData = {
+        companyName: jobPostData.companyName,
+        jobName: jobPostData.jobName,
+        jobPostDescription: jobPostData.jobPostDescription,
+        mainTasks: jobPostData.mainTasks,
+        qualifications: jobPostData.qualifications,
+        preferredQualifications: jobPostData.preferredQualifications,
+        idealCandidate: jobPostData.idealCandidate,
+        jobPeriod: jobPostData.jobPeriod,
+        jobRegion: jobPostData.jobRegion,
+        deadline: jobPostData.deadline + 'T23:59:59',
+        careerType: jobPostData.careerType
+      };
+
+      const response = await api.post('/job-posts', formattedData);
+      return response.data;
+    } catch (error) {
+      console.error('채용공고 생성 실패:', error);
+      if (error.response) {
+        console.error('응답 데이터:', error.response.data);
+        console.error('응답 상태:', error.response.status);
+        console.error('응답 헤더:', error.response.headers);
+      }
+      throw error;
+    }
+  },
+
+  // 채용공고 조회
+  getJobPost: async (jobPostId) => {
+    try {
+      const response = await api.get(`/job-posts/${jobPostId}`);
+      return response.data;
+    } catch (error) {
+      console.error('채용공고 조회 실패:', error);
+      if (error.response?.status === 404) {
+        console.error('채용공고를 찾을 수 없음:', error.response.data.message);
+      }
+      throw error;
+    }
+  },
+
+  // 채용공고 수정
+  updateJobPost: async (jobPostId, jobPostData) => {
+    try {
+      const formattedData = {
+        ...jobPostData,
+        deadline: jobPostData.deadline + 'T23:59:59'
+      };
+
+      const response = await api.put(`/job-posts/${jobPostId}`, formattedData);
+      return response.data;
+    } catch (error) {
+      console.error('채용공고 수정 실패:', error);
+      if (error.response?.status === 403) {
+        localStorage.removeItem('token');
+        throw new Error('토큰이 만료되었거나 유효하지 않습니다. 다시 로그인해주세요.');
+      }
+      throw error;
+    }
+  },
+
+  // 채용공고 삭제
+  deleteJobPost: async (jobPostId) => {
+    try {
+      const response = await api.delete(`/job-posts/${jobPostId}`);
+      return response.data;
+    } catch (error) {
+      console.error('채용공고 삭제 실패:', error);
+      throw error;
+    }
+  },
+
+  // 채용공고 목록 조회
+  getJobPosts: async () => {
+    try {
+      const response = await api.get('/job-posts');
+      if (response.status === 200) {
+        return response.data;
+      }
+      throw new Error('채용공고를 불러오는데 실패했습니다.');
+    } catch (error) {
+      console.error('API 오류:', error);
+      if (error.response?.status === 403) {
+        localStorage.removeItem('token');
+        throw new Error('세션이 만료되었습니다. 다시 로그인해주세요.');
+      }
+      throw error;
+    }
+  },
+
+  // 직종 코드 조회
+  getJobCodeByJobName: async (jobName) => {
+    try {
+      const response = await api.get(`/job-codes/name/${encodeURIComponent(jobName)}`);
+      if (response.data && response.data.jobCodeId) {
+        return {
+          jobCodeId: response.data.jobCodeId,
+          jobCode: response.data.jobCode,
+          jobName: response.data.jobName,
+          industryCategory: response.data.industryCategory,
+          industrySubcategory: response.data.industrySubcategory
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('직종 코드 조회 실패:', error);
+      if (error.response?.status === 403) {
+        console.error('토큰이 만료되었거나 유효하지 않음');
+      }
       throw error;
     }
   }

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -102,32 +102,40 @@ const AuthButton = styled(motion.button)`
   }
 `;
 
-const Header = ({ isLoggedIn, userInfo, onLoginStatusChange }) => {
+const Header = ({ isLoggedIn, userInfo, onLogout }) => {
   const navigate = useNavigate();
 
-  const handleLogout = async () => {
-    try {
-      await userApi.logout();
-      localStorage.removeItem('token');
-      onLoginStatusChange(false, null);
-      showToast.success('로그아웃되었습니다.');
-      navigate('/login');
-    } catch (error) {
-      console.error('로그아웃 중 오류:', error);
-      showToast.error('로그아웃 중 오류가 발생했습니다.');
+  const handleLogout = () => {
+    // 1. localStorage 정리
+    localStorage.removeItem('token');
+    localStorage.removeItem('userType');
+    localStorage.removeItem('userName');
+    localStorage.removeItem('userId');
+    
+    // 2. 부모 컴포넌트에 로그아웃 알림
+    if (onLogout) {
+      onLogout();
     }
+    
+    // 3. 성공 메시지 표시 후 잠시 대기
+    showToast.success('로그아웃되었습니다.');
+    
+    // 4. 잠시 후 로그인 페이지로 이동
+    setTimeout(() => {
+      navigate('/login', { replace: true });
+    }, 2000);
   };
 
-  const handleLogin = () => {
-    navigate('/login');
-  };
+  // 로그인 상태에 따라 메뉴 표시 여부 결정
+  const shouldShowCompanyMenu = isLoggedIn && userInfo?.userType === 'COMPANY';
+  const shouldShowIndividualMenu = isLoggedIn && userInfo?.userType === 'INDIVIDUAL';
 
   return (
     <HeaderContainer>
       <LogoSection>
         <Logo onClick={() => navigate('/')}>급구당</Logo>
         <NavMenu>
-          {isLoggedIn && userInfo?.userType === 'COMPANY' && (
+          {shouldShowCompanyMenu && (
             <>
               <NavLink onClick={() => navigate('/jobpost')}>모집공고</NavLink>
               <NavLink onClick={() => navigate('/add-job')}>직무 추가</NavLink>
@@ -135,7 +143,7 @@ const Header = ({ isLoggedIn, userInfo, onLoginStatusChange }) => {
               <NavLink onClick={() => navigate('/matching')}>대체인력 매칭</NavLink>
             </>
           )}
-          {isLoggedIn && userInfo?.userType === 'INDIVIDUAL' && (
+          {shouldShowIndividualMenu && (
             <>
               <NavLink onClick={() => navigate('/jobs')}>채용공고</NavLink>
               <NavLink onClick={() => navigate('/profile')}>내 프로필</NavLink>
@@ -161,7 +169,7 @@ const Header = ({ isLoggedIn, userInfo, onLoginStatusChange }) => {
         ) : (
           <AuthButton
             variant="login"
-            onClick={handleLogin}
+            onClick={() => navigate('/login')}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
