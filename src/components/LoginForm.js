@@ -169,48 +169,42 @@ const LoginForm = () => {
   });
 
   const onSubmit = async (data) => {
-    setIsSubmitting(true);
-
     try {
       const response = await userApi.login(data);
-      console.log('Login Response:', response);
       
-      // 토큰 저장
-      if (response.token) {
-        localStorage.setItem('token', response.token);
-      }
-      
-      // 사용자 정보 저장
-      if (response.userType) {
-        console.log('Saving userType:', response.userType);
-        localStorage.setItem('userType', response.userType);
+      // 응답 구조 확인
+      const token = response.accessToken;
+      const userType = response.userType;
+      const userName = response.userName;
+      const userId = response.userId;
+
+      if (!token) {
+        throw new Error('토큰이 없습니다.');
       }
 
-      // 사용자 정보 조회
-      const userData = await userApi.getUserInfo();
-      console.log('User Info:', userData);
+      // 토큰 저장
+      localStorage.setItem('token', token);
+      localStorage.setItem('userType', userType);
+      localStorage.setItem('userName', userName);
+      localStorage.setItem('userId', userId);
       
-      // userType 추가
-      const userInfoWithType = {
-        ...userData,
-        userType: response.userType
+      // 사용자 정보 객체 생성
+      const userInfo = {
+        userId: userId,
+        userName: userName,
+        userType: userType
       };
-      console.log('UserInfo with type:', userInfoWithType);
       
-      showToast.success('로그인되었습니다.');
-      
-      // 메인 페이지로 이동하면서 userInfo 전달
-      navigate('/', { 
-        replace: true,
+      // 메인 페이지로 이동하면서 사용자 정보 전달
+      navigate('/main', { 
         state: { 
-          userInfo: userInfoWithType
-        }
+          userInfo: userInfo,
+          isLoggedIn: true
+        },
+        replace: true
       });
     } catch (error) {
-      console.error('Login Error:', error);
-      showToast.error('로그인에 실패했습니다.');
-    } finally {
-      setIsSubmitting(false);
+      showToast.error('로그인에 실패했습니다. 다시 시도해주세요.');
     }
   };
 

@@ -6,6 +6,7 @@ import { userApi } from '../services/api';
 import { showToast } from '../components/common/Toast';
 import Toast from '../components/common/Toast';
 import { FaUserCircle, FaSearch } from 'react-icons/fa';
+import Header from '../components/common/Header';
 
 const PageContainer = styled(motion.div)`
   min-height: 100vh;
@@ -194,64 +195,54 @@ const MOCK_JOBS = [
 ];
 
 const MainPage = () => {
-  const navigate = useNavigate();
   const location = useLocation();
-  const [searchTerm, setSearchTerm] = useState('');
+  const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userInfo, setUserInfo] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      const fetchUserInfo = async () => {
-        try {
-          const userData = await userApi.getUserInfo();
-          const userType = localStorage.getItem('userType');
-          
-          if (userType) {
-            const userInfoWithType = {
-              ...userData,
-              userType: userType
-            };
-            setUserInfo(userInfoWithType);
-          } else {
-            setUserInfo(userData);
-          }
-          setIsLoggedIn(true);
-        } catch (error) {
-          console.error('사용자 정보 조회 실패:', error);
-          localStorage.removeItem('token');
-          localStorage.removeItem('userType');
-          setIsLoggedIn(false);
-          setUserInfo(null);
-        }
-      };
-      fetchUserInfo();
-    }
+    const checkLoginStatus = async () => {
+      // location.state에서 사용자 정보를 받아온 경우
+      if (location.state?.userInfo) {
+        setUserInfo(location.state.userInfo);
+        setIsLoggedIn(true);
+        return;
+      }
 
-    // 로그인 후 전달된 사용자 정보가 있는 경우
-    if (location.state?.userInfo) {
-      setUserInfo(location.state.userInfo);
-      setIsLoggedIn(true);
-    }
-  }, [location]);
+      // localStorage에서 토큰 확인
+      const token = localStorage.getItem('token');
+      const userType = localStorage.getItem('userType');
+      const userName = localStorage.getItem('userName');
 
-  const handleJobClick = (jobId) => {
-    navigate(`/jobs/${jobId}`);
+      if (token) {
+        // 토큰이 있으면 로그인 상태로 설정
+        setUserInfo({
+          userId: localStorage.getItem('userId'),
+          userName: userName || 'Unknown',
+          userType: userType || 'Unknown'
+        });
+        setIsLoggedIn(true);
+      }
+    };
+
+    checkLoginStatus();
+  }, [location.state]);
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    setUserInfo(null);
   };
 
-  const handleJobPostClick = () => {
-    navigate('/jobpost', {
-      state: {
-        userInfo: userInfo,
-        isLoggedIn: isLoggedIn
-      }
-    });
+  const handleJobClick = (jobId) => {
+    // 채용공고 상세 페이지로 이동
+    navigate(`/jobs/${jobId}`);
   };
 
   return (
     <PageContainer>
       <Toast />
+      <Header isLoggedIn={isLoggedIn} userInfo={userInfo} onLogout={handleLogout} />
       <MainContent>
         <SearchSection>
           <SearchTitle>
