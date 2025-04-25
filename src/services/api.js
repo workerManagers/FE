@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 // API 기본 URL 설정
-const API_BASE_URL = 'https://port-0-workermangers-be-m9ax68es6a756190.sel4.cloudtype.app';
-// const API_BASE_URL = 'http://localhost:8080';
+// const API_BASE_URL = 'https://port-0-workermangers-be-m9ax68es6a756190.sel4.cloudtype.app';
+const API_BASE_URL = 'http://localhost:8080';
 
 // axios 인스턴스 생성
 const api = axios.create({
@@ -113,15 +113,20 @@ export const userApi = {
         throw new Error('인증 토큰이 없습니다.');
       }
 
-      // 토큰에서 사용자 정보 추출
-      const tokenPayload = JSON.parse(atob(token.split('.')[1]));
-      const userInfo = {
-        userId: tokenPayload.sub,
-        userType: tokenPayload.userType,
-        userName: localStorage.getItem('userName')
-      };
+      // 백엔드 API를 통해 사용자 정보 조회
+      const response = await api.get('/users/me');
+      const userData = response.data;
 
-      return userInfo;
+      // 회사 정보가 있는 경우 companyName과 companyAddress 설정
+      if (userData.userType === 'COMPANY' && userData.companyInfo) {
+        return {
+          ...userData,
+          companyName: userData.companyInfo.companyName,
+          companyAddress: userData.companyInfo.companyRegion
+        };
+      }
+
+      return userData;
     } catch (error) {
       console.error('사용자 정보 조회 중 오류:', error);
       throw error;

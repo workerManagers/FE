@@ -3,8 +3,6 @@ import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { userApi } from '../services/api';
-import { showToast } from '../components/common/Toast';
-import Toast from '../components/common/Toast';
 import { FaUserCircle, FaSearch } from 'react-icons/fa';
 import Header from '../components/common/Header';
 
@@ -199,65 +197,58 @@ const MainPage = () => {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userInfo, setUserInfo] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     const checkLoginStatus = async () => {
-      // location.state에서 사용자 정보를 받아온 경우
-      if (location.state?.userInfo) {
-        setUserInfo(location.state.userInfo);
-        setIsLoggedIn(true);
-        return;
-      }
-
-      // localStorage에서 토큰 확인
       const token = localStorage.getItem('token');
-      const userType = localStorage.getItem('userType');
-      const userName = localStorage.getItem('userName');
-
       if (token) {
-        // 토큰이 있으면 로그인 상태로 설정
-        setUserInfo({
-          userId: localStorage.getItem('userId'),
-          userName: userName || 'Unknown',
-          userType: userType || 'Unknown'
-        });
-        setIsLoggedIn(true);
+        try {
+          const userData = await userApi.getUserInfo();
+          const userType = localStorage.getItem('userType');
+          
+          if (userType) {
+            const userInfoWithType = {
+              ...userData,
+              userType: userType
+            };
+            setUserInfo(userInfoWithType);
+          } else {
+            setUserInfo(userData);
+          }
+          setIsLoggedIn(true);
+        } catch (error) {
+          console.error('사용자 정보 조회 실패:', error);
+          localStorage.removeItem('token');
+          localStorage.removeItem('userType');
+          setIsLoggedIn(false);
+          setUserInfo(null);
+          navigate('/login');
+        }
       }
     };
 
     checkLoginStatus();
-  }, [location.state]);
-
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    setUserInfo(null);
-  };
+  }, [navigate]);
 
   const handleJobClick = (jobId) => {
-    // 채용공고 상세 페이지로 이동
-    navigate(`/jobs/${jobId}`);
+    navigate(`/jobpost/${jobId}`);
   };
 
   return (
-    <PageContainer>
-      <Toast />
-      <Header isLoggedIn={isLoggedIn} userInfo={userInfo} onLogout={handleLogout} />
+    <PageContainer
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
       <MainContent>
         <SearchSection>
-          <SearchTitle>
-            원하는 직무, 회사를 검색해보세요
-          </SearchTitle>
+          <SearchTitle>대체인력 찾기</SearchTitle>
           <SearchBox>
+            <SearchInput placeholder="직무, 지역, 회사명으로 검색하세요" />
             <SearchIcon />
-            <SearchInput
-              type="text"
-              placeholder="직무, 회사를 검색해 주세요"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
           </SearchBox>
         </SearchSection>
+
         <JobSection>
           <JobGrid>
             {MOCK_JOBS.map((job) => (
@@ -265,11 +256,10 @@ const MainPage = () => {
                 key={job.id}
                 onClick={() => handleJobClick(job.id)}
                 whileHover={{ y: -4 }}
-                transition={{ duration: 0.2 }}
               >
                 <CompanyLogo>{job.company[0]}</CompanyLogo>
-                <CompanyName>{job.company}</CompanyName>
                 <JobTitle>{job.title}</JobTitle>
+                <CompanyName>{job.company}</CompanyName>
                 <JobInfo>
                   <span>{job.location}</span>
                   <span>•</span>

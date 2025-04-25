@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { jobPostApi } from '../services/api';
+import { jobPostApi, userApi } from '../services/api';
 import { showToast } from '../components/common/Toast';
 import Toast from '../components/common/Toast';
 import { IoArrowBack } from 'react-icons/io5';
@@ -144,6 +144,7 @@ function JobPostDetail() {
   const [jobPost, setJobPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [userInfo, setUserInfo] = useState(null);
 
   const formatDate = (dateString) => {
     if (!dateString) return '';
@@ -157,9 +158,27 @@ function JobPostDetail() {
   };
 
   useEffect(() => {
+    const fetchUserInfo = async () => {
+      try {
+        const userData = await userApi.getUserInfo();
+        console.log('현재 사용자 정보:', userData);
+        setUserInfo(userData);
+      } catch (error) {
+        console.error('사용자 정보 조회 실패:', error);
+      }
+    };
+
+    const token = localStorage.getItem('token');
+    if (token) {
+      fetchUserInfo();
+    }
+  }, []);
+
+  useEffect(() => {
     const fetchJobPost = async () => {
       try {
         const data = await jobPostApi.getJobPost(id);
+        console.log('채용공고 정보:', data);
         setJobPost(data);
         setError(null);
       } catch (error) {
@@ -221,6 +240,11 @@ function JobPostDetail() {
   if (!jobPost) {
     return null;
   }
+
+  const isAuthor = userInfo && 
+                   userInfo.userType === 'COMPANY' && 
+                   userInfo.companyInfo && 
+                   userInfo.companyInfo.companyName === jobPost.companyName;
 
   return (
     <Container>
@@ -284,9 +308,14 @@ function JobPostDetail() {
       </Content>
 
       <ButtonGroup>
-        <EditButton onClick={handleEdit}>수정</EditButton>
-        <DeleteButton onClick={handleDelete}>삭제</DeleteButton>
-        <ApplyButton onClick={handleApply}>지원하기</ApplyButton>
+        {isAuthor ? (
+          <>
+            <EditButton onClick={handleEdit}>수정</EditButton>
+            <DeleteButton onClick={handleDelete}>삭제</DeleteButton>
+          </>
+        ) : (
+          <ApplyButton onClick={handleApply}>지원하기</ApplyButton>
+        )}
         <BackButton onClick={() => navigate('/jobpost')}>목록으로 돌아가기</BackButton>
       </ButtonGroup>
     </Container>

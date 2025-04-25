@@ -195,14 +195,19 @@ const LoginForm = () => {
         userType: userType
       };
       
-      // 메인 페이지로 이동하면서 사용자 정보 전달
-      navigate('/main', { 
-        state: { 
-          userInfo: userInfo,
-          isLoggedIn: true
-        },
-        replace: true
-      });
+      // 성공 메시지 표시
+      showToast.success(`${userName}님, 반갑습니다!`);
+      
+      // 2초 후 메인 페이지로 이동하면서 사용자 정보 전달
+      setTimeout(() => {
+        navigate('/main', { 
+          state: { 
+            userInfo: userInfo,
+            isLoggedIn: true
+          },
+          replace: true
+        });
+      }, 2000);
     } catch (error) {
       showToast.error('로그인에 실패했습니다. 다시 시도해주세요.');
     }

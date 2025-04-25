@@ -68,6 +68,13 @@ const UserSection = styled.div`
   gap: 1rem;
 `;
 
+const WelcomeMessage = styled.span`
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-right: 0.5rem;
+`;
+
 const ProfileButton = styled.button`
   background: none;
   border: none;
@@ -102,7 +109,7 @@ const AuthButton = styled(motion.button)`
   }
 `;
 
-const Header = ({ isLoggedIn, userInfo, onLogout }) => {
+const Header = ({ isLoggedIn, userInfo, onLoginStatusChange }) => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -113,17 +120,15 @@ const Header = ({ isLoggedIn, userInfo, onLogout }) => {
     localStorage.removeItem('userId');
     
     // 2. 부모 컴포넌트에 로그아웃 알림
-    if (onLogout) {
-      onLogout();
+    if (onLoginStatusChange) {
+      onLoginStatusChange(false, null);
     }
     
-    // 3. 성공 메시지 표시 후 잠시 대기
-    showToast.success('로그아웃되었습니다.');
-    
-    // 4. 잠시 후 로그인 페이지로 이동
+    // 3. 페이지 이동 후 토스트 메시지 표시
+    navigate('/login', { replace: true });
     setTimeout(() => {
-      navigate('/login', { replace: true });
-    }, 2000);
+      showToast.success('로그아웃되었습니다.');
+    }, 100);
   };
 
   // 로그인 상태에 따라 메뉴 표시 여부 결정
@@ -157,6 +162,7 @@ const Header = ({ isLoggedIn, userInfo, onLogout }) => {
             <ProfileButton>
               <FaUserCircle />
             </ProfileButton>
+            <WelcomeMessage>{userInfo?.userName}</WelcomeMessage>
             <AuthButton
               variant="logout"
               onClick={handleLogout}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { jobPostApi } from '../services/api';
+import { jobPostApi, userApi } from '../services/api';
 import { showToast } from '../components/common/Toast';
 import Toast from '../components/common/Toast';
 
@@ -90,6 +90,11 @@ const ErrorMessage = styled.div`
 
 function NewJobPost() {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [userInfo, setUserInfo] = useState(null);
+  const [companies, setCompanies] = useState([]);
+  const [jobCodes, setJobCodes] = useState([]);
+  const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState({
     companyName: '',
     jobName: '',
@@ -101,35 +106,63 @@ function NewJobPost() {
     jobPeriod: '',
     jobRegion: '',
     deadline: '',
-    careerType: 'ANY'
+    careerType: ''
   });
-  const [errors, setErrors] = useState({});
-  const [companies, setCompanies] = useState([]);
-  const [jobCodes, setJobCodes] = useState([]);
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    const fetchUserInfo = async () => {
+      try {
+        const userData = await userApi.getUserInfo();
+        console.log('사용자 정보:', userData);
+        setUserInfo(userData);
+        if (userData.companyName) {
+          console.log('회사 정보:', {
+            companyName: userData.companyName,
+            companyAddress: userData.companyAddress
+          });
+          setFormData(prev => ({
+            ...prev,
+            companyName: userData.companyName,
+            jobRegion: userData.companyAddress || ''
+          }));
+        }
+      } catch (error) {
+        console.error('사용자 정보 조회 실패:', error);
+        showToast.error('사용자 정보를 불러오는데 실패했습니다.');
+      }
+    };
+
     const fetchCompanies = async () => {
       try {
-        const data = await jobPostApi.getCompanies();
-        setCompanies(data);
+        const companiesData = await jobPostApi.getCompanies();
+        setCompanies(companiesData);
       } catch (error) {
-        console.error('Error fetching companies:', error);
+        console.error('회사 목록 조회 실패:', error);
+        showToast.error('회사 목록을 불러오는데 실패했습니다.');
       }
     };
 
     const fetchJobCodes = async () => {
       try {
-        const data = await jobPostApi.getJobCodes();
-        setJobCodes(data);
+        const jobCodesData = await jobPostApi.getJobCodes();
+        setJobCodes(jobCodesData);
       } catch (error) {
-        console.error('Error fetching job codes:', error);
+        console.error('직종 코드 조회 실패:', error);
+        showToast.error('직종 코드를 불러오는데 실패했습니다.');
       }
     };
 
+    const token = localStorage.getItem('token');
+    if (!token) {
+      showToast.error('로그인이 필요합니다.');
+      navigate('/login');
+      return;
+    }
+
+    fetchUserInfo();
     fetchCompanies();
     fetchJobCodes();
-  }, []);
+  }, [navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -137,23 +170,10 @@ function NewJobPost() {
       ...prev,
       [name]: value
     }));
-
-    if (name === 'companyName') {
-      const selectedCompany = companies.find(company => company.companyName === value);
-      if (selectedCompany) {
-        setFormData(prev => ({
-          ...prev,
-          jobRegion: selectedCompany.companyRegion
-        }));
-      }
-    }
-
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
-    }
+    setErrors(prev => ({
+      ...prev,
+      [name]: ''
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -207,19 +227,12 @@ function NewJobPost() {
       <Form onSubmit={handleSubmit}>
         <FormGroup>
           <Label>회사명 *</Label>
-          <Select
+          <Input
+            type="text"
             name="companyName"
             value={formData.companyName}
-            onChange={handleChange}
-            required
-          >
-            <option value="">회사 선택</option>
-            {companies.map(company => (
-              <option key={company.companyId} value={company.companyName}>
-                {company.companyName}
-              </option>
-            ))}
-          </Select>
+            readOnly
+          />
           {errors.companyName && <ErrorMessage>{errors.companyName}</ErrorMessage>}
         </FormGroup>
 

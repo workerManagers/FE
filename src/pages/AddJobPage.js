@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { showToast } from '../components/common/Toast';
+import { userApi } from '../services/api';
 import api from '../services/api';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -140,6 +141,36 @@ const AddJobPage = () => {
 
   const [filteredSubcategories, setFilteredSubcategories] = useState([]);
 
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      try {
+        const userData = await userApi.getUserInfo();
+        const userType = localStorage.getItem('userType');
+        
+        if (userType) {
+          const userInfoWithType = {
+            ...userData,
+            userType: userType
+          };
+        } else {
+          console.error('사용자 타입이 없습니다.');
+        }
+      } catch (error) {
+        console.error('사용자 정보 조회 실패:', error);
+        localStorage.removeItem('token');
+        localStorage.removeItem('userType');
+        navigate('/login');
+      }
+    };
+
+    const token = localStorage.getItem('token');
+    if (token) {
+      fetchUserInfo();
+    } else {
+      navigate('/login');
+    }
+  }, [navigate]);
+
   const handleCategoryChange = (e) => {
     const category = e.target.value;
     setFormData(prev => ({
@@ -171,15 +202,7 @@ const AddJobPage = () => {
       console.log('직무 등록 응답:', response);
       
       // 토스트 메시지 표시
-      showToast.success('직무 추가가 완료되었습니다.', {
-        position: "top-center",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-      });
+      showToast.success('직무 추가가 완료되었습니다.');
       
       // 2초 후 페이지 이동
       setTimeout(() => {
@@ -187,15 +210,7 @@ const AddJobPage = () => {
       }, 2000);
     } catch (error) {
       console.error('직무 등록 중 오류:', error);
-      showToast.error('직무 등록 중 오류가 발생했습니다.', {
-        position: "top-center",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-      });
+      showToast.error('직무 등록 중 오류가 발생했습니다.');
     }
   };
 
