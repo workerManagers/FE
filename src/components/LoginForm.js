@@ -173,41 +173,30 @@ const LoginForm = () => {
       const response = await userApi.login(data);
       
       // 응답 구조 확인
-      const token = response.accessToken;
-      const userType = response.userType;
-      const userName = response.userName;
-      const userId = response.userId;
-
-      if (!token) {
+      console.log('로그인 응답:', response);
+      
+      if (!response.accessToken) {
         throw new Error('토큰이 없습니다.');
       }
-
-      // 토큰 저장
-      localStorage.setItem('token', token);
-      localStorage.setItem('userType', userType);
-      localStorage.setItem('userName', userName);
-      localStorage.setItem('userId', userId);
       
       // 사용자 정보 객체 생성
       const userInfo = {
-        userId: userId,
-        userName: userName,
-        userType: userType
+        userId: response.userId,
+        userName: response.userName,
+        userType: response.userType
       };
       
       // 성공 메시지 표시
-      showToast.success(`${userName}님, 반갑습니다!`);
+      showToast.success(`${response.userName}님, 반갑습니다!`);
       
-      // 2초 후 메인 페이지로 이동하면서 사용자 정보 전달
-      setTimeout(() => {
-        navigate('/main', { 
-          state: { 
-            userInfo: userInfo,
-            isLoggedIn: true
-          },
-          replace: true
-        });
-      }, 2000);
+      // 메인 페이지로 이동하면서 사용자 정보 전달
+      navigate('/main', { 
+        state: { 
+          userInfo: userInfo,
+          isLoggedIn: true
+        },
+        replace: true
+      });
     } catch (error) {
       showToast.error('로그인에 실패했습니다. 다시 시도해주세요.');
     }

@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { userApi } from '../services/api';
 import { FaUserCircle, FaSearch } from 'react-icons/fa';
 import Header from '../components/common/Header';
+import { userApi } from '../services/api';
 
 const PageContainer = styled(motion.div)`
   min-height: 100vh;
@@ -224,6 +224,10 @@ const MainPage = () => {
           setUserInfo(null);
           navigate('/login');
         }
+      } else {
+        setIsLoggedIn(false);
+        setUserInfo(null);
+        navigate('/login');
       }
     };
 

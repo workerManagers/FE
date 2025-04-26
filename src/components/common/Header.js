@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { FaUserCircle } from 'react-icons/fa';
 import { userApi } from '../../services/api';
 import { showToast } from './Toast';
@@ -105,12 +105,12 @@ const AuthButton = styled(motion.button)`
 
   &:hover {
     background-color: ${props => props.variant === 'login' ? '#f8f9fa' : 'rgba(255, 255, 255, 0.2)'};
-    transform: translateY(-1px);
   }
 `;
 
 const Header = ({ isLoggedIn, userInfo, onLoginStatusChange }) => {
   const navigate = useNavigate();
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   const handleLogout = () => {
     // 1. localStorage 정리
@@ -140,7 +140,7 @@ const Header = ({ isLoggedIn, userInfo, onLoginStatusChange }) => {
       <LogoSection>
         <Logo onClick={() => navigate('/')}>급구당</Logo>
         <NavMenu>
-          {shouldShowCompanyMenu && (
+          {isLoggedIn && userInfo?.userType === 'COMPANY' && (
             <>
               <NavLink onClick={() => navigate('/jobpost')}>모집공고</NavLink>
               <NavLink onClick={() => navigate('/add-job')}>직무 추가</NavLink>
@@ -148,18 +148,19 @@ const Header = ({ isLoggedIn, userInfo, onLoginStatusChange }) => {
               <NavLink onClick={() => navigate('/matching')}>대체인력 매칭</NavLink>
             </>
           )}
-          {shouldShowIndividualMenu && (
+          {isLoggedIn && userInfo?.userType === 'INDIVIDUAL' && (
             <>
               <NavLink onClick={() => navigate('/jobs')}>채용공고</NavLink>
-              <NavLink onClick={() => navigate('/profile')}>내 프로필</NavLink>
+              <NavLink onClick={() => navigate('/resume')}>내 이력서</NavLink>
             </>
           )}
         </NavMenu>
       </LogoSection>
+
       <UserSection>
         {isLoggedIn ? (
           <>
-            <ProfileButton>
+            <ProfileButton onClick={() => setIsProfileOpen(!isProfileOpen)}>
               <FaUserCircle />
             </ProfileButton>
             <WelcomeMessage>{userInfo?.userName}</WelcomeMessage>
@@ -173,18 +174,28 @@ const Header = ({ isLoggedIn, userInfo, onLoginStatusChange }) => {
             </AuthButton>
           </>
         ) : (
-          <AuthButton
-            variant="login"
-            onClick={() => navigate('/login')}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            로그인
-          </AuthButton>
+          <>
+            <AuthButton
+              variant="login"
+              onClick={() => navigate('/login')}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              로그인
+            </AuthButton>
+            <AuthButton
+              variant="signup"
+              onClick={() => navigate('/signup')}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              회원가입
+            </AuthButton>
+          </>
         )}
       </UserSection>
     </HeaderContainer>
   );
 };
 
-export default Header; 
+export default Header;
