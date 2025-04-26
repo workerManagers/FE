@@ -173,6 +173,7 @@ const LoginForm = () => {
       const response = await userApi.login(data);
       
       // 응답 구조 확인
+      console.log('로그인 응답:', response); // 로그인 응답 로그
       const token = response.accessToken;
       const userType = response.userType;
       const userName = response.userName;
@@ -188,12 +189,21 @@ const LoginForm = () => {
       localStorage.setItem('userName', userName);
       localStorage.setItem('userId', userId);
       
+      console.log('로컬 스토리지 저장:', { // 저장된 값 로그
+        token,
+        userType,
+        userName,
+        userId
+      });
+      
       // 사용자 정보 객체 생성
       const userInfo = {
         userId: userId,
         userName: userName,
         userType: userType
       };
+      
+      console.log('사용자 정보:', userInfo); // 사용자 정보 로그
       
       // 메인 페이지로 이동하면서 사용자 정보 전달
       navigate('/main', { 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { FaUserCircle } from 'react-icons/fa';
 import { userApi } from '../../services/api';
 import { showToast } from './Toast';
@@ -98,44 +98,35 @@ const AuthButton = styled(motion.button)`
 
   &:hover {
     background-color: ${props => props.variant === 'login' ? '#f8f9fa' : 'rgba(255, 255, 255, 0.2)'};
-    transform: translateY(-1px);
   }
 `;
 
-const Header = ({ isLoggedIn, userInfo, onLogout }) => {
+const Header = ({ isLoggedIn, userInfo, onLoginStatusChange }) => {
   const navigate = useNavigate();
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
 
-  const handleLogout = () => {
-    // 1. localStorage 정리
-    localStorage.removeItem('token');
-    localStorage.removeItem('userType');
-    localStorage.removeItem('userName');
-    localStorage.removeItem('userId');
-    
-    // 2. 부모 컴포넌트에 로그아웃 알림
-    if (onLogout) {
-      onLogout();
+  const handleLogout = async () => {
+    try {
+      await userApi.logout();
+      localStorage.removeItem('token');
+      localStorage.removeItem('userType');
+      if (typeof onLoginStatusChange === 'function') {
+        onLoginStatusChange(false, null);
+      }
+      navigate('/');
+      showToast.success('로그아웃되었습니다.');
+    } catch (error) {
+      console.error('로그아웃 실패:', error);
+      showToast.error('로그아웃에 실패했습니다.');
     }
-    
-    // 3. 성공 메시지 표시 후 잠시 대기
-    showToast.success('로그아웃되었습니다.');
-    
-    // 4. 잠시 후 로그인 페이지로 이동
-    setTimeout(() => {
-      navigate('/login', { replace: true });
-    }, 2000);
   };
-
-  // 로그인 상태에 따라 메뉴 표시 여부 결정
-  const shouldShowCompanyMenu = isLoggedIn && userInfo?.userType === 'COMPANY';
-  const shouldShowIndividualMenu = isLoggedIn && userInfo?.userType === 'INDIVIDUAL';
 
   return (
     <HeaderContainer>
       <LogoSection>
         <Logo onClick={() => navigate('/')}>급구당</Logo>
         <NavMenu>
-          {shouldShowCompanyMenu && (
+          {isLoggedIn && userInfo?.userType === 'COMPANY' && (
             <>
               <NavLink onClick={() => navigate('/jobpost')}>모집공고</NavLink>
               <NavLink onClick={() => navigate('/add-job')}>직무 추가</NavLink>
@@ -143,38 +134,74 @@ const Header = ({ isLoggedIn, userInfo, onLogout }) => {
               <NavLink onClick={() => navigate('/matching')}>대체인력 매칭</NavLink>
             </>
           )}
-          {shouldShowIndividualMenu && (
+          {isLoggedIn && userInfo?.userType === 'INDIVIDUAL' && (
             <>
               <NavLink onClick={() => navigate('/jobs')}>채용공고</NavLink>
-              <NavLink onClick={() => navigate('/profile')}>내 프로필</NavLink>
+              <NavLink onClick={() => navigate('/resume')}>내 이력서</NavLink>
             </>
           )}
         </NavMenu>
       </LogoSection>
+
       <UserSection>
         {isLoggedIn ? (
           <>
-            <ProfileButton>
+            <ProfileButton onClick={() => setIsProfileOpen(!isProfileOpen)}>
               <FaUserCircle />
             </ProfileButton>
+            {isProfileOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                style={{
+                  position: 'absolute',
+                  top: '100%',
+                  right: '2rem',
+                  background: 'white',
+                  padding: '1rem',
+                  borderRadius: '8px',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                  zIndex: 1000,
+                }}
+              >
+                <div style={{ marginBottom: '0.5rem' }}>{userInfo?.username}님</div>
+                <button
+                  onClick={handleLogout}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#dc3545',
+                    cursor: 'pointer',
+                    padding: '0.5rem',
+                    width: '100%',
+                    textAlign: 'left',
+                  }}
+                >
+                  로그아웃
+                </button>
+              </motion.div>
+            )}
+          </>
+        ) : (
+          <>
             <AuthButton
-              variant="logout"
-              onClick={handleLogout}
+              variant="login"
+              onClick={() => navigate('/login')}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              로그아웃
+              로그인
+            </AuthButton>
+            <AuthButton
+              variant="signup"
+              onClick={() => navigate('/signup')}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              회원가입
             </AuthButton>
           </>
-        ) : (
-          <AuthButton
-            variant="login"
-            onClick={() => navigate('/login')}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            로그인
-          </AuthButton>
         )}
       </UserSection>
     </HeaderContainer>

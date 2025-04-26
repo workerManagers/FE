@@ -7,12 +7,12 @@ import MainPage from './pages/MainPage';
 import JobPost from './pages/jobpost';
 import NewJobPost from './pages/NewJobPost';
 import JobPostDetail from './pages/JobPostDetail';
-import Test from './pages/test';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import PredictPage from './pages/PredictPage';
 import EditJobPost from './pages/EditJobPost';
 import AddJobPage from './pages/AddJobPage';
+import ResumePage from './pages/ResumePage';
 import Toast from './components/common/Toast';
 import { userApi } from './services/api';
 import './App.css';
@@ -29,11 +29,14 @@ function App() {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
+    console.log('App - 토큰:', token);
     if (token) {
       const fetchUserInfo = async () => {
         try {
           const userData = await userApi.getUserInfo();
+          console.log('App - getUserInfo 응답:', userData);
           const userType = localStorage.getItem('userType');
+          console.log('App - 로컬 스토리지 userType:', userType);
           
           if (userType) {
             const userInfoWithType = {
@@ -46,7 +49,10 @@ function App() {
           }
           setIsLoggedIn(true);
         } catch (error) {
-          console.error('사용자 정보 조회 실패:', error);
+          console.error('App - 사용자 정보 조회 실패:', error);
+          if (error.response) {
+            console.log('App - 에러 응답:', error.response);
+          }
           localStorage.removeItem('token');
           localStorage.removeItem('userType');
           setIsLoggedIn(false);
@@ -81,7 +87,7 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/predict" element={<PredictPage />} />
-          <Route path="/test" element={<Test />} />
+          <Route path="/resume" element={<ResumePage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </PageContainer>

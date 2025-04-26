@@ -39,11 +39,19 @@ api.interceptors.response.use(
   },
   (error) => {
     if (error.response) {
-      if (error.response.status === 401 || error.response.status === 403) {
+      if (error.response.status === 401) {
+        // 401: 인증 실패 (토큰이 없거나 만료)
         localStorage.removeItem('token');
         if (window.location.pathname !== '/login' && window.location.pathname !== '/signup') {
           window.location.href = '/login';
         }
+      } else if (error.response.status === 403) {
+        // 403: 권한 없음 (토큰은 유효하지만 접근 권한이 없음)
+        // 토큰을 삭제하지 않고 에러만 전달
+        console.error('접근 권한이 없습니다:', error.response.data);
+      } else if (error.response.status === 404) {
+        // 404: 리소스를 찾을 수 없음
+        return Promise.reject(error);
       }
       console.error('API 오류:', error.response.data);
     } else if (error.request) {
@@ -292,6 +300,49 @@ export const jobPostApi = {
       throw error;
     }
   }
+};
+
+// 이력서 관련 API
+export const resumeApi = {
+  // 이력서 생성
+  createResume: async (resumeText) => {
+    try {
+      const response = await api.post('/resumes', { resumeText });
+      return response.data;
+    } catch (error) {
+      throw error.response.data;
+    }
+  },
+
+  // 이력서 조회
+  getResume: async () => {
+    try {
+      const response = await api.get('/resumes');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // 이력서 수정
+  updateResume: async (resumeText) => {
+    try {
+      const response = await api.put('/resumes', { resumeText });
+      return response.data;
+    } catch (error) {
+      throw error.response.data;
+    }
+  },
+
+  // 이력서 삭제
+  deleteResume: async () => {
+    try {
+      const response = await api.delete('/resumes');
+      return response.data;
+    } catch (error) {
+      throw error.response.data;
+    }
+  },
 };
 
 export default api; 
