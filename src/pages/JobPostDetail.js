@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
-import { jobPostApi, userApi, bookmarkApi, applicationApi  } from '../services/api';
+import { jobPostApi, userApi, bookmarkApi, applicationApi, chatApi } from '../services/api';
 import { showToast } from '../components/common/Toast';
 import Toast from '../components/common/Toast';
 import { IoArrowBack } from 'react-icons/io5';
@@ -135,6 +135,22 @@ const ApplyButton = styled(Button)`
 
   &:hover {
     background-color: #45a049;
+  }
+`;
+
+const ChatButton = styled(Button)`
+  background-color: #007bff;
+  color: #fff;
+  &:hover {
+    background-color: #0056b3;
+  }
+`;
+
+const ChatInquiryButton = styled(Button)`
+  background-color: #6c757d;
+  color: #fff;
+  &:hover {
+    background-color: #5a6268;
   }
 `;
 
@@ -323,6 +339,26 @@ function JobPostDetail() {
     }
   };
 
+  const handleChatClick = async () => {
+    try {
+      const res = await chatApi.createChatRoom(jobPost.jobPostId);
+      console.log('채팅방 생성 응답:', res);
+      const roomId = res.roomId || res.id || (res.data && (res.data.roomId || res.data.id));
+      console.log('이동할 roomId:', roomId);
+      if (!roomId) {
+        showToast.error('채팅방 ID를 찾을 수 없습니다. 관리자에게 문의하세요.');
+        return;
+      }
+      navigate(`/chat/${roomId}`);
+    } catch (error) {
+      showToast.error('채팅방 생성에 실패했습니다.');
+    }
+  };
+
+  const handleChatInquiryClick = () => {
+    navigate(`/chat/recruiter?jobPostId=${id}`);
+  };
+
   if (loading) {
     return <Container>Loading...</Container>;
   }
@@ -434,30 +470,29 @@ function JobPostDetail() {
       </Content>
 
       <ButtonGroup>
-        {isAuthor ? (
+        <BackButton onClick={() => navigate(-1)}>
+          <IoArrowBack style={{ marginRight: '0.3rem' }} />
+          뒤로가기
+        </BackButton>
+        
+        {userInfo?.userType === 'COMPANY' && (
           <>
-            <EditButton onClick={handleEdit}>수정</EditButton>
-            <DeleteButton onClick={handleDelete}>삭제</DeleteButton>
+            <EditButton onClick={handleEdit}>수정하기</EditButton>
+            <DeleteButton onClick={handleDelete}>삭제하기</DeleteButton>
+            <ChatInquiryButton onClick={handleChatInquiryClick}>
+              1대1 문의 목록
+            </ChatInquiryButton>
           </>
-        ) : (
-          <ApplyButton onClick={handleApply}>지원하기</ApplyButton>
         )}
-        <BackButton onClick={() => {
-          if (location.state?.from) {
-            navigate(location.state.from);
-          } else {
-            navigate('/jobpost');
-          }
-        }}>목록으로 돌아가기</BackButton>
-        ) : userInfo?.userType !== 'COMPANY' ? (
-          <ApplyButton 
-            onClick={handleApply} 
-            disabled={hasApplied}
-          >
-            {hasApplied ? '지원완료' : '지원하기'}
-          </ApplyButton>
-        ) : null}
-        <BackButton onClick={() => navigate('/jobpost')}>목록으로 돌아가기</BackButton>
+        
+        {userInfo?.userType === 'INDIVIDUAL' && (
+          <>
+            <ApplyButton onClick={handleApply} disabled={hasApplied}>
+              {hasApplied ? '지원완료' : '지원하기'}
+            </ApplyButton>
+            <ChatButton onClick={handleChatClick}>1대1 문의하기</ChatButton>
+          </>
+        )}
       </ButtonGroup>
     </Container>
   );

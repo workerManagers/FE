@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 // API 기본 URL 설정
-const API_BASE_URL = 'https://port-0-workermangers-be-m9ax68es6a756190.sel4.cloudtype.app';
-
+// const API_BASE_URL = 'https://port-0-workermangers-be-m9ax68es6a756190.sel4.cloudtype.app';
+const API_BASE_URL = 'http://localhost:8080';
 // axios 인스턴스 생성
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -86,12 +86,18 @@ export const userApi = {
   login: async (credentials) => {
     try {
       const response = await api.post('/users/login', credentials);
+      console.log('로그인 응답:', response.data); // 로그인 응답 확인
       // 로그인 성공 시 토큰과 사용자 정보 저장
       if (response.data.accessToken) {
         localStorage.setItem('token', response.data.accessToken);
         localStorage.setItem('userType', response.data.userType);
         localStorage.setItem('userName', response.data.userName);
         localStorage.setItem('userId', response.data.userId);
+        // 회사 정보 저장
+        if (response.data.companyName) {
+          localStorage.setItem('companyName', response.data.companyName);
+          localStorage.setItem('jobRegion', response.data.jobRegion);
+        }
       }
       return response.data;
     } catch (error) {
@@ -122,22 +128,16 @@ export const userApi = {
         throw new Error('인증 토큰이 없습니다.');
       }
 
-      // localStorage에서 사용자 정보 조회
-      const userType = localStorage.getItem('userType');
-      const userName = localStorage.getItem('userName');
-      const userId = localStorage.getItem('userId');
-
-      if (!userType || !userName || !userId) {
-        throw new Error('사용자 정보가 없습니다.');
+      const response = await api.get('/users/me');
+      console.log('사용자 정보 응답:', response.data); // 응답 데이터 확인
+      
+      // 회사 정보가 있는 경우 localStorage에 저장
+      if (response.data.companyInfo) {
+        localStorage.setItem('companyName', response.data.companyInfo.companyName);
+        localStorage.setItem('jobRegion', response.data.companyInfo.companyRegion || '');
       }
-
-      const userData = {
-        userId: userId,
-        userName: userName,
-        userType: userType
-      };
-
-      return userData;
+      
+      return response.data;
     } catch (error) {
       console.error('사용자 정보 조회 중 오류:', error);
       throw error;
@@ -429,58 +429,61 @@ export const applicationApi = {
   }
 };
 
-export const resumeApi = {
-  // 이력서 생성
-  createResume: async (resumeText) => {
+export const chatApi = {
+  // 채팅방 생성
+  createChatRoom: async (jobPostId) => {
     try {
-      const response = await api.post('/resumes', { resumeText });
+      const response = await api.post('/chat/rooms', { jobPostId });
       return response.data;
     } catch (error) {
-      if (error.response?.status === 401) {
-        console.error('인증 오류:', error);
-      }
+      console.error('채팅방 생성 실패:', error);
       throw error;
     }
   },
 
-  // 이력서 조회
-  getResume: async () => {
+  // 채팅방 목록 조회
+  getChatRooms: async () => {
     try {
-      const response = await api.get('/resumes');
+      const response = await api.get('/chat/rooms');
       return response.data;
     } catch (error) {
-      if (error.response?.status === 401) {
-        console.error('인증 오류:', error);
-      }
+      console.error('채팅방 목록 조회 실패:', error);
       throw error;
     }
   },
 
-  // 이력서 수정
-  updateResume: async (resumeText) => {
+  // 채팅 메시지 조회
+  getChatMessages: async (roomId) => {
     try {
-      const response = await api.put('/resumes', { resumeText });
+      const response = await api.get(`/chat/rooms/${roomId}/messages`);
       return response.data;
     } catch (error) {
-      if (error.response?.status === 401) {
-        console.error('인증 오류:', error);
-      }
+      console.error('채팅 메시지 조회 실패:', error);
       throw error;
     }
   },
 
-  // 이력서 삭제
-  deleteResume: async () => {
+  // 채용담당자(공고 작성자) 채팅방 목록 조회
+  getRecruiterChatRooms: async () => {
     try {
-      const response = await api.delete('/resumes');
+      const response = await api.get('/chat/rooms/recruiter');
       return response.data;
     } catch (error) {
-      if (error.response?.status === 401) {
-        console.error('인증 오류:', error);
-      }
+      console.error('채용담당자 채팅방 목록 조회 실패:', error);
       throw error;
     }
-  }
+  },
+
+  // 채팅방 메시지 읽음 처리
+  markAsRead: async (roomId) => {
+    try {
+      const response = await api.put(`/chat/rooms/${roomId}/read`);
+      return response.data;
+    } catch (error) {
+      console.error('메시지 읽음 처리 실패:', error);
+      throw error;
+    }
+  },
 };
 
 export default api; 

@@ -96,7 +96,7 @@ function NewJobPost() {
   const [jobCodes, setJobCodes] = useState([]);
   const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState({
-    companyName: '',
+    companyName: localStorage.getItem('companyName') || '',
     jobName: '',
     jobPostDescription: '',
     mainTasks: '',
@@ -104,7 +104,7 @@ function NewJobPost() {
     preferredQualifications: '',
     idealCandidate: '',
     jobPeriod: '',
-    jobRegion: '',
+    jobRegion: localStorage.getItem('jobRegion') || '',
     deadline: '',
     careerType: ''
   });
@@ -115,15 +115,12 @@ function NewJobPost() {
         const userData = await userApi.getUserInfo();
         console.log('사용자 정보:', userData);
         setUserInfo(userData);
-        if (userData.companyName) {
-          console.log('회사 정보:', {
-            companyName: userData.companyName,
-            companyAddress: userData.companyAddress
-          });
+        if (userData.companyInfo) {
+          console.log('회사 정보:', userData.companyInfo);
           setFormData(prev => ({
             ...prev,
-            companyName: userData.companyName,
-            jobRegion: userData.companyAddress || ''
+            companyName: userData.companyInfo.companyName,
+            jobRegion: userData.companyInfo.companyRegion || ''
           }));
         }
       } catch (error) {
