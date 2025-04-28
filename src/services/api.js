@@ -1,8 +1,7 @@
 import axios from 'axios';
 
 // API 기본 URL 설정
-// const API_BASE_URL = 'https://port-0-workermangers-be-m9ax68es6a756190.sel4.cloudtype.app';
-const API_BASE_URL = 'http://localhost:8080';
+const API_BASE_URL = 'https://port-0-workermangers-be-m9ax68es6a756190.sel4.cloudtype.app';
 
 // axios 인스턴스 생성
 const api = axios.create({
@@ -39,11 +38,19 @@ api.interceptors.response.use(
   },
   (error) => {
     if (error.response) {
-      if (error.response.status === 401 || error.response.status === 403) {
+      if (error.response.status === 401) {
+        // 401: 인증 실패 (토큰이 없거나 만료)
         localStorage.removeItem('token');
         if (window.location.pathname !== '/login' && window.location.pathname !== '/signup') {
           window.location.href = '/login';
         }
+      } else if (error.response.status === 403) {
+        // 403: 권한 없음 (토큰은 유효하지만 접근 권한이 없음)
+        // 토큰을 삭제하지 않고 에러만 전달
+        console.error('접근 권한이 없습니다:', error.response.data);
+      } else if (error.response.status === 404) {
+        // 404: 리소스를 찾을 수 없음
+        return Promise.reject(error);
       }
       console.error('API 오류:', error.response.data);
     } else if (error.request) {
@@ -80,10 +87,11 @@ export const userApi = {
     try {
       const response = await api.post('/users/login', credentials);
       // 로그인 성공 시 토큰과 사용자 정보 저장
-      if (response.data.token) {
-        localStorage.setItem('token', response.data.token);
+      if (response.data.accessToken) {
+        localStorage.setItem('token', response.data.accessToken);
         localStorage.setItem('userType', response.data.userType);
         localStorage.setItem('userName', response.data.userName);
+        localStorage.setItem('userId', response.data.userId);
       }
       return response.data;
     } catch (error) {
@@ -99,6 +107,7 @@ export const userApi = {
       localStorage.removeItem('token');
       localStorage.removeItem('userType');
       localStorage.removeItem('userName');
+      localStorage.removeItem('userId');
       return response.data;
     } catch (error) {
       throw error;
@@ -113,18 +122,20 @@ export const userApi = {
         throw new Error('인증 토큰이 없습니다.');
       }
 
-      // 백엔드 API를 통해 사용자 정보 조회
-      const response = await api.get('/users/me');
-      const userData = response.data;
+      // localStorage에서 사용자 정보 조회
+      const userType = localStorage.getItem('userType');
+      const userName = localStorage.getItem('userName');
+      const userId = localStorage.getItem('userId');
 
-      // 회사 정보가 있는 경우 companyName과 companyAddress 설정
-      if (userData.userType === 'COMPANY' && userData.companyInfo) {
-        return {
-          ...userData,
-          companyName: userData.companyInfo.companyName,
-          companyAddress: userData.companyInfo.companyRegion
-        };
+      if (!userType || !userName || !userId) {
+        throw new Error('사용자 정보가 없습니다.');
       }
+
+      const userData = {
+        userId: userId,
+        userName: userName,
+        userType: userType
+      };
 
       return userData;
     } catch (error) {
@@ -297,6 +308,80 @@ export const jobPostApi = {
       throw error;
     }
   }
+};
+
+// 이력서 관련 API
+export const resumeApi = {
+  // 이력서 생성
+  createResume: async (resumeText) => {
+    try {
+      const response = await api.post('/resumes', { resumeText });
+      return response.data;
+    } catch (error) {
+      throw error.response.data;
+    }
+  },
+
+  // 이력서 조회
+  getResume: async () => {
+    try {
+      const response = await api.get('/resumes');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // 이력서 수정
+  updateResume: async (resumeText) => {
+    try {
+      const response = await api.put('/resumes', { resumeText });
+      return response.data;
+    } catch (error) {
+      throw error.response.data;
+    }
+  },
+
+  // 이력서 삭제
+  deleteResume: async () => {
+    try {
+      const response = await api.delete('/resumes');
+      return response.data;
+    } catch (error) {
+      throw error.response.data;
+    }
+  },
+};
+
+// 북마크 관련 API
+export const bookmarkApi = {
+  // 북마크 생성
+  createBookmark: async (jobPostId) => {
+    try {
+      const response = await api.post('/bookmarks', { jobPostId });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  // 북마크 삭제
+  deleteBookmark: async (bookmarkId) => {
+    try {
+      const response = await api.delete(`/bookmarks/${bookmarkId}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  // 내 북마크 목록 조회
+  getMyBookmarks: async () => {
+    try {
+      const response = await api.get('/bookmarks/my');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
 };
 
 export const applicationApi = {
