@@ -15,6 +15,7 @@ import AddJobPage from './pages/AddJobPage';
 import ResumePage from './pages/ResumePage';
 import Toast from './components/common/Toast';
 import { userApi } from './services/api';
+import BookmarkPage from './pages/BookmarkPage';
 import './App.css';
 
 const PageContainer = styled.div`
@@ -88,6 +89,7 @@ function App() {
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/predict" element={<PredictPage />} />
           <Route path="/resume" element={<ResumePage />} />
+          <Route path="/bookmarks" element={<BookmarkPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </PageContainer>

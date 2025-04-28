@@ -1,150 +1,183 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
-import { jobPostApi, userApi } from '../services/api';
+import { jobPostApi, userApi, bookmarkApi } from '../services/api';
 import { showToast } from '../components/common/Toast';
 import Toast from '../components/common/Toast';
 import { IoArrowBack } from 'react-icons/io5';
+import BookmarkButton from '../components/common/BookmarkButton';
 
 const Container = styled.div`
-  max-width: 800px;
+  max-width: 900px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 2.5rem 1.5rem 3.5rem 1.5rem;
+  background: #f7f8fa;
+  min-height: 100vh;
 `;
 
 const Title = styled.h1`
-  font-size: 2rem;
-  margin-bottom: 2rem;
-  color: #333;
+  font-size: 2.2rem;
+  margin-bottom: 0.7rem;
+  color: #181818;
+  font-weight: 800;
+  letter-spacing: -1px;
 `;
 
 const DetailSection = styled.div`
-  margin-bottom: 2rem;
-  padding: 1.5rem;
+  margin-bottom: 2.2rem;
+  padding: 1.7rem 1.5rem;
   background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 18px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.07), 0 1.5px 6px rgba(0,0,0,0.04);
 `;
 
 const DetailTitle = styled.h2`
-  font-size: 1.5rem;
-  margin-bottom: 1rem;
-  color: #333;
+  font-size: 1.25rem;
+  margin-bottom: 0.7rem;
+  color: #222;
+  font-weight: 700;
 `;
 
 const DetailContent = styled.div`
-  font-size: 1rem;
-  line-height: 1.6;
-  color: #666;
+  font-size: 1.05rem;
+  line-height: 1.7;
+  color: #444;
   white-space: pre-wrap;
 `;
 
 const InfoGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
-  margin-bottom: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 1.2rem;
+  margin-bottom: 1.5rem;
 `;
 
 const InfoItem = styled.div`
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  padding: 1.1rem 1rem 0.9rem 1rem;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.4rem;
+  align-items: flex-start;
 `;
 
 const InfoLabel = styled.span`
-  font-weight: bold;
-  color: #333;
+  font-weight: 700;
+  color: #222;
+  font-size: 1.01rem;
 `;
 
 const InfoValue = styled.span`
-  color: #666;
+  color: #444;
+  font-size: 1.08rem;
+  font-weight: 500;
 `;
 
 const ButtonGroup = styled.div`
   display: flex;
-  gap: 1rem;
-  margin-top: 2rem;
+  gap: 1.1rem;
+  margin-top: 2.5rem;
 `;
 
 const Button = styled.button`
-  padding: 0.75rem 1.5rem;
+  padding: 0.8rem 1.7rem;
   border: none;
-  border-radius: 4px;
-  font-size: 1rem;
+  border-radius: 999px;
+  font-size: 1.07rem;
   cursor: pointer;
-  transition: background-color 0.2s;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+  letter-spacing: -0.2px;
 
   &:hover {
-    opacity: 0.9;
+    opacity: 0.93;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.10);
   }
 `;
 
 const EditButton = styled(Button)`
-  background-color: #007bff;
-  color: white;
+  background-color: #181818;
+  color: #fff;
 `;
 
 const DeleteButton = styled(Button)`
   background-color: #dc3545;
-  color: white;
+  color: #fff;
 `;
 
 const BackButton = styled(Button)`
-  background-color: #6c757d;
-  color: white;
+  background-color: #fff;
+  color: #181818;
+  border: 1.5px solid #e0e0e0;
 `;
 
 const ApplyButton = styled(Button)`
-  background-color: #28a745;
-  color: white;
+  background-color: #1a7f37;
+  color: #fff;
 `;
 
 const Loading = styled.div`
   text-align: center;
-  padding: 2rem;
+  padding: 2.5rem;
+  font-size: 1.2rem;
+  color: #888;
 `;
 
 const Error = styled.div`
   text-align: center;
-  padding: 2rem;
-  color: red;
+  padding: 2.5rem;
+  color: #d32f2f;
+  font-size: 1.1rem;
 `;
 
 const Header = styled.div`
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 2.2rem;
+`;
+
+const TitleRow = styled.div`
+  display: flex;
   align-items: center;
-  margin-bottom: 2rem;
+  gap: 0.7rem;
 `;
 
 const CompanyName = styled.span`
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: #333;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #444;
+  margin-top: 0.2rem;
+  margin-bottom: 0.2rem;
 `;
 
-const Content = styled.div`
-  // Add any necessary styles for the content section
-`;
+const Content = styled.div``;
 
 const Section = styled.div`
-  margin-bottom: 2rem;
+  margin-bottom: 2.2rem;
 `;
 
 const SectionTitle = styled.h3`
-  font-size: 1.5rem;
+  font-size: 1.18rem;
   margin-bottom: 1rem;
-  color: #333;
+  color: #222;
+  font-weight: 700;
 `;
 
 function JobPostDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [jobPost, setJobPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [userInfo, setUserInfo] = useState(null);
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [bookmarkId, setBookmarkId] = useState(null);
+  const [bookmarkLoading, setBookmarkLoading] = useState(true);
 
   const formatDate = (dateString) => {
     if (!dateString) return '';
@@ -195,6 +228,33 @@ function JobPostDetail() {
     fetchJobPost();
   }, [id]);
 
+  useEffect(() => {
+    const fetchBookmark = async () => {
+      setBookmarkLoading(true);
+      try {
+        const data = await bookmarkApi.getMyBookmarks();
+        const bookmarks = Array.isArray(data.bookmarks) ? data.bookmarks : [];
+        console.log('JobPostDetail 북마크 API 응답:', data);
+        bookmarks.forEach(b => {
+          const isMatch = Number(b.jobPostId) === Number(id);
+          console.log(
+            `[비교] jobPostId=${id} (type:${typeof id}), bookmark.jobPostId=${b.jobPostId} (type:${typeof b.jobPostId}), isMatch=${isMatch}`
+          );
+        });
+        const found = bookmarks.find(b => Number(b.jobPostId) === Number(id));
+        if (found) {
+          setIsBookmarked(true);
+          setBookmarkId(found.bookmarkId);
+        } else {
+          setIsBookmarked(false);
+          setBookmarkId(null);
+        }
+      } catch (e) {}
+      setBookmarkLoading(false);
+    };
+    if (id) fetchBookmark();
+  }, [id]);
+
   const handleEdit = () => {
     navigate(`/jobpost/${id}/edit`);
   };
@@ -232,7 +292,13 @@ function JobPostDetail() {
     return (
       <Container>
         <div>{error}</div>
-        <BackButton onClick={() => navigate('/jobpost')}>목록으로 돌아가기</BackButton>
+        <BackButton onClick={() => {
+          if (location.state?.from) {
+            navigate(location.state.from);
+          } else {
+            navigate('/jobpost');
+          }
+        }}>목록으로 돌아가기</BackButton>
       </Container>
     );
   }
@@ -250,7 +316,28 @@ function JobPostDetail() {
     <Container>
       <Toast />
       <Header>
-        <Title>{jobPost.jobName}</Title>
+        <TitleRow>
+          <Title>{jobPost.jobName}</Title>
+          <BookmarkButton
+            jobPostId={jobPost.jobPostId}
+            isBookmarked={isBookmarked}
+            bookmarkId={bookmarkId}
+            onBookmarkChange={() => {
+              setBookmarkLoading(true);
+              (async () => {
+                try {
+                  const data = await bookmarkApi.getMyBookmarks();
+                  const bookmarks = Array.isArray(data.bookmarks) ? data.bookmarks : [];
+                  const found = bookmarks.find(b => Number(b.jobPostId) === Number(jobPost.jobPostId));
+                  setIsBookmarked(!!found);
+                  setBookmarkId(found ? found.bookmarkId : null);
+                } catch (e) {}
+                setBookmarkLoading(false);
+              })();
+            }}
+            disabled={bookmarkLoading}
+          />
+        </TitleRow>
         <CompanyName>{jobPost.companyName}</CompanyName>
       </Header>
 
@@ -316,7 +403,13 @@ function JobPostDetail() {
         ) : (
           <ApplyButton onClick={handleApply}>지원하기</ApplyButton>
         )}
-        <BackButton onClick={() => navigate('/jobpost')}>목록으로 돌아가기</BackButton>
+        <BackButton onClick={() => {
+          if (location.state?.from) {
+            navigate(location.state.from);
+          } else {
+            navigate('/jobpost');
+          }
+        }}>목록으로 돌아가기</BackButton>
       </ButtonGroup>
     </Container>
   );

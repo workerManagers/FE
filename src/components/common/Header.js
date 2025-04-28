@@ -142,7 +142,7 @@ const Header = ({ isLoggedIn, userInfo, onLoginStatusChange }) => {
         <NavMenu>
           {isLoggedIn && userInfo?.userType === 'COMPANY' && (
             <>
-              <NavLink onClick={() => navigate('/jobpost')}>모집공고</NavLink>
+              <NavLink onClick={() => navigate('/jobpost')}>채용공고</NavLink>
               <NavLink onClick={() => navigate('/add-job')}>직무 추가</NavLink>
               <NavLink onClick={() => navigate('/predict')}>요양기간 예측</NavLink>
               <NavLink onClick={() => navigate('/matching')}>대체인력 매칭</NavLink>
@@ -150,8 +150,8 @@ const Header = ({ isLoggedIn, userInfo, onLoginStatusChange }) => {
           )}
           {isLoggedIn && userInfo?.userType === 'INDIVIDUAL' && (
             <>
-              <NavLink onClick={() => navigate('/jobs')}>채용공고</NavLink>
               <NavLink onClick={() => navigate('/resume')}>내 이력서</NavLink>
+              <NavLink onClick={() => navigate('/bookmarks')}>찜한 공고</NavLink>
             </>
           )}
         </NavMenu>

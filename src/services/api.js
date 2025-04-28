@@ -353,4 +353,35 @@ export const resumeApi = {
   },
 };
 
+// 북마크 관련 API
+export const bookmarkApi = {
+  // 북마크 생성
+  createBookmark: async (jobPostId) => {
+    try {
+      const response = await api.post('/bookmarks', { jobPostId });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  // 북마크 삭제
+  deleteBookmark: async (bookmarkId) => {
+    try {
+      const response = await api.delete(`/bookmarks/${bookmarkId}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  // 내 북마크 목록 조회
+  getMyBookmarks: async () => {
+    try {
+      const response = await api.get('/bookmarks/my');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+};
+
 export default api; 
