@@ -152,6 +152,7 @@ const Header = ({ isLoggedIn, userInfo, onLoginStatusChange }) => {
             <>
               <NavLink onClick={() => navigate('/resume')}>내 이력서</NavLink>
               <NavLink onClick={() => navigate('/bookmarks')}>찜한 공고</NavLink>
+              <NavLink onClick={() => navigate('/job-matching')}>직무 매칭</NavLink>
             </>
           )}
         </NavMenu>

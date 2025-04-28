@@ -486,4 +486,26 @@ export const chatApi = {
   },
 };
 
+export const matchingApi = {
+  // 공고별 매칭 점수 조회 (기업회원용)
+  getMatchingScores: async (jobPostId) => {
+    try {
+      const response = await api.post('/company-matchings/match', { jobPostId });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // 이력서 기반 직무 매칭 점수 조회 (일반회원용)
+  getJobMatchingScores: async (resumeId) => {
+    try {
+      const response = await api.post('/ai-matchings/match', { resumeId });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+};
+
 export default api; 

@@ -18,6 +18,8 @@ import { userApi } from './services/api';
 import BookmarkPage from './pages/BookmarkPage';
 import ChatRoomList from './components/chat/ChatRoomList';
 import ChatRoom from './components/chat/ChatRoom';
+import MatchingPage from './pages/MatchingPage';
+import JobMatchingPage from './pages/JobMatchingPage';
 import './App.css';
 
 const PageContainer = styled.div`
@@ -95,6 +97,8 @@ function App() {
           <Route path="/chat/:roomId" element={<ChatRoom />} />
           <Route path="/chat" element={<ChatRoomList />} />
           <Route path="/chat/recruiter" element={<ChatRoomList />} />
+          <Route path="/matching" element={<MatchingPage />} />
+          <Route path="/job-matching" element={<JobMatchingPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </PageContainer>
