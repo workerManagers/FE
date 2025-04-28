@@ -299,4 +299,103 @@ export const jobPostApi = {
   }
 };
 
+export const applicationApi = {
+  // 채용공고 지원하기
+  applyToJob: async (jobPostId) => {
+    try {
+      const response = await api.post('/applications', { jobPostId }, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // 내 지원 목록 조회
+  getMyApplications: async () => {
+    try {
+      const response = await api.get('/applications/my-applications', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // 특정 공고의 지원자 목록 조회 (기업 회원용)
+  getJobPostApplications: async (jobPostId) => {
+    try {
+      const response = await api.get(`/applications/job-posts/${jobPostId}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+};
+
+export const resumeApi = {
+  // 이력서 생성
+  createResume: async (resumeText) => {
+    try {
+      const response = await api.post('/resumes', { resumeText });
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 401) {
+        console.error('인증 오류:', error);
+      }
+      throw error;
+    }
+  },
+
+  // 이력서 조회
+  getResume: async () => {
+    try {
+      const response = await api.get('/resumes');
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 401) {
+        console.error('인증 오류:', error);
+      }
+      throw error;
+    }
+  },
+
+  // 이력서 수정
+  updateResume: async (resumeText) => {
+    try {
+      const response = await api.put('/resumes', { resumeText });
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 401) {
+        console.error('인증 오류:', error);
+      }
+      throw error;
+    }
+  },
+
+  // 이력서 삭제
+  deleteResume: async () => {
+    try {
+      const response = await api.delete('/resumes');
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 401) {
+        console.error('인증 오류:', error);
+      }
+      throw error;
+    }
+  }
+};
+
 export default api; 

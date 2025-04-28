@@ -239,79 +239,54 @@ function JobPost() {
   };
 
   useEffect(() => {
-    // 메인 페이지에서 전달받은 로그인 상태 확인
-    if (location.state?.userInfo && location.state?.isLoggedIn) {
-      setUserInfo(location.state.userInfo);
-      setIsLoggedIn(location.state.isLoggedIn);
-    } else {
-      // 전달받은 상태가 없는 경우 localStorage에서 확인
-      const token = localStorage.getItem('token');
-      if (token) {
-        const fetchUserInfo = async () => {
-          try {
-            const userData = await userApi.getUserInfo();
-            const userType = localStorage.getItem('userType');
-            
-            if (userType) {
-              const userInfoWithType = {
-                ...userData,
-                userType: userType
-              };
-              setUserInfo(userInfoWithType);
-            } else {
-              setUserInfo(userData);
-            }
-            setIsLoggedIn(true);
-          } catch (error) {
-            localStorage.removeItem('token');
-            localStorage.removeItem('userType');
-            setIsLoggedIn(false);
-            setUserInfo(null);
-            navigate('/login');
-          }
-        };
-        fetchUserInfo();
-      } else {
-        setIsLoggedIn(false);
-        setUserInfo(null);
-        navigate('/login');
-      }
+    const token = localStorage.getItem('token');
+    if (token) {
+      const fetchUserInfo = async () => {
+        try {
+          const userData = await userApi.getUserInfo();
+          setUserInfo(userData);
+          setIsLoggedIn(true);
+        } catch (error) {
+          console.error('사용자 정보 조회 실패:', error);
+          setIsLoggedIn(false);
+          setUserInfo(null);
+        }
+      };
+      fetchUserInfo();
     }
-  }, [navigate, location]);
+  }, []);
 
   useEffect(() => {
     const fetchJobPosts = async () => {
       try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          setError('로그인이 필요합니다.');
-          navigate('/login');
-          return;
+        setIsLoading(true);
+        const response = await jobPostApi.getJobPosts();
+        
+        // 기업 사용자인 경우 자신의 공고만 필터링
+        if (userInfo?.userType === 'COMPANY') {
+          const filteredPosts = response.filter(post => 
+            post.companyName === userInfo.companyInfo.companyName
+          );
+          setJobPosts(filteredPosts);
+        } else {
+          // 일반 사용자인 경우 모든 공고 표시
+          setJobPosts(response);
         }
-
-        const data = await jobPostApi.getJobPosts();
-        setJobPosts(data);
+        
         setError(null);
       } catch (error) {
-        console.error('채용공고 조회 실패:', error);
-        if (error.message.includes('세션이 만료되었습니다')) {
-          localStorage.removeItem('token');
-          localStorage.removeItem('userType');
-          setIsLoggedIn(false);
-          setUserInfo(null);
+        console.error('채용공고 목록 조회 실패:', error);
+        setError('채용공고를 불러오는데 실패했습니다.');
+        if (error.response?.status === 401) {
           navigate('/login');
-        } else {
-          setError('채용공고를 불러오는 중 오류가 발생했습니다.');
         }
       } finally {
         setIsLoading(false);
       }
     };
 
-    if (isLoggedIn) {
-      fetchJobPosts();
-    }
-  }, [navigate, isLoggedIn]);
+    fetchJobPosts();
+  }, [userInfo, navigate]);
 
   useEffect(() => {
     const fetchJobCategories = async () => {
@@ -450,7 +425,9 @@ function JobPost() {
   return (
     <Container>
       <Toast />
-      <Title>채용 공고</Title>
+      <Title>
+        {userInfo?.userType === 'COMPANY' ? '내 모집공고 관리' : '채용공고 목록'}
+      </Title>
 
       <FilterSection>
         <FilterGroup>
@@ -496,31 +473,43 @@ function JobPost() {
         </FilterGroup>
       </FilterSection>
 
-      <JobList>
-        {filteredJobPosts.map(post => {
-          const jobCategory = jobCategories[post.jobName];
-          return (
-            <JobCard key={post.jobPostId} onClick={() => navigate(`/jobpost/${post.jobPostId}`)}>
-              <JobTitle>{post.jobName}</JobTitle>
-              <CompanyName>{post.companyName}</CompanyName>
-              <JobInfo>
-                {jobCategory && (
-                  <>
-                    <InfoTag>{industryCategories[jobCategory.industryCategory]}</InfoTag>
-                    <InfoTag>{industrySubcategories[jobCategory.industrySubcategory]}</InfoTag>
-                  </>
-                )}
-                <InfoTag>{getCareerTypeLabel(post.careerType)}</InfoTag>
-              </JobInfo>
-              <Deadline>마감일: {formatDate(post.deadline)}</Deadline>
-            </JobCard>
-          );
-        })}
-      </JobList>
+      {isLoading ? (
+        <div>로딩 중...</div>
+      ) : error ? (
+        <div>{error}</div>
+      ) : jobPosts.length === 0 ? (
+        <div>
+          {userInfo?.userType === 'COMPANY' 
+            ? '등록된 모집공고가 없습니다.' 
+            : '현재 등록된 채용공고가 없습니다.'}
+        </div>
+      ) : (
+        <JobList>
+          {filteredJobPosts.map(post => {
+            const jobCategory = jobCategories[post.jobName];
+            return (
+              <JobCard key={post.jobPostId} onClick={() => navigate(`/jobpost/${post.jobPostId}`)}>
+                <JobTitle>{post.jobName}</JobTitle>
+                <CompanyName>{post.companyName}</CompanyName>
+                <JobInfo>
+                  {jobCategory && (
+                    <>
+                      <InfoTag>{industryCategories[jobCategory.industryCategory]}</InfoTag>
+                      <InfoTag>{industrySubcategories[jobCategory.industrySubcategory]}</InfoTag>
+                    </>
+                  )}
+                  <InfoTag>{getCareerTypeLabel(post.careerType)}</InfoTag>
+                </JobInfo>
+                <Deadline>마감일: {formatDate(post.deadline)}</Deadline>
+              </JobCard>
+            );
+          })}
+        </JobList>
+      )}
 
-      <NewPostButton onClick={() => navigate('/jobpost/new')}>
-        +
-      </NewPostButton>
+      {userInfo?.userType === 'COMPANY' && (
+        <NewPostButton onClick={() => navigate('/jobpost/new')}>+</NewPostButton>
+      )}
     </Container>
   );
 }
