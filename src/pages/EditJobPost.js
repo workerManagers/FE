@@ -227,8 +227,17 @@ function EditJobPost() {
             type="text"
             name="companyName"
             value={formData.companyName}
-            onChange={handleChange}
-            required
+            readOnly
+          />
+        </FormGroup>
+
+        <FormGroup>
+          <Label>근무지역</Label>
+          <Input
+            type="text"
+            name="jobRegion"
+            value={formData.jobRegion}
+            readOnly
           />
         </FormGroup>
 
@@ -318,17 +327,6 @@ function EditJobPost() {
         </FormGroup>
 
         <FormGroup>
-          <Label>근무지역</Label>
-          <Input
-            type="text"
-            name="jobRegion"
-            value={formData.jobRegion}
-            onChange={handleChange}
-            required
-          />
-        </FormGroup>
-
-        <FormGroup>
           <Label>마감일</Label>
           <Input
             type="date"
@@ -341,7 +339,7 @@ function EditJobPost() {
 
         <ButtonGroup>
           <SubmitButton type="submit">수정하기</SubmitButton>
-          <CancelButton type="button" onClick={() => navigate(`/job-posts/${id}`)}>취소</CancelButton>
+          <CancelButton type="button" onClick={() => navigate(`/jobpost/${id}`)}>취소</CancelButton>
         </ButtonGroup>
       </Form>
     </Container>

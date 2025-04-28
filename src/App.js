@@ -15,6 +15,7 @@ import EditJobPost from './pages/EditJobPost';
 import AddJobPage from './pages/AddJobPage';
 import Toast from './components/common/Toast';
 import { userApi } from './services/api';
+import ResumePage from './pages/ResumePage';
 import './App.css';
 
 const PageContainer = styled.div`
@@ -82,6 +83,7 @@ function App() {
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/predict" element={<PredictPage />} />
           <Route path="/test" element={<Test />} />
+          <Route path="/resume" element={<ResumePage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </PageContainer>

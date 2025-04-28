@@ -150,7 +150,8 @@ const Header = ({ isLoggedIn, userInfo, onLoginStatusChange }) => {
           )}
           {shouldShowIndividualMenu && (
             <>
-              <NavLink onClick={() => navigate('/jobs')}>채용공고</NavLink>
+              <NavLink onClick={() => navigate('/jobpost')}>채용공고</NavLink>
+              <NavLink onClick={() => navigate('/resume')}>자기소개서</NavLink>
               <NavLink onClick={() => navigate('/profile')}>내 프로필</NavLink>
             </>
           )}

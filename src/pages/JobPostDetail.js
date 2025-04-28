@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { jobPostApi, userApi } from '../services/api';
+import { jobPostApi, userApi, applicationApi } from '../services/api';
 import { showToast } from '../components/common/Toast';
 import Toast from '../components/common/Toast';
 import { IoArrowBack } from 'react-icons/io5';
@@ -68,15 +68,23 @@ const ButtonGroup = styled.div`
 `;
 
 const Button = styled.button`
-  padding: 0.75rem 1.5rem;
+  padding: 0.8rem 2rem;
   border: none;
   border-radius: 4px;
   font-size: 1rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
 
   &:hover {
+    transform: translateY(-2px);
     opacity: 0.9;
+  }
+
+  &:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+    transform: none;
   }
 `;
 
@@ -96,8 +104,12 @@ const BackButton = styled(Button)`
 `;
 
 const ApplyButton = styled(Button)`
-  background-color: #28a745;
+  background-color: #4CAF50;
   color: white;
+
+  &:hover {
+    background-color: #45a049;
+  }
 `;
 
 const Loading = styled.div`
@@ -145,6 +157,8 @@ function JobPostDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [userInfo, setUserInfo] = useState(null);
+  const [hasApplied, setHasApplied] = useState(false);
+  const userType = localStorage.getItem('userType');
 
   const formatDate = (dateString) => {
     if (!dateString) return '';
@@ -181,6 +195,9 @@ function JobPostDetail() {
         console.log('채용공고 정보:', data);
         setJobPost(data);
         setError(null);
+        if (userType === 'INDIVIDUAL') {
+          checkApplicationStatus();
+        }
       } catch (error) {
         console.error('Error fetching job post:', error);
         setError('채용공고를 불러오는 중 오류가 발생했습니다.');
@@ -194,6 +211,15 @@ function JobPostDetail() {
 
     fetchJobPost();
   }, [id]);
+
+  const checkApplicationStatus = async () => {
+    try {
+      const applications = await applicationApi.getMyApplications();
+      setHasApplied(applications.some(app => app.jobPostId === parseInt(id)));
+    } catch (error) {
+      console.error('지원 상태 확인 실패:', error);
+    }
+  };
 
   const handleEdit = () => {
     navigate(`/jobpost/${id}/edit`);
@@ -220,8 +246,14 @@ function JobPostDetail() {
     }
   };
 
-  const handleApply = () => {
-    navigate(`/jobpost/${id}/apply`);
+  const handleApply = async () => {
+    try {
+      const response = await applicationApi.applyToJob(parseInt(id));
+      setHasApplied(true);
+      showToast.success(response.message || '채용공고 지원이 완료되었습니다.');
+    } catch (error) {
+      showToast.error(error.response?.data?.message || '지원에 실패했습니다. 다시 시도해주세요.');
+    }
   };
 
   if (loading) {
@@ -263,7 +295,7 @@ function JobPostDetail() {
               <InfoValue>{jobPost.jobRegion}</InfoValue>
             </InfoItem>
             <InfoItem>
-              <InfoLabel>고용형태</InfoLabel>
+              <InfoLabel>고용기간</InfoLabel>
               <InfoValue>{jobPost.jobPeriod}</InfoValue>
             </InfoItem>
             <InfoItem>
@@ -313,9 +345,14 @@ function JobPostDetail() {
             <EditButton onClick={handleEdit}>수정</EditButton>
             <DeleteButton onClick={handleDelete}>삭제</DeleteButton>
           </>
-        ) : (
-          <ApplyButton onClick={handleApply}>지원하기</ApplyButton>
-        )}
+        ) : userInfo?.userType !== 'COMPANY' ? (
+          <ApplyButton 
+            onClick={handleApply} 
+            disabled={hasApplied}
+          >
+            {hasApplied ? '지원완료' : '지원하기'}
+          </ApplyButton>
+        ) : null}
         <BackButton onClick={() => navigate('/jobpost')}>목록으로 돌아가기</BackButton>
       </ButtonGroup>
     </Container>
