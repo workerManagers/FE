@@ -135,6 +135,18 @@ const DeleteButton = styled(Button)`
   color: white;
 `;
 
+const DisabledInput = styled(Input)`
+  background-color: #f8f9fa;
+  cursor: not-allowed;
+  opacity: 0.8;
+`;
+
+const DisabledSelect = styled(Select)`
+  background-color: #f8f9fa;
+  cursor: not-allowed;
+  opacity: 0.8;
+`;
+
 const ResumePage = () => {
   const navigate = useNavigate();
   const [resume, setResume] = useState(null);
@@ -212,15 +224,32 @@ const ResumePage = () => {
           return;
         }
 
+        // 사용자 정보에서 성별과 나이 가져오기
+        const userGender = userInfo.userSex;
+        const userAge = userInfo.userAge;
+
         try {
           const data = await resumeApi.getResume();
           if (data) {
             setResume(data);
             parseResumeText(data.resumeText);
+          } else {
+            // 이력서가 없는 경우 기본 정보 설정
+            setSections(prev => ({
+              ...prev,
+              gender: userGender === '여' ? '여성' : '남성',
+              age: userAge?.toString() || ''
+            }));
           }
           setLoading(false);
         } catch (error) {
           console.error('이력서 조회 중 에러:', error);
+          // 이력서 조회 실패 시에도 기본 정보 설정
+          setSections(prev => ({
+            ...prev,
+            gender: userGender === '여' ? '여성' : '남성',
+            age: userAge?.toString() || ''
+          }));
           setLoading(false);
         }
       } catch (error) {
@@ -250,11 +279,14 @@ const ResumePage = () => {
       const genderMatch = text.match(/성별:([^\n]*)/);
       const ageMatch = text.match(/나이:([^\n]*)/);
       const regionMatch = text.match(/원하는 근무지역:([^\n]*)/);
-      const introMatch = text.match(/자기소개:([^직무]*)/);
       
-      // 직무 경험은 '직무 경험 및 관련 활동:' 부터 '나의 성향:' 직전까지
+      // 자기소개는 '자기소개:' 부터 '직무 경험 및 관련 활동:' 전까지
+      const introMatch = text.match(/자기소개:([\s\S]*?)(?=직무 경험 및 관련 활동:)/);
+      
+      // 직무 경험은 '직무 경험 및 관련 활동:' 부터 '나의 성향:' 전까지
       const expMatch = text.match(/직무 경험 및 관련 활동:([\s\S]*?)(?=나의 성향:)/);
       
+      // 성향은 '나의 성향:' 부터 끝까지
       const traitsMatch = text.match(/나의 성향:([^\n]*?)$/);
 
       if (genderMatch) newSections.gender = genderMatch[1].trim();
@@ -364,22 +396,18 @@ const ResumePage = () => {
             <>
               <FormGroup>
                 <Label>성별</Label>
-                <Select
+                <DisabledInput
+                  type="text"
                   value={sections.gender}
-                  onChange={(e) => setSections({...sections, gender: e.target.value})}
-                >
-                  <option value="">선택하세요</option>
-                  <option value="남성">남성</option>
-                  <option value="여성">여성</option>
-                </Select>
+                  disabled
+                />
               </FormGroup>
               <FormGroup>
                 <Label>나이</Label>
-                <Input
-                  type="number"
+                <DisabledInput
+                  type="text"
                   value={sections.age}
-                  onChange={(e) => setSections({...sections, age: e.target.value})}
-                  placeholder="나이를 입력하세요"
+                  disabled
                 />
               </FormGroup>
               <FormGroup>

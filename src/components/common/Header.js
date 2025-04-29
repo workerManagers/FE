@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
-import { FaUserCircle } from 'react-icons/fa';
+import { FaUserCircle, FaBookmark } from 'react-icons/fa';
 import { userApi } from '../../services/api';
 import { showToast } from './Toast';
 
@@ -65,7 +65,7 @@ const NavLink = styled.a`
 const UserSection = styled.div`
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.8rem;
 `;
 
 const WelcomeMessage = styled.span`
@@ -73,6 +73,38 @@ const WelcomeMessage = styled.span`
   font-size: 0.9rem;
   font-weight: 500;
   margin-right: 0.5rem;
+`;
+
+const IconButton = styled.button`
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  position: relative;
+  margin-right: -0.5rem;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+`;
+
+const BookmarkCount = styled.span`
+  position: absolute;
+  top: 0;
+  right: 0;
+  background-color: #ff4757;
+  color: white;
+  font-size: 0.7rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
 `;
 
 const ProfileButton = styled.button`
@@ -144,6 +176,23 @@ const Divider = styled.div`
 const Header = ({ isLoggedIn, userInfo, onLoginStatusChange }) => {
   const navigate = useNavigate();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [bookmarkCount, setBookmarkCount] = useState(0);
+
+  // 북마크 수 가져오기
+  useEffect(() => {
+    if (isLoggedIn && userInfo?.userType === 'INDIVIDUAL') {
+      // TODO: 북마크 수를 가져오는 API 호출
+      // const fetchBookmarkCount = async () => {
+      //   try {
+      //     const response = await userApi.getBookmarkCount();
+      //     setBookmarkCount(response.count);
+      //   } catch (error) {
+      //     console.error('북마크 수 조회 실패:', error);
+      //   }
+      // };
+      // fetchBookmarkCount();
+    }
+  }, [isLoggedIn, userInfo]);
 
   // 프로필 드롭다운 외부 클릭 감지
   useEffect(() => {
@@ -190,7 +239,6 @@ const Header = ({ isLoggedIn, userInfo, onLoginStatusChange }) => {
           )}
           {isLoggedIn && userInfo?.userType === 'INDIVIDUAL' && (
             <>
-              <NavLink onClick={() => navigate('/bookmarks')}>찜한 공고</NavLink>
               <NavLink onClick={() => navigate('/job-matching')}>직무 매칭</NavLink>
             </>
           )}
@@ -200,6 +248,12 @@ const Header = ({ isLoggedIn, userInfo, onLoginStatusChange }) => {
       <UserSection>
         {isLoggedIn ? (
           <>
+            {userInfo?.userType === 'INDIVIDUAL' && (
+              <IconButton onClick={() => navigate('/bookmarks')} title="찜한 공고">
+                <FaBookmark />
+                {bookmarkCount > 0 && <BookmarkCount>{bookmarkCount}</BookmarkCount>}
+              </IconButton>
+            )}
             <ProfileButton 
               className="profile-menu"
               onClick={() => setIsProfileOpen(!isProfileOpen)}
