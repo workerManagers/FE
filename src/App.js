@@ -13,6 +13,7 @@ import PredictPage from './pages/PredictPage';
 import EditJobPost from './pages/EditJobPost';
 import AddJobPage from './pages/AddJobPage';
 import ResumePage from './pages/ResumePage';
+import ProfilePage from './pages/ProfilePage';
 import Toast from './components/common/Toast';
 import { userApi } from './services/api';
 import BookmarkPage from './pages/BookmarkPage';
@@ -93,6 +94,7 @@ function App() {
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/predict" element={<PredictPage />} />
           <Route path="/resume" element={<ResumePage />} />
+          <Route path="/profile" element={<ProfilePage />} />
           <Route path="/bookmarks" element={<BookmarkPage />} />
           <Route path="/chat/:roomId" element={<ChatRoom />} />
           <Route path="/chat" element={<ChatRoomList />} />

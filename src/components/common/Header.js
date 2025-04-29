@@ -108,32 +108,72 @@ const AuthButton = styled(motion.button)`
   }
 `;
 
+const ProfileDropdown = styled(motion.div)`
+  position: absolute;
+  top: 100%;
+  right: 2rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 0.5rem;
+  min-width: 200px;
+  z-index: 1001;
+`;
+
+const DropdownItem = styled.div`
+  padding: 0.8rem 1rem;
+  color: #333;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  &:hover {
+    background-color: #f8f9fa;
+  }
+`;
+
+const Divider = styled.div`
+  height: 1px;
+  background-color: #dee2e6;
+  margin: 0.5rem 0;
+`;
+
 const Header = ({ isLoggedIn, userInfo, onLoginStatusChange }) => {
   const navigate = useNavigate();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
+  // 프로필 드롭다운 외부 클릭 감지
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isProfileOpen && !event.target.closest('.profile-menu')) {
+        setIsProfileOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isProfileOpen]);
+
   const handleLogout = () => {
-    // 1. localStorage 정리
     localStorage.removeItem('token');
     localStorage.removeItem('userType');
     localStorage.removeItem('userName');
     localStorage.removeItem('userId');
     
-    // 2. 부모 컴포넌트에 로그아웃 알림
     if (onLoginStatusChange) {
       onLoginStatusChange(false, null);
     }
     
-    // 3. 페이지 이동 후 토스트 메시지 표시
     navigate('/login', { replace: true });
     setTimeout(() => {
       showToast.success('로그아웃되었습니다.');
     }, 100);
   };
-
-  // 로그인 상태에 따라 메뉴 표시 여부 결정
-  const shouldShowCompanyMenu = isLoggedIn && userInfo?.userType === 'COMPANY';
-  const shouldShowIndividualMenu = isLoggedIn && userInfo?.userType === 'INDIVIDUAL';
 
   return (
     <HeaderContainer>
@@ -150,7 +190,6 @@ const Header = ({ isLoggedIn, userInfo, onLoginStatusChange }) => {
           )}
           {isLoggedIn && userInfo?.userType === 'INDIVIDUAL' && (
             <>
-              <NavLink onClick={() => navigate('/resume')}>내 이력서</NavLink>
               <NavLink onClick={() => navigate('/bookmarks')}>찜한 공고</NavLink>
               <NavLink onClick={() => navigate('/job-matching')}>직무 매칭</NavLink>
             </>
@@ -161,18 +200,43 @@ const Header = ({ isLoggedIn, userInfo, onLoginStatusChange }) => {
       <UserSection>
         {isLoggedIn ? (
           <>
-            <ProfileButton onClick={() => setIsProfileOpen(!isProfileOpen)}>
+            <ProfileButton 
+              className="profile-menu"
+              onClick={() => setIsProfileOpen(!isProfileOpen)}
+            >
               <FaUserCircle />
             </ProfileButton>
+            {isProfileOpen && (
+              <ProfileDropdown
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="profile-menu"
+              >
+                <DropdownItem onClick={() => {
+                  navigate('/profile');
+                  setIsProfileOpen(false);
+                }}>
+                  내 정보
+                </DropdownItem>
+                {userInfo?.userType === 'INDIVIDUAL' && (
+                  <>
+                    <Divider />
+                    <DropdownItem onClick={() => {
+                      navigate('/resume');
+                      setIsProfileOpen(false);
+                    }}>
+                      내 이력서
+                    </DropdownItem>
+                  </>
+                )}
+                <Divider />
+                <DropdownItem onClick={handleLogout}>
+                  로그아웃
+                </DropdownItem>
+              </ProfileDropdown>
+            )}
             <WelcomeMessage>{userInfo?.userName}</WelcomeMessage>
-            <AuthButton
-              variant="logout"
-              onClick={handleLogout}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              로그아웃
-            </AuthButton>
           </>
         ) : (
           <>
