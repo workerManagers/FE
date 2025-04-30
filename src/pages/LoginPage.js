@@ -7,11 +7,12 @@ import { showToast } from '../components/common/Toast';
 
 const PageContainer = styled(motion.div)`
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
-  min-height: calc(100vh - 60px);
-  background-color: white;
-  padding: 1rem;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 6rem 2rem 2rem;
+  background-color: #f8f9fa;
   
   @media (max-width: 480px) {
     padding: 0.5rem;

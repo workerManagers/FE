@@ -204,8 +204,8 @@ const ButtonContainer = styled.div`
 `;
 
 const SubmitButton = styled(motion.button)`
-  width: 140px;
-  padding: 0.8rem 0;
+  width: 120px;
+  padding: 0.6rem 0;
   background: rgba(0, 0, 0, 0.8);
   color: white;
   border: none;
@@ -213,6 +213,7 @@ const SubmitButton = styled(motion.button)`
   font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
+  margin-bottom: 20px;
   transition: all 0.3s ease;
   backdrop-filter: blur(10px);
   box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);

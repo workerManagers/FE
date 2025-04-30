@@ -7,11 +7,15 @@ import { showToast } from '../components/common/Toast';
 import Toast from '../components/common/Toast';
 
 const PageContainer = styled(motion.div)`
+  padding: 6rem 2rem 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background-color: #f8f9fa;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  background-color: white;
-  padding:6rem;
+  align-items: center;
+  justify-content: center;
 `;
 
 const Title = styled.h1`

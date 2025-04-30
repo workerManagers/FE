@@ -75,6 +75,8 @@ const PlanCard = styled(motion.div)`
   border: 2px solid transparent;
   position: relative;
   overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transform: translateY(0);
 
   &::before {
     content: '';
@@ -90,7 +92,6 @@ const PlanCard = styled(motion.div)`
 
   &:hover {
     transform: translateY(-5px);
-    border-color: transparent;
     box-shadow: 0 12px 32px rgba(0, 122, 255, 0.15);
 
     &::before {
@@ -264,7 +265,9 @@ const SubscriptionModal = ({ isOpen, onClose, userInfo }) => {
 
   const handleClose = () => {
     if (dontShowAgain) {
-      localStorage.setItem('hideSubscriptionModal', 'true');
+      // 현재 날짜를 저장 (YYYY-MM-DD 형식)
+      const today = new Date().toISOString().split('T')[0];
+      localStorage.setItem('hideSubscriptionModalUntil', today);
     }
     onClose();
   };
@@ -298,8 +301,6 @@ const SubscriptionModal = ({ isOpen, onClose, userInfo }) => {
                 <PlanCard
                   key={index}
                   gradient={plan.gradient}
-                  whileHover={{ y: -5 }}
-                  transition={{ type: "spring", stiffness: 300 }}
                 >
                   <PlanHeader>
                     <PlanIcon background={plan.background}>
@@ -329,7 +330,7 @@ const SubscriptionModal = ({ isOpen, onClose, userInfo }) => {
                 checked={dontShowAgain}
                 onChange={(e) => setDontShowAgain(e.target.checked)}
               />
-              <label htmlFor="dontShowAgain">다시 보지 않기</label>
+              <label htmlFor="dontShowAgain">오늘 다시 보지 않기</label>
             </DontShowAgain>
           </ModalContainer>
         </Overlay>

@@ -8,12 +8,12 @@ import penguin from '../assets/img/img2.png';
 const PageContainer = styled(motion.div)`
   min-height: 100vh;
   background-color: #f7f7f7;
-  padding: 6rem 2rem 2rem;
+  padding: 7.5rem 2rem 2rem;
 `;
 
 const ProfileContainer = styled.div`
   max-width: 800px;
-  margin: 0 auto;
+  margin: 1rem auto;
   background: white;
   border-radius: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -36,15 +36,15 @@ const ProfileHeader = styled.div`
   display: flex;
   align-items: flex-start;
   gap: 2rem;
-  padding: 2rem 3rem;
+  padding: 1.5rem 3rem;
   position: relative;
   z-index: 2;
 `;
 
 const ProfileImageContainer = styled.div`
-  width: 180px;
-  height: 180px;
-  padding: 1rem;
+  width: 150px;
+  height: 150px;
+  padding: 0.8rem;
   background: white;
   border-radius: 16px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -69,12 +69,12 @@ const ProfileImage = styled.div`
 
 const ProfileInfo = styled.div`
   flex: 1;
-  padding-top: 1rem;
+  padding-top: 0.8rem;
 `;
 
 const Name = styled.h1`
-  font-size: 2.2rem;
-  margin-bottom: 0.8rem;
+  font-size: 2rem;
+  margin-bottom: 0.6rem;
   color: white;
   font-weight: 600;
   letter-spacing: -0.5px;
@@ -92,14 +92,14 @@ const UserType = styled.span`
 `;
 
 const ProfileSection = styled.div`
-  padding: 2rem 3rem;
+  padding: 1.5rem 3rem;
   background-color: white;
 `;
 
 const SectionTitle = styled.h2`
   font-size: 1.3rem;
   color: rgb(74, 80, 86);
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   font-weight: 600;
   letter-spacing: -0.5px;
   position: relative;
@@ -114,7 +114,7 @@ const SectionTitle = styled.h2`
     top: 50%;
     transform: translateY(-50%);
     width: 4px;
-    height: 20px;
+    height: 18px;
     background: linear-gradient(to bottom,rgb(183, 209, 241),rgb(142, 197, 194));
     border-radius: 2px;
   }
@@ -123,11 +123,11 @@ const SectionTitle = styled.h2`
 const InfoGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 1.5rem;
+  gap: 1.2rem;
 `;
 
 const InfoItem = styled.div`
-  padding: 1.5rem;
+  padding: 1.2rem;
   border-radius: 12px;
   background: #f8f9fa;
   transition: all 0.2s ease;

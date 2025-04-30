@@ -286,7 +286,7 @@ const MainPage = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedSubcategory, setSelectedSubcategory] = useState('all');
   const [selectedCareerType, setSelectedCareerType] = useState('ALL');
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
   useEffect(() => {
     const checkLoginStatus = async () => {
@@ -307,6 +307,16 @@ const MainPage = () => {
             setUserInfo(userData);
           }
           setIsLoggedIn(true);
+          
+          // 기업 사용자이고 모달을 오늘 보지 않기로 설정하지 않은 경우에만 모달 표시
+          if (userData.userType === 'COMPANY') {
+            const hideUntil = localStorage.getItem('hideSubscriptionModalUntil');
+            const today = new Date().toISOString().split('T')[0];
+            
+            if (!hideUntil || hideUntil !== today) {
+              setShowSubscriptionModal(true);
+            }
+          }
         } catch (error) {
           console.error('사용자 정보 조회 실패:', error);
           localStorage.removeItem('token');
@@ -382,15 +392,6 @@ const MainPage = () => {
     };
     fetchBookmarks();
   }, [isLoggedIn, jobPosts]);
-
-  useEffect(() => {
-    // localStorage에서 다시 보지 않기 설정 확인
-    const hideModal = localStorage.getItem('hideSubscriptionModal');
-    // 기업 사용자이고 다시 보지 않기를 선택하지 않은 경우에만 모달 표시
-    if (!hideModal && userInfo?.userType === 'COMPANY') {
-      setIsModalOpen(true);
-    }
-  }, [userInfo]);
 
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
@@ -577,8 +578,8 @@ const MainPage = () => {
         </JobSection>
       </MainContent>
       <SubscriptionModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)}
+        isOpen={showSubscriptionModal} 
+        onClose={() => setShowSubscriptionModal(false)}
         userInfo={userInfo}
       />
       <Toast />

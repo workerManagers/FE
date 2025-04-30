@@ -142,7 +142,7 @@ const AuthButton = styled(motion.button)`
 
 const ProfileDropdown = styled(motion.div)`
   position: absolute;
-  top: 100%;
+  top: calc(100% + 0.5rem);
   right: 2rem;
   background: white;
   border-radius: 8px;
@@ -150,10 +150,11 @@ const ProfileDropdown = styled(motion.div)`
   padding: 0.5rem;
   min-width: 200px;
   z-index: 1001;
+  margin-top: -0.5rem;
 `;
 
 const DropdownItem = styled.div`
-  padding: 0.8rem 1rem;
+  padding: 0.6rem 1rem;
   color: #333;
   cursor: pointer;
   border-radius: 4px;
@@ -170,7 +171,7 @@ const DropdownItem = styled.div`
 const Divider = styled.div`
   height: 1px;
   background-color: #dee2e6;
-  margin: 0.5rem 0;
+  margin: 0.3rem 0;
 `;
 
 const Header = ({ isLoggedIn, userInfo, onLoginStatusChange }) => {

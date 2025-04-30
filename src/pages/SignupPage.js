@@ -5,11 +5,12 @@ import SignupForm from '../components/SignupForm';
 
 const PageContainer = styled(motion.div)`
   display: flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  align-items: flex-start;
-  min-height: calc(100vh - 60px);
-  background-color: white;
-  padding-top: -4rem;
+  min-height: 100vh;
+  padding: 3rem 2rem 2rem;
+  background-color: #f8f9fa;
   
   @media (max-width: 480px) {
     padding-top: -2rem;

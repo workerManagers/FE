@@ -57,9 +57,11 @@ const INDUSTRY_SUBCATEGORIES = {
 };
 
 const PageContainer = styled(motion.div)`
-  padding: 6rem 2rem 2rem;
+  padding: 9rem 2rem 2rem;
   max-width: 800px;
   margin: 0 auto;
+  min-height: 100vh;
+  background-color: #f8f9fa;
 `;
 
 const Title = styled.h1`
