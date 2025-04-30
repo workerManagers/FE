@@ -7,8 +7,8 @@ class WebSocketService {
 
   connect() {
     const token = localStorage.getItem('token');
-    // this.socket = new WebSocket(`wss://port-0-workermangers-be-m9ax68es6a756190.sel4.cloudtype.app/ws-chat?token=${token}`);
-    this.socket = new WebSocket(`ws://localhost:8080/ws-chat?token=${token}`);
+    this.socket = new WebSocket(`wss://port-0-workermangers-be-m9ax68es6a756190.sel4.cloudtype.app/ws-chat?token=${token}`);
+    // this.socket = new WebSocket(`ws://localhost:8080/ws-chat?token=${token}`);
     this.socket.onopen = () => {
       console.log('WebSocket 연결 성공');
       // 연결이 열린 후에만 구독 메시지 전송

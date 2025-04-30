@@ -1,84 +1,139 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
+import { motion } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { chatApi } from '../../services/api';
 import { showToast } from '../common/Toast';
 import { IoArrowBack } from 'react-icons/io5';
 
+const PageContainer = styled(motion.div)`
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: white;
+  padding: 2rem;
+`;
+
 const RoomListContainer = styled.div`
   max-width: 800px;
+  width: 100%;
   margin: 0 auto;
-  padding: 2rem 1rem;
+  min-height: calc(100vh - 8rem);
 `;
 
 const Header = styled.div`
   display: flex;
   align-items: center;
-  margin-bottom: 2rem;
+  margin-bottom: 2.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: white;
+  padding: 1rem 0;
 `;
 
-const BackButton = styled.button`
+const BackButton = styled(motion.button)`
   display: flex;
   align-items: center;
   padding: 0.8rem 1.5rem;
-  border: 1.5px solid #e0e0e0;
-  border-radius: 4px;
-  background-color: white;
-  color: #181818;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  border: none;
+  border-radius: 12px;
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
-  margin-right: 1rem;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
 
   &:hover {
-    background-color: #f8f9fa;
+    background: rgba(0, 0, 0, 0.9);
     transform: translateY(-2px);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   }
 `;
 
 const Title = styled.h2`
   margin: 0;
-  font-size: 1.5rem;
-  color: #181818;
+  font-size: 2rem;
+  color: #000000;
+  font-weight: 600;
+  margin-left: 1.5rem;
+  position: relative;
+
+  &:after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -10px;
+    width: 60px;
+    height: 3px;
+    background-color: #000000;
+    transition: width 0.3s ease;
+  }
+
+  &:hover:after {
+    width: 120px;
+  }
 `;
 
-const RoomCard = styled.div`
-  background-color: white;
-  border-radius: 0.5rem;
-  padding: 1rem;
-  margin-bottom: 1rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+const RoomCard = styled(motion.div)`
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  border-radius: 24px;
+  border: 3px solid rgba(0, 0, 0, 0.3);
   cursor: pointer;
-  transition: transform 0.2s;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
 
   &:hover {
-    transform: translateY(-2px);
+    transform: translateY(-5px);
+    border: 3px solid rgba(0, 0, 0, 0.4);
+    box-shadow: 0 12px 48px 0 rgba(0, 0, 0, 0.2);
+  }
+
+  &:first-child {
+    margin-top: 1rem;
   }
 `;
 
 const RoomTitle = styled.h3`
   margin: 0;
-  color: #333;
-  font-size: 1.1rem;
+  color: #000000;
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
 `;
 
 const RoomInfo = styled.div`
   display: flex;
   justify-content: space-between;
-  margin-top: 0.5rem;
-  color: #666;
+  margin-top: 1rem;
+  color: rgba(0, 0, 0, 0.6);
   font-size: 0.9rem;
+  gap: 1rem;
+  flex-wrap: wrap;
 `;
 
 const LastMessage = styled.p`
-  margin: 0.5rem 0 0;
-  color: #666;
+  margin: 1rem 0 0;
+  color: rgba(0, 0, 0, 0.6);
   font-size: 0.9rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+`;
+
+const EmptyState = styled.div`
+  text-align: center;
+  padding: 3rem;
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 1.1rem;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  border-radius: 24px;
+  border: 3px solid rgba(0, 0, 0, 0.3);
+  margin-top: 2rem;
 `;
 
 const ChatRoomList = () => {
@@ -89,10 +144,12 @@ const ChatRoomList = () => {
   const jobPostId = queryParams.get('jobPostId');
 
   useEffect(() => {
+    // 페이지 로드 시 스크롤을 맨 위로 이동
+    window.scrollTo(0, 0);
+    
     const loadChatRooms = async () => {
       try {
         const chatRooms = await chatApi.getRecruiterChatRooms();
-        // jobPostId가 있으면 해당 공고의 채팅방만 필터링
         const filteredRooms = jobPostId 
           ? chatRooms.filter(room => room.jobPostId === Number(jobPostId))
           : chatRooms;
@@ -114,31 +171,46 @@ const ChatRoomList = () => {
   };
 
   return (
-    <RoomListContainer>
-      <Header>
-        <BackButton onClick={handleGoBack}>
-          <IoArrowBack style={{ marginRight: '0.3rem' }} />
-          뒤로가기
-        </BackButton>
-        <Title>{jobPostId ? '1대1 문의 목록' : '전체 1대1 문의 목록'}</Title>
-      </Header>
-      {rooms.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
-          {jobPostId ? '이 공고에 대한 1대1 문의가 없습니다.' : '1대1 문의가 없습니다.'}
-        </div>
-      ) : (
-        rooms.map((room) => (
-          <RoomCard key={room.id} onClick={() => handleRoomClick(room.id)}>
-            <RoomTitle>{room.jobName}</RoomTitle>
-            <RoomInfo>
-              <span>문의자: {room.applicantName}</span>
-              <span>담당자: {room.recruiterName}</span>
-              <span>{new Date(room.createdAt).toLocaleString()}</span>
-            </RoomInfo>
-          </RoomCard>
-        ))
-      )}
-    </RoomListContainer>
+    <PageContainer
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <RoomListContainer>
+        <Header>
+          <BackButton
+            onClick={handleGoBack}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <IoArrowBack style={{ marginRight: '0.5rem' }} />
+            뒤로가기
+          </BackButton>
+          <Title>{jobPostId ? '1대1 문의 목록' : '전체 1대1 문의 목록'}</Title>
+        </Header>
+        {rooms.length === 0 ? (
+          <EmptyState>
+            {jobPostId ? '이 공고에 대한 1대1 문의가 없습니다.' : '1대1 문의가 없습니다.'}
+          </EmptyState>
+        ) : (
+          rooms.map((room) => (
+            <RoomCard
+              key={room.id}
+              onClick={() => handleRoomClick(room.id)}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <RoomTitle>{room.jobName}</RoomTitle>
+              <RoomInfo>
+                <span>문의자: {room.applicantName}</span>
+                <span>담당자: {room.recruiterName}</span>
+                <span>{new Date(room.createdAt).toLocaleString()}</span>
+              </RoomInfo>
+            </RoomCard>
+          ))
+        )}
+      </RoomListContainer>
+    </PageContainer>
   );
 };
 

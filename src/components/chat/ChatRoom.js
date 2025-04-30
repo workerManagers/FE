@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
+import { motion } from 'framer-motion';
 import { chatApi } from '../../services/api';
 import ChatMessage from './ChatMessage';
 import { showToast } from '../common/Toast';
@@ -8,16 +9,64 @@ import { Client } from '@stomp/stompjs';
 import { useParams, useNavigate } from 'react-router-dom';
 import { IoArrowBack } from 'react-icons/io5';
 
-const ChatContainer = styled.div`
-  width: 400px;
-  height: 800px;
-  margin: 0 auto;
-  margin-top: 40px;
+const PageContainer = styled(motion.div)`
   display: flex;
   flex-direction: column;
-  background: #f7f8fa;
+  min-height: 100vh;
+  background-color: white;
+  padding: 2rem;
+  margin-top: 0;
+  position: fixed;
+  width: 100%;
+  top: 0;
+  left: 0;
+`;
+
+const ChatContainer = styled.div`
+  max-width: 600px;
+  width: 100%;
+  height: 80vh;
+  margin: 5.5rem auto;
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  border-radius: 24px;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
+  border: 3px solid rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  position: relative;
+`;
+
+const Header = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  background: white;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.2);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+`;
+
+const BackButton = styled(motion.button)`
+  display: flex;
+  align-items: center;
+  padding: 0.8rem 1.5rem;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  border: none;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.9);
+    transform: translateY(-2px);
+  }
 `;
 
 const MessagesContainer = styled.div`
@@ -25,63 +74,77 @@ const MessagesContainer = styled.div`
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  padding: 1rem;
-  background: #f8f9fa;
-  border-radius: 0.5rem;
-`;
+  padding: 1.5rem;
+  background: rgba(248, 249, 250, 0.5);
+  scroll-behavior: smooth;
 
-const Header = styled.div`
-  display: flex;
-  justify-content: flex-end;
-  padding: 0.5rem 1rem 0 1rem;
-`;
+  /* 스크롤바 스타일링 */
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
 
-const LeaveButton = styled.button`
-  background: #dc3545;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  padding: 0.5rem 1.2rem;
-  font-size: 1rem;
-  cursor: pointer;
-  font-weight: 600;
-  &:hover {
-    background: #b52a37;
+  &::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+    
+    &:hover {
+      background: rgba(0, 0, 0, 0.3);
+    }
   }
 `;
 
 const InputContainer = styled.div`
   display: flex;
-  gap: 0.5rem;
-  padding: 1rem;
+  gap: 1rem;
+  padding: 1.5rem;
   background-color: white;
-  border-radius: 0.5rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-top: 2px solid rgba(0, 0, 0, 0.2);
 `;
 
 const MessageInput = styled.input`
   flex: 1;
-  padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 0.25rem;
+  padding: 1rem 1.5rem;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
   font-size: 1rem;
+  background: white;
+  transition: all 0.2s ease;
+
   &:focus {
     outline: none;
-    border-color: #007bff;
+    border-color: rgba(0, 0, 0, 0.4);
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+  }
+
+  &::placeholder {
+    color: rgba(0, 0, 0, 0.4);
   }
 `;
 
-const SendButton = styled.button`
-  padding: 0.75rem 1.5rem;
-  background-color: #007bff;
+const SendButton = styled(motion.button)`
+  padding: 1rem 2rem;
+  background: rgba(0, 0, 0, 0.8);
   color: white;
   border: none;
-  border-radius: 0.25rem;
-  cursor: pointer;
+  border-radius: 12px;
   font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
   &:hover {
-    background-color: #0056b3;
+    background: rgba(0, 0, 0, 0.9);
+    transform: translateY(-2px);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 `;
 
@@ -90,17 +153,16 @@ const ChatRoom = () => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
   const stompClient = useRef(null);
   const userId = Number(localStorage.getItem('userId'));
   const token = localStorage.getItem('token');
   const navigate = useNavigate();
 
   useEffect(() => {
-    // 채팅방 메시지 로드
-    const loadMessages = async () => {
+    const init = async () => {
       try {
         const chatMessages = await chatApi.getChatMessages(roomId);
-        console.log('채팅 메시지 응답:', chatMessages);
         setMessages(Array.isArray(chatMessages.messages) ? chatMessages.messages : []);
       } catch (error) {
         showToast.error('메시지 로드 실패');
@@ -108,11 +170,12 @@ const ChatRoom = () => {
       }
     };
 
+    init();
+
     // 채팅방 입장 시 읽음 처리
     const markAsRead = async () => {
       try {
         await chatApi.markAsRead(roomId);
-        // 메시지 목록의 read 상태 업데이트
         setMessages(prev => 
           prev.map(msg => 
             msg.senderId !== userId ? { ...msg, read: true } : msg
@@ -125,6 +188,7 @@ const ChatRoom = () => {
 
     // SockJS + STOMP 연결
     const socket = new SockJS('http://localhost:8080/ws-chat');
+    // const socket = new SockJS('wss://port-0-workermangers-be-m9ax68es6a756190.sel4.cloudtype.app/ws-chat');
     stompClient.current = new Client({
       webSocketFactory: () => socket,
       connectHeaders: {
@@ -150,7 +214,6 @@ const ChatRoom = () => {
     });
     stompClient.current.activate();
 
-    loadMessages();
     markAsRead(); // 채팅방 입장 시 읽음 처리
 
     return () => {
@@ -161,7 +224,10 @@ const ChatRoom = () => {
   }, [roomId, token, userId]);
 
   useEffect(() => {
-    scrollToBottom();
+    // 새 메시지가 추가될 때만 스크롤 이동
+    if (messages.length > 0) {
+      scrollToBottom();
+    }
   }, [messages]);
 
   const handleSendMessage = () => {
@@ -189,7 +255,9 @@ const ChatRoom = () => {
   };
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
   };
 
   // 채팅방 나가기 -> 뒤로가기로 변경
@@ -198,33 +266,50 @@ const ChatRoom = () => {
   };
 
   return (
-    <ChatContainer>
-      <Header>
-        <LeaveButton onClick={handleGoBack}>
-          <IoArrowBack style={{ marginRight: '0.3rem' }} />
-          뒤로가기
-        </LeaveButton>
-      </Header>
-      <MessagesContainer>
-        {Array.isArray(messages) && messages.map((message, index) => (
-          <ChatMessage
-            key={index}
-            message={message}
-            isMine={message.senderId === userId}
+    <PageContainer
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <ChatContainer>
+        <Header>
+          <BackButton
+            onClick={handleGoBack}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <IoArrowBack style={{ marginRight: '0.5rem' }} />
+            뒤로가기
+          </BackButton>
+        </Header>
+        <MessagesContainer ref={messagesContainerRef}>
+          {Array.isArray(messages) && messages.map((message, index) => (
+            <ChatMessage
+              key={index}
+              message={message}
+              isMine={message.senderId === userId}
+            />
+          ))}
+          <div ref={messagesEndRef} />
+        </MessagesContainer>
+        <InputContainer>
+          <MessageInput
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder="메시지를 입력하세요..."
           />
-        ))}
-        <div ref={messagesEndRef} />
-      </MessagesContainer>
-      <InputContainer>
-        <MessageInput
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-          onKeyPress={handleKeyPress}
-          placeholder="메시지를 입력하세요..."
-        />
-        <SendButton onClick={handleSendMessage}>전송</SendButton>
-      </InputContainer>
-    </ChatContainer>
+          <SendButton
+            onClick={handleSendMessage}
+            disabled={!newMessage.trim()}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            전송
+          </SendButton>
+        </InputContainer>
+      </ChatContainer>
+    </PageContainer>
   );
 };
 
