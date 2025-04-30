@@ -182,15 +182,6 @@ const Header = ({ isLoggedIn, userInfo, onLoginStatusChange }) => {
   useEffect(() => {
     if (isLoggedIn && userInfo?.userType === 'INDIVIDUAL') {
       // TODO: 북마크 수를 가져오는 API 호출
-      // const fetchBookmarkCount = async () => {
-      //   try {
-      //     const response = await userApi.getBookmarkCount();
-      //     setBookmarkCount(response.count);
-      //   } catch (error) {
-      //     console.error('북마크 수 조회 실패:', error);
-      //   }
-      // };
-      // fetchBookmarkCount();
     }
   }, [isLoggedIn, userInfo]);
 

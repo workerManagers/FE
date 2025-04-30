@@ -10,7 +10,7 @@ import BookmarkButton from '../components/common/BookmarkButton';
 const Container = styled.div`
   max-width: 900px;
   margin: 0 auto;
-  padding: 2.5rem 1.5rem 3.5rem 1.5rem;
+  padding: 6rem 1.5rem 3.5rem 1.5rem;
   background: #f7f8fa;
   min-height: 100vh;
 `;
@@ -21,6 +21,7 @@ const Title = styled.h1`
   color: #181818;
   font-weight: 800;
   letter-spacing: -1px;
+  margin-top: 1rem;
 `;
 
 const DetailSection = styled.div`

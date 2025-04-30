@@ -190,7 +190,7 @@ const LoginForm = () => {
       showToast.success(`${response.userName}님, 반갑습니다!`);
       
       // 메인 페이지로 이동하면서 사용자 정보 전달
-      navigate('/main', { 
+      navigate('/', { 
         state: { 
           userInfo: userInfo,
           isLoggedIn: true

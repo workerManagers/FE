@@ -23,6 +23,12 @@ const Button = styled.button`
 
 const BookmarkButton = ({ jobPostId, isBookmarked, bookmarkId, onBookmarkChange, disabled }) => {
   const [loading, setLoading] = useState(false);
+  const userType = localStorage.getItem('userType');
+
+  // 기업 사용자인 경우 null 반환
+  if (userType === 'COMPANY') {
+    return null;
+  }
 
   const handleClick = async (e) => {
     e.stopPropagation();

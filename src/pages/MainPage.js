@@ -8,6 +8,7 @@ import { showToast } from '../components/common/Toast';
 import JobCard from '../components/common/JobCard';
 import BookmarkButton from '../components/common/BookmarkButton';
 import Toast from '../components/common/Toast';
+import SubscriptionModal from '../components/subscription/SubscriptionModal';
 
 const PageContainer = styled(motion.div)`
   min-height: 100vh;
@@ -278,15 +279,18 @@ const MainPage = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(true);
   const [jobCategories, setJobCategories] = useState({});
   const [bookmarks, setBookmarks] = useState([]);
   const [bookmarkLoading, setBookmarkLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedSubcategory, setSelectedSubcategory] = useState('all');
   const [selectedCareerType, setSelectedCareerType] = useState('ALL');
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const checkLoginStatus = async () => {
+      setAuthLoading(true);
       const token = localStorage.getItem('token');
       if (token) {
         try {
@@ -314,6 +318,7 @@ const MainPage = () => {
         setIsLoggedIn(false);
         setUserInfo(null);
       }
+      setAuthLoading(false);
     };
 
     checkLoginStatus();
@@ -378,6 +383,15 @@ const MainPage = () => {
     fetchBookmarks();
   }, [isLoggedIn, jobPosts]);
 
+  useEffect(() => {
+    // localStorage에서 다시 보지 않기 설정 확인
+    const hideModal = localStorage.getItem('hideSubscriptionModal');
+    // 기업 사용자이고 다시 보지 않기를 선택하지 않은 경우에만 모달 표시
+    if (!hideModal && userInfo?.userType === 'COMPANY') {
+      setIsModalOpen(true);
+    }
+  }, [userInfo]);
+
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
   };
@@ -436,13 +450,16 @@ const MainPage = () => {
     });
   }
 
+  if (authLoading) {
+    return null;
+  }
+
   return (
     <PageContainer
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
-      <Toast />
       <MainContent>
         <SearchSection>
           <SearchTitle>대체인력 찾기</SearchTitle>
@@ -559,6 +576,12 @@ const MainPage = () => {
           )}
         </JobSection>
       </MainContent>
+      <SubscriptionModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)}
+        userInfo={userInfo}
+      />
+      <Toast />
     </PageContainer>
   );
 };

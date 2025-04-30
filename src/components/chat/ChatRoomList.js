@@ -11,7 +11,7 @@ const PageContainer = styled(motion.div)`
   flex-direction: column;
   min-height: 100vh;
   background-color: white;
-  padding: 2rem;
+  padding: 6rem 2rem 2rem;
 `;
 
 const RoomListContainer = styled.div`
