@@ -663,12 +663,13 @@ const PredictPage = () => {
     age: '',
     region: ''
   });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [diseaseList, setDiseaseList] = useState([]);
   const [predictionResult, setPredictionResult] = useState(null);
   const [userInfo, setUserInfo] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [showRedirectModal, setShowRedirectModal] = useState(false);
 
   useEffect(() => {
     const checkAccess = async () => {
@@ -695,7 +696,6 @@ const PredictPage = () => {
           }
 
           setUserInfo(userInfo);
-          setLoading(false);
         } catch (error) {
           if (error.response && (error.response.status === 401 || error.response.status === 403)) {
             showToast.error('세션이 만료되었습니다. 다시 로그인해주세요.');
@@ -769,6 +769,22 @@ const PredictPage = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleRedirectToJobPost = () => {
+    setShowRedirectModal(true);
+  };
+
+  const handleConfirmRedirect = () => {
+    navigate('/jobpost/new', { 
+      state: { 
+        predictedPeriod: `${predictionResult.predicted_value}일` 
+      } 
+    });
+  };
+
+  const handleRedirectToSubstitute = () => {
+    navigate('/substitute');
   };
 
   if (loading) {
@@ -951,24 +967,64 @@ const PredictPage = () => {
               </motion.div>
               <span>일</span>
             </ResultValue>
-            <ActionButton
-              onClick={() => navigate('/substitute')}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              대체 인력 구하러 가기
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                viewBox="0 0 24 24" 
-                fill="none" 
-                stroke="currentColor" 
-                strokeWidth="2" 
-                strokeLinecap="round" 
-                strokeLinejoin="round"
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '2rem' }}>
+              <ActionButton
+                onClick={handleRedirectToJobPost}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
-                <path d="M5 12h14M12 5l7 7-7 7"/>
-              </svg>
-            </ActionButton>
+                채용공고 작성하기
+              </ActionButton>
+              <ActionButton
+                onClick={handleRedirectToSubstitute}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                대체인력 매칭하기
+              </ActionButton>
+            </div>
+          </ModalContent>
+        </ModalOverlay>
+      )}
+
+      {showRedirectModal && (
+        <ModalOverlay
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={() => setShowRedirectModal(false)}
+        >
+          <ModalContent
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.8, opacity: 0 }}
+            transition={{ type: "spring", duration: 0.5 }}
+            onClick={e => e.stopPropagation()}
+          >
+            <CloseButton onClick={() => setShowRedirectModal(false)}>×</CloseButton>
+            <ResultTitle>채용공고 작성</ResultTitle>
+            <p style={{ textAlign: 'center', marginBottom: '2rem' }}>
+              예측된 요양기간을 채용공고에 적용하시겠습니까?
+            </p>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+              <ActionButton
+                onClick={handleConfirmRedirect}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                네
+              </ActionButton>
+              <ActionButton
+                onClick={() => {
+                  setShowRedirectModal(false);
+                  navigate('/jobpost/new');
+                }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                아니오
+              </ActionButton>
+            </div>
           </ModalContent>
         </ModalOverlay>
       )}

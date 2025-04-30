@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 import { jobPostApi, userApi } from '../services/api';
 import { showToast } from '../components/common/Toast';
@@ -90,6 +90,7 @@ const ErrorMessage = styled.div`
 
 function NewJobPost() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [loading, setLoading] = useState(false);
   const [userInfo, setUserInfo] = useState(null);
   const [companies, setCompanies] = useState([]);
@@ -103,7 +104,7 @@ function NewJobPost() {
     qualifications: '',
     preferredQualifications: '',
     idealCandidate: '',
-    jobPeriod: '',
+    jobPeriod: location.state?.predictedPeriod || '',
     jobRegion: localStorage.getItem('jobRegion') || '',
     deadline: '',
     careerType: ''
