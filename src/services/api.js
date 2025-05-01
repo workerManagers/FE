@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 // API 기본 URL 설정
-// const API_BASE_URL = 'https://port-0-workermangers-be-m9ax68es6a756190.sel4.cloudtype.app';
-const API_BASE_URL = 'http://localhost:8080';
+const API_BASE_URL = 'https://port-0-workermangers-be-m9ax68es6a756190.sel4.cloudtype.app';
+// const API_BASE_URL = 'http://localhost:8080';
 // axios 인스턴스 생성
 const api = axios.create({
   baseURL: API_BASE_URL,
