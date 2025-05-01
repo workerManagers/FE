@@ -110,6 +110,15 @@ function NewJobPost() {
     careerType: ''
   });
 
+  // 오늘 날짜를 YYYY-MM-DD 형식으로 반환하는 함수
+  const getTodayDate = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
@@ -347,6 +356,8 @@ function NewJobPost() {
             name="deadline"
             value={formData.deadline}
             onChange={handleChange}
+            min={getTodayDate()}
+            required
           />
           {errors.deadline && <ErrorMessage>{errors.deadline}</ErrorMessage>}
         </FormGroup>

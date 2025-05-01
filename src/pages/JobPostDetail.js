@@ -147,14 +147,6 @@ const ChatButton = styled(Button)`
   }
 `;
 
-const ChatInquiryButton = styled(Button)`
-  background-color: #6c757d;
-  color: #fff;
-  &:hover {
-    background-color: #5a6268;
-  }
-`;
-
 const Loading = styled.div`
   text-align: center;
   padding: 2.5rem;
@@ -342,22 +334,17 @@ function JobPostDetail() {
 
   const handleChatClick = async () => {
     try {
-      const res = await chatApi.createChatRoom(jobPost.jobPostId);
-      console.log('채팅방 생성 응답:', res);
-      const roomId = res.roomId || res.id || (res.data && (res.data.roomId || res.data.id));
-      console.log('이동할 roomId:', roomId);
-      if (!roomId) {
-        showToast.error('채팅방 ID를 찾을 수 없습니다. 관리자에게 문의하세요.');
+      if (!jobPost.authorId) {
+        showToast.error('채팅 기능을 사용할 수 없습니다.');
         return;
       }
-      navigate(`/chat/${roomId}`);
+      const response = await chatApi.createChatRoom(jobPost.authorId);
+      console.log('채팅방 생성 응답:', response);
+      navigate(`/chat/${response.id}`);
     } catch (error) {
+      console.error('채팅방 생성 실패:', error);
       showToast.error('채팅방 생성에 실패했습니다.');
     }
-  };
-
-  const handleChatInquiryClick = () => {
-    navigate(`/chat/recruiter?jobPostId=${id}`);
   };
 
   if (loading) {
@@ -476,13 +463,10 @@ function JobPostDetail() {
           뒤로가기
         </BackButton>
         
-        {userInfo?.userType === 'COMPANY' && (
+        {userInfo?.userType === 'COMPANY' && userInfo?.companyInfo?.companyName === jobPost?.companyName && (
           <>
             <EditButton onClick={handleEdit}>수정하기</EditButton>
             <DeleteButton onClick={handleDelete}>삭제하기</DeleteButton>
-            <ChatInquiryButton onClick={handleChatInquiryClick}>
-              1대1 문의 목록
-            </ChatInquiryButton>
           </>
         )}
         

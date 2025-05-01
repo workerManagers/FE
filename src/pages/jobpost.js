@@ -12,6 +12,36 @@ const Container = styled.div`
   padding: 2rem;
 `;
 
+const LoadingContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 200px); // 헤더 높이 등을 고려한 높이
+`;
+
+const LoadingSpinner = styled.div`
+  width: 50px;
+  height: 50px;
+  border: 5px solid #f3f3f3;
+  border-top: 5px solid #007bff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+`;
+
+const LoadingMessage = styled.div`
+  text-align: center;
+  color: #666;
+  font-size: 1.1rem;
+  font-weight: 500;
+`;
+
 const Title = styled.h1`
   font-size: 2rem;
   margin-bottom: 2rem;
@@ -238,66 +268,38 @@ function JobPost() {
     'HOSPITAL_OTHER': '병원·간호·연구 기타'
   };
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      const fetchUserInfo = async () => {
-        try {
-          const userData = await userApi.getUserInfo();
-          setUserInfo(userData);
-          setIsLoggedIn(true);
-        } catch (error) {
-          console.error('사용자 정보 조회 실패:', error);
-          setIsLoggedIn(false);
-          setUserInfo(null);
-        }
-      };
-      fetchUserInfo();
-    }
-  }, []);
-
-  useEffect(() => {
-    const fetchJobPosts = async () => {
-      try {
-        setIsLoading(true);
-        const response = await jobPostApi.getJobPosts();
-        
-        // 기업 사용자인 경우 자신의 공고만 필터링
-        if (userInfo?.userType === 'COMPANY') {
-          const filteredPosts = response.filter(post => 
-            post.companyName === userInfo.companyInfo.companyName
-          );
-          setJobPosts(filteredPosts);
-        } else {
-          // 일반 사용자인 경우 모든 공고 표시
-          setJobPosts(response);
-        }
-        
-        setError(null);
-      } catch (error) {
-        console.error('채용공고 목록 조회 실패:', error);
-        setError('채용공고를 불러오는데 실패했습니다.');
-        if (error.response?.status === 401) {
-          navigate('/login');
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchJobPosts();
-  }, [userInfo, navigate]);
-
-  useEffect(() => {
-    const fetchJobCategories = async () => {
+  // 사용자 정보와 채용공고를 함께 가져오는 함수
+  const fetchInitialData = async () => {
+    try {
+      setIsLoading(true);
       const token = localStorage.getItem('token');
       if (!token) {
         navigate('/login');
         return;
       }
 
+      // 사용자 정보 가져오기
+      const userData = await userApi.getUserInfo();
+      setUserInfo(userData);
+      setIsLoggedIn(true);
+
+      // 채용공고 가져오기
+      const response = await jobPostApi.getJobPosts();
+      
+      // 기업 사용자인 경우 자신의 공고만 필터링
+      if (userData?.userType === 'COMPANY') {
+        const filteredPosts = response.filter(post => 
+          post.companyName === userData.companyInfo.companyName
+        );
+        setJobPosts(filteredPosts);
+      } else {
+        // 일반 사용자인 경우 모든 공고 표시
+        setJobPosts(response);
+      }
+
+      // 채용공고 카테고리 정보 가져오기
       const categories = {};
-      for (const post of jobPosts) {
+      for (const post of response) {
         try {
           const jobCode = await jobPostApi.getJobCodeByJobName(post.jobName);
           if (jobCode) {
@@ -308,12 +310,23 @@ function JobPost() {
         }
       }
       setJobCategories(categories);
-    };
-
-    if (jobPosts.length > 0 && isLoggedIn) {
-      fetchJobCategories();
+      
+      setError(null);
+    } catch (error) {
+      console.error('데이터 로딩 실패:', error);
+      setError('데이터를 불러오는데 실패했습니다.');
+      if (error.response?.status === 401) {
+        navigate('/login');
+      }
+    } finally {
+      setIsLoading(false);
     }
-  }, [jobPosts, isLoggedIn, navigate]);
+  };
+
+  // 초기 데이터 로딩
+  useEffect(() => {
+    fetchInitialData();
+  }, [navigate]);
 
   const handleCategoryClick = (category) => {
     setSelectedCategory(category);
@@ -410,7 +423,14 @@ function JobPost() {
   };
 
   if (isLoading) {
-    return <Container>Loading...</Container>;
+    return (
+      <Container>
+        <LoadingContainer>
+          <LoadingSpinner />
+          <LoadingMessage>채용공고를 불러오는 중...</LoadingMessage>
+        </LoadingContainer>
+      </Container>
+    );
   }
 
   if (error) {
@@ -473,9 +493,7 @@ function JobPost() {
         </FilterGroup>
       </FilterSection>
 
-      {isLoading ? (
-        <div>로딩 중...</div>
-      ) : error ? (
+      {error ? (
         <div>{error}</div>
       ) : jobPosts.length === 0 ? (
         <div>

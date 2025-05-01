@@ -1,7 +1,8 @@
 import axios from 'axios';
 
 // API 기본 URL 설정
-const API_BASE_URL = 'https://port-0-workermangers-be-m9ax68es6a756190.sel4.cloudtype.app';
+// const API_BASE_URL = 'https://port-0-workermangers-be-m9ax68es6a756190.sel4.cloudtype.app';
+const API_BASE_URL = 'http://localhost:8080';
 // axios 인스턴스 생성
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -163,6 +164,17 @@ export const userApi = {
       if (error.code === 'ECONNABORTED') {
         throw new Error('서버 응답 시간이 초과되었습니다. 잠시 후 다시 시도해주세요.');
       }
+      throw error;
+    }
+  },
+
+  // 사용자 이름으로 정보 조회
+  getUserByName: async (userName) => {
+    try {
+      const response = await api.get(`/users/name/${userName}`);
+      return response.data;
+    } catch (error) {
+      console.error('사용자 정보 조회 실패:', error);
       throw error;
     }
   },
@@ -430,9 +442,9 @@ export const applicationApi = {
 
 export const chatApi = {
   // 채팅방 생성
-  createChatRoom: async (jobPostId) => {
+  createChatRoom: async (targetUserId) => {
     try {
-      const response = await api.post('/chat/rooms', { jobPostId });
+      const response = await api.post('/chat/rooms', { targetUserId });
       return response.data;
     } catch (error) {
       console.error('채팅방 생성 실패:', error);
@@ -462,18 +474,7 @@ export const chatApi = {
     }
   },
 
-  // 채용담당자(공고 작성자) 채팅방 목록 조회
-  getRecruiterChatRooms: async () => {
-    try {
-      const response = await api.get('/chat/rooms/recruiter');
-      return response.data;
-    } catch (error) {
-      console.error('채용담당자 채팅방 목록 조회 실패:', error);
-      throw error;
-    }
-  },
-
-  // 채팅방 메시지 읽음 처리
+  // 메시지 읽음 처리
   markAsRead: async (roomId) => {
     try {
       const response = await api.put(`/chat/rooms/${roomId}/read`);
@@ -483,6 +484,28 @@ export const chatApi = {
       throw error;
     }
   },
+
+  // 채팅방 나가기
+  leaveRoom: async (roomId) => {
+    try {
+      const response = await api.delete(`/chat/rooms/${roomId}`);
+      return response.data;
+    } catch (error) {
+      console.error('채팅방 나가기 실패:', error);
+      throw error;
+    }
+  },
+
+  // 메시지 삭제
+  deleteMessage: async (messageId) => {
+    try {
+      const response = await api.delete(`/chat/messages/${messageId}`);
+      return response.data;
+    } catch (error) {
+      console.error('메시지 삭제 실패:', error);
+      throw error;
+    }
+  }
 };
 
 export const matchingApi = {
@@ -506,5 +529,90 @@ export const matchingApi = {
     }
   },
 };
+
+// WebSocket 서비스 클래스
+class WebSocketService {
+  constructor() {
+    this.socket = null;
+    this.messageHandlers = new Map();
+    this.pendingSubscriptions = [];
+  }
+
+  connect() {
+    const token = localStorage.getItem('token');
+    // this.socket = new WebSocket(`wss://port-0-workermangers-be-m9ax68es6a756190.sel4.cloudtype.app/ws-chat?token=${token}`);
+    this.socket = new WebSocket(`ws://localhost:8080/ws-chat?token=${token}`);
+    
+    this.socket.onopen = () => {
+      console.log('WebSocket 연결 성공');
+      // 연결이 열린 후에만 구독 메시지 전송
+      this.pendingSubscriptions.forEach(({ roomId }) => {
+        this.socket.send(JSON.stringify({ type: 'SUBSCRIBE', roomId }));
+      });
+      this.pendingSubscriptions = [];
+    };
+
+    this.socket.onmessage = (event) => {
+      const message = JSON.parse(event.data);
+      const handlers = this.messageHandlers.get(message.chatRoomId) || [];
+      handlers.forEach(handler => handler(message));
+    };
+
+    this.socket.onclose = () => {
+      console.log('WebSocket 연결 종료');
+    };
+
+    this.socket.onerror = (error) => {
+      console.error('WebSocket 에러:', error);
+    };
+  }
+
+  subscribe(roomId, handler) {
+    if (!this.messageHandlers.has(roomId)) {
+      this.messageHandlers.set(roomId, []);
+    }
+    this.messageHandlers.get(roomId).push(handler);
+
+    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+      this.socket.send(JSON.stringify({ 
+        type: 'SUBSCRIBE', 
+        destination: `/topic/chat.${roomId}` 
+      }));
+    } else {
+      this.pendingSubscriptions.push({ roomId });
+    }
+  }
+
+  unsubscribe(roomId, handler) {
+    const handlers = this.messageHandlers.get(roomId);
+    if (handlers) {
+      const index = handlers.indexOf(handler);
+      if (index > -1) {
+        handlers.splice(index, 1);
+      }
+    }
+  }
+
+  sendMessage(roomId, content) {
+    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+      this.socket.send(JSON.stringify({
+        destination: '/chat.send',
+        chatRoomId: roomId,
+        content: content
+      }));
+    } else {
+      console.error('WebSocket이 연결되어 있지 않습니다.');
+    }
+  }
+
+  disconnect() {
+    if (this.socket) {
+      this.socket.close();
+    }
+  }
+}
+
+// WebSocket 서비스 인스턴스 생성 및 내보내기
+export const websocketService = new WebSocketService();
 
 export default api; 

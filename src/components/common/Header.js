@@ -5,6 +5,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { FaUserCircle, FaBookmark } from 'react-icons/fa';
 import { userApi } from '../../services/api';
 import { showToast } from './Toast';
+import { chatApi } from '../../services/api';
 
 const HeaderContainer = styled.header`
   display: flex;
@@ -49,6 +50,7 @@ const NavLink = styled.a`
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s ease;
+  position: relative;
 
   &:hover {
     background-color: rgba(255, 255, 255, 0.1);
@@ -60,6 +62,19 @@ const NavLink = styled.a`
     background-color: rgba(255, 255, 255, 0.15);
     font-weight: 600;
   }
+`;
+
+const UnreadBadge = styled.span`
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background-color: #ff4757;
+  color: white;
+  font-size: 0.7rem;
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 `;
 
 const UserSection = styled.div`
@@ -178,6 +193,44 @@ const Header = ({ isLoggedIn, userInfo, onLoginStatusChange }) => {
   const navigate = useNavigate();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [bookmarkCount, setBookmarkCount] = useState(0);
+  const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
+
+  const checkUnreadMessages = async () => {
+    if (!isLoggedIn) return;
+    
+    try {
+      const response = await chatApi.getChatRooms();
+      const hasUnread = response.some(room => room.unreadCount > 0);
+      setHasUnreadMessages(hasUnread);
+    } catch (error) {
+      console.error('Failed to check unread messages:', error);
+    }
+  };
+
+  // 새 메시지 확인
+  useEffect(() => {
+    if (isLoggedIn) {
+      checkUnreadMessages();
+      
+      // 15초마다 새 메시지 확인
+      const interval = setInterval(checkUnreadMessages, 15000);
+      return () => clearInterval(interval);
+    }
+  }, [isLoggedIn]);
+
+  // 페이지 포커스될 때마다 확인
+  useEffect(() => {
+    if (isLoggedIn) {
+      const handleFocus = () => {
+        checkUnreadMessages();
+      };
+
+      window.addEventListener('focus', handleFocus);
+      return () => {
+        window.removeEventListener('focus', handleFocus);
+      };
+    }
+  }, [isLoggedIn]);
 
   // 북마크 수 가져오기
   useEffect(() => {
@@ -227,11 +280,25 @@ const Header = ({ isLoggedIn, userInfo, onLoginStatusChange }) => {
               <NavLink onClick={() => navigate('/add-job')}>직무 추가</NavLink>
               <NavLink onClick={() => navigate('/predict')}>요양기간 예측</NavLink>
               <NavLink onClick={() => navigate('/matching')}>대체인력 매칭</NavLink>
+              <NavLink 
+                onClick={() => navigate('/chat')}
+                style={{ position: 'relative' }}
+              >
+                채팅목록
+                {hasUnreadMessages && <UnreadBadge>NEW</UnreadBadge>}
+              </NavLink>
             </>
           )}
           {isLoggedIn && userInfo?.userType === 'INDIVIDUAL' && (
             <>
               <NavLink onClick={() => navigate('/job-matching')}>직무 매칭</NavLink>
+              <NavLink 
+                onClick={() => navigate('/chat')}
+                style={{ position: 'relative' }}
+              >
+                채팅목록
+                {hasUnreadMessages && <UnreadBadge>NEW</UnreadBadge>}
+              </NavLink>
             </>
           )}
         </NavMenu>

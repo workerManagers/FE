@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { jobPostApi } from '../services/api';
+import { jobPostApi, userApi } from '../services/api';
 import { showToast } from '../components/common/Toast';
 import Toast from '../components/common/Toast';
 
@@ -116,7 +116,26 @@ function EditJobPost() {
           return;
         }
 
+        // 사용자 정보 먼저 확인
+        const userData = await userApi.getUserInfo();
+        if (userData.userType !== 'COMPANY') {
+          setError('기업 회원만 접근할 수 있습니다.');
+          navigate('/');
+          return;
+        }
+
         const data = await jobPostApi.getJobPost(id);
+        
+        // 본인 회사의 공고인지 확인
+        if (userData.companyInfo?.companyName !== data.companyName) {
+          setError('자신의 회사 공고만 수정할 수 있습니다.');
+          navigate('/');
+          return;
+        }
+
+        // 마감일 날짜 형식 변환 (YYYY-MM-DD)
+        const deadlineDate = data.deadline ? data.deadline.split('T')[0] : '';
+
         setFormData({
           companyName: data.companyName,
           jobName: data.jobName,
@@ -128,7 +147,7 @@ function EditJobPost() {
           idealCandidate: data.idealCandidate,
           jobPeriod: data.jobPeriod,
           jobRegion: data.jobRegion,
-          deadline: data.deadline,
+          deadline: deadlineDate,
           careerType: data.careerType || 'ANY'
         });
         setError(null);
@@ -199,6 +218,25 @@ function EditJobPost() {
         showToast.error('채용공고 수정 중 오류가 발생했습니다.');
       }
     }
+  };
+
+  // 오늘 날짜를 YYYY-MM-DD 형식으로 반환하는 함수
+  const getTodayDate = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  // 내일 날짜를 YYYY-MM-DD 형식으로 반환하는 함수
+  const getTomorrowDate = () => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const year = tomorrow.getFullYear();
+    const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
+    const day = String(tomorrow.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
   if (loading) {
@@ -333,6 +371,7 @@ function EditJobPost() {
             name="deadline"
             value={formData.deadline}
             onChange={handleChange}
+            min={getTodayDate()}
             required
           />
         </FormGroup>
