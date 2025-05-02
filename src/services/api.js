@@ -163,11 +163,15 @@ export const userApi = {
   logout: async () => {
     try {
       const response = await api.post('/users/logout');
-      // 로그아웃 시 모든 사용자 정보 제거
+      // 로그아웃 시 모든 사용자 정보 및 세션 스토리지 제거
       localStorage.removeItem('token');
       localStorage.removeItem('userType');
       localStorage.removeItem('userName');
       localStorage.removeItem('userId');
+      localStorage.removeItem('companyName');
+      localStorage.removeItem('jobRegion');
+      // 세션 스토리지 완전히 비우기
+      sessionStorage.clear();
       return response.data;
     } catch (error) {
       throw error;
