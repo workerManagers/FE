@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FaSearch, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import { userApi, jobPostApi, bookmarkApi } from '../services/api';
 import { showToast } from '../components/common/Toast';
 import JobCard from '../components/common/JobCard';
@@ -11,62 +11,20 @@ import Toast from '../components/common/Toast';
 
 const PageContainer = styled(motion.div)`
   min-height: 100vh;
-  background-color: #f8f9fa;
+  background-color: transparent;
 `;
 
 const MainContent = styled.main`
   padding-top: 5rem;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   min-height: calc(100vh - 4rem);
-`;
+  margin-top: 5rem;
 
-const SearchSection = styled.section`
-  width: 100%;
-  max-width: 800px;
-  margin: 4rem auto;
-  padding: 2rem;
-  text-align: center;
-`;
-
-const SearchTitle = styled.h2`
-  font-size: 2rem;
-  color: #212529;
-  margin-bottom: 1.5rem;
-`;
-
-const SearchBox = styled.div`
-  display: flex;
-  align-items: center;
-  background: white;
-  border: 2px solid #dee2e6;
-  border-radius: 8px;
-  padding: 0.5rem 1rem;
-  margin: 0 auto;
-  max-width: 600px;
-
-  &:focus-within {
-    border-color: #ff6b6b;
+  @media (max-width: 768px) {  
+    padding-top: 10rem;  
   }
-`;
-
-const SearchInput = styled.input`
-  flex: 1;
-  border: none;
-  padding: 0.8rem;
-  font-size: 1rem;
-  outline: none;
-  background: none;
-
-  &::placeholder {
-    color: #adb5bd;
-  }
-`;
-
-const SearchIcon = styled(FaSearch)`
-  color: #adb5bd;
-  font-size: 1.2rem;
 `;
 
 const JobSection = styled.section`
@@ -444,14 +402,6 @@ const MainPage = () => {
     >
       <Toast />
       <MainContent>
-        <SearchSection>
-          <SearchTitle>대체인력 찾기</SearchTitle>
-          <SearchBox>
-            <SearchInput placeholder="직무, 지역, 회사명으로 검색하세요" />
-            <SearchIcon />
-          </SearchBox>
-        </SearchSection>
-
         <FilterSection>
           <FilterGroup>
             <FilterLabel>카테고리</FilterLabel>

@@ -19,29 +19,24 @@ const PageWrapper = styled.div`
   width: 100%;
   max-width: 1400px;
   margin: 0 auto;
+  padding-top: 11vh; 
+
+  @media (max-width: 768px) {
+    padding-top: 20vh;
+  }
 `;
 
 const FormContainer = styled(motion.form)`
   display: flex;
   gap: 2rem;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(10px);
-  padding: 2.5rem;
-  border: 3px solid rgba(0, 0, 0, 0.3);
-  border-radius: 24px;
+  background: transparent;
+  padding: 0;
+  border: none;
+  border-radius: 0;
   width: ${props => props.isCompany ? '80%' : '35%'};
   position: relative;
   margin-bottom: 80px;
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15),
-              inset 0 0 32px 0 rgba(31, 38, 135, 0.05);
-  transition: all 0.3s ease;
-
-  &:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 48px 0 rgba(31, 38, 135, 0.2),
-                inset 0 0 32px 0 rgba(31, 38, 135, 0.1);
-    border: 3px solid rgba(0, 0, 0, 0.4);
-  }
+  
 
   @media (max-width: 768px) {
     flex-direction: column;
@@ -49,14 +44,6 @@ const FormContainer = styled(motion.form)`
     padding: 1.5rem;
     gap: 1.5rem;
     margin-bottom: 60px;
-    box-shadow: 0 4px 16px 0 rgba(31, 38, 135, 0.15),
-                inset 0 0 16px 0 rgba(31, 38, 135, 0.05);
-
-    &:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 6px 24px 0 rgba(31, 38, 135, 0.2),
-                  inset 0 0 16px 0 rgba(31, 38, 135, 0.1);
-    }
   }
 `;
 

@@ -6,7 +6,7 @@ import BookmarkButton from './BookmarkButton';
 const Card = styled.div`
   background: #fff;
   border-radius: 18px;
-  padding: 2rem 1.7rem 1.5rem 1.7rem;
+  padding: 1.5rem 1.7rem 1.5rem 1.7rem;  /* Adjusted padding for better positioning */
   box-shadow: 0 4px 24px rgba(0,0,0,0.07), 0 1.5px 6px rgba(0,0,0,0.04);
   border: 1.5px solid #f2f2f2;
   cursor: pointer;
@@ -24,29 +24,34 @@ const Card = styled.div`
 
 const TopRow = styled.div`
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+  justify-content: flex-end;  /* 북마크 버튼을 오른쪽 끝에 위치시킴 */
+  align-items: center;
   margin-bottom: 0.2rem;
+  width: 100%;
 `;
 
 const JobTitle = styled.h2`
-  font-size: 1.35rem;
-  font-weight: 700;
-  margin-bottom: 0.7rem;
+  font-size: 1.2rem;
+  font-weight: 370;
+  margin-bottom: 0.6rem;
   color: #181818;
   letter-spacing: -0.5px;
+  text-align: center; 
+  width: 100%;
 `;
 
 const CompanyName = styled.p`
-  font-size: 1.05rem;
-  color: #444;
-  margin-bottom: 1.1rem;
-  font-weight: 500;
+  font-size: 1.5rem;
+  color: #181818;
+  font-weight: 600;
+  text-align: center;
+  margin-top: 0;  /* Ensure no margin above */
+  margin-bottom: 0.5rem;  /* Adjust this to your liking */
 `;
 
 const JobInfo = styled.div`
   display: flex;
-  flex-wrap: nowrap;
+  justify-content: center;  /* 가운데 정렬 */
   gap: 0.6rem;
   margin-bottom: 1.2rem;
   overflow-x: auto;
@@ -69,10 +74,7 @@ const InfoTag = styled.span`
   letter-spacing: -0.2px;
   border: 1px solid #ececec;
   transition: background 0.18s;
-
-  &:not(:last-child) {
-    margin-right: 0.1rem;
-  }
+  text-align: center; /* 가운데 정렬 */
 `;
 
 const Deadline = styled.p`
@@ -80,6 +82,7 @@ const Deadline = styled.p`
   color: #888;
   margin-top: 1.1rem;
   font-weight: 400;
+  text-align: center; /* 가운데 정렬 */
 `;
 
 const JobCard = ({ job, jobCategory, industryCategories, industrySubcategories, getCareerTypeLabel, onClick, isBookmarked, bookmarkId, onBookmarkChange }) => {
@@ -106,7 +109,6 @@ const JobCard = ({ job, jobCategory, industryCategories, industrySubcategories, 
   return (
     <Card onClick={handleClick}>
       <TopRow>
-        <JobTitle>{job.jobName}</JobTitle>
         <BookmarkButton
           jobPostId={job.jobPostId}
           isBookmarked={isBookmarked}
@@ -115,8 +117,8 @@ const JobCard = ({ job, jobCategory, industryCategories, industrySubcategories, 
         />
       </TopRow>
       <CompanyName>{job.companyName}</CompanyName>
+      <JobTitle>{job.jobName}</JobTitle>
       <JobInfo>
-        {/* 카테고리, 세부카테고리, 경력 한글 변환 */}
         {jobCategory && industryCategories && industrySubcategories && (
           <>
             <InfoTag>{industryCategories[jobCategory.industryCategory]}</InfoTag>
@@ -130,4 +132,4 @@ const JobCard = ({ job, jobCategory, industryCategories, industrySubcategories, 
   );
 };
 
-export default JobCard; 
+export default JobCard;
