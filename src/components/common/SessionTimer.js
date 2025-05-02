@@ -7,21 +7,21 @@ const TimerContainer = styled(motion.div)`
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.5rem 0.75rem;
-  background-color: ${props => props.$isExpiring ? 'rgba(255, 215, 0, 0.2)' : 'rgba(255, 255, 255, 0.15)'};
-  border-radius: 8px;
-  transition: all 0.3s ease;
-  color: white;
+  padding: 0.5rem 1.1rem;
+  background: ${props => props.$isExpiring ? 'rgba(220, 220, 220, 0.45)' : 'rgba(245,246,248,0.85)'};
+  border-radius: 10px;
+  transition: all 0.3s cubic-bezier(.4,0,.2,1);
+  color: #6B7280;
   margin-right: 1rem;
-  backdrop-filter: blur(4px);
-  border: 1px solid ${props => props.$isExpiring ? 'rgba(255, 215, 0, 0.3)' : 'rgba(255, 255, 255, 0.1)'};
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(0px);
+  border: 1.5px solid ${props => props.$isExpiring ? 'rgba(163,170,184,0.5)' : 'rgba(245,246,248,0.18)'};
+  box-shadow: 0 2px 8px rgba(163,170,184,0.07);
 `;
 
 const TimerText = styled.span`
-  font-size: 0.85rem;
-  color: ${props => props.$isExpiring ? '#ffd700' : 'rgba(255, 255, 255, 0.9)'};
-  font-weight: 500;
+  font-size: 0.97rem;
+  color: ${props => props.$isExpiring ? '#A3AAB8' : '#6B7280'};
+  font-weight: 600;
   letter-spacing: 0.3px;
   display: flex;
   align-items: center;
@@ -29,33 +29,35 @@ const TimerText = styled.span`
 
   &::before {
     content: '⏳';
-    font-size: 1rem;
+    font-size: 1.1rem;
   }
 `;
 
 const ToggleButton = styled(motion.button)`
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.7);
+  color: #A3AAB8;
   cursor: pointer;
-  font-size: 0.8rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  transition: all 0.2s ease;
-  
+  font-size: 0.88rem;
+  padding: 0.22rem 0.7rem;
+  border-radius: 6px;
+  transition: color 0.18s;
+  font-weight: 600;
   &:hover {
-    color: white;
-    background-color: rgba(255, 255, 255, 0.1);
+    color: #23272f;
+    text-decoration: underline;
+    background: none;
   }
 `;
 
 const TimeDisplay = styled.span`
   font-family: 'Courier New', monospace;
-  font-weight: 600;
-  background: rgba(0, 0, 0, 0.2);
-  padding: 0.2rem 0.4rem;
-  border-radius: 4px;
-  color: ${props => props.$isExpiring ? '#ffd700' : 'white'};
+  font-weight: 700;
+  background: ${props => props.$isExpiring ? 'rgba(220,220,220,0.18)' : 'rgba(245,246,248,0.7)'};
+  padding: 0.22rem 0.7rem;
+  border-radius: 6px;
+  color: ${props => props.$isExpiring ? '#A3AAB8' : '#6B7280'};
+  font-size: 1.08rem;
 `;
 
 const SessionTimer = ({ onToggle }) => {

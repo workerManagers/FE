@@ -57,78 +57,164 @@ const INDUSTRY_SUBCATEGORIES = {
 };
 
 const PageContainer = styled(motion.div)`
-  padding: 9rem 2rem 2rem;
-  max-width: 800px;
+  padding: 11rem 2rem 2rem;
+  max-width: 1200px;
   margin: 0 auto;
   min-height: 100vh;
-  background-color: #f8f9fa;
+  background-color: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
 `;
 
 const Title = styled.h1`
   color: #000000;
-  font-size: 2rem;
-  margin-bottom: 2rem;
+  font-size: 2.2rem;
   text-align: center;
+  font-weight: 600;
+  position: relative;
+
+  &:after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: -10px;
+    width: 90px;
+    height: 3px;
+    background-color: #000000;
+    transform: translateX(-50%);
+    transition: width 0.3s ease;
+  }
+
+  &:hover:after {
+    width: 240px;
+  }
+`;
+
+const Description = styled.p`
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 1.1rem;
+  text-align: center;
+  margin-bottom: 2.5rem;
+  margin-top: 2.5rem;
+  line-height: 1.6;
 `;
 
 const Form = styled.form`
-  background: white;
-  padding: 2rem;
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  padding: 2.5rem;
+  border: 3px solid rgba(0, 0, 0, 0.3);
+  border-radius: 24px;
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15),
+              inset 0 0 32px 0 rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+
+  &:hover {
+    transform: translateY(-5px);
+    border: 3px solid rgba(0, 0, 0, 0.4);
+    box-shadow: 0 12px 48px 0 rgba(0, 0, 0, 0.2),
+                inset 0 0 32px 0 rgba(0, 0, 0, 0.1);
+  }
 `;
 
 const FormGroup = styled.div`
-  margin-bottom: 1.5rem;
+  flex: 1 1 calc(50% - 1rem);
+  min-width: 250px;
+  position: relative;
+
+  &:first-child {
+    flex: 1 1 100%;
+  }
+
+  @media (max-width: 768px) {
+    flex: 1 1 100%;
+  }
 `;
 
 const Label = styled.label`
   display: block;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.8rem;
   color: #000000;
   font-weight: 500;
+  font-size: 1rem;
 `;
 
 const Input = styled.input`
   width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  padding: 0.8rem;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
   font-size: 1rem;
+  background: white;
+  transition: all 0.2s ease;
 
   &:focus {
     outline: none;
     border-color: #000000;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+  }
+
+  &::placeholder {
+    color: rgba(0, 0, 0, 0.4);
   }
 `;
 
 const Select = styled.select`
   width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  padding: 0.8rem;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
   font-size: 1rem;
-  background-color: white;
+  background: white;
+  transition: all 0.2s ease;
+  cursor: pointer;
 
   &:focus {
     outline: none;
     border-color: #000000;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+  }
+
+  option {
+    color: #000000;
+    background: white;
+    padding: 0.5rem;
   }
 `;
 
 const Button = styled(motion.button)`
-  background: #000000;
+  width: 200px;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.8);
   color: white;
   border: none;
-  padding: 1rem 2rem;
-  border-radius: 4px;
-  font-size: 1rem;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 500;
   cursor: pointer;
-  width: 100%;
-  margin-top: 1rem;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  transition: all 0.3s ease;
+  margin: 0 auto;
 
-  &:hover {
-    background: #333333;
+  &:hover:not(:disabled) {
+    background: rgba(0, 0, 0, 0.9);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.3);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 `;
 
@@ -222,7 +308,11 @@ const AddJobPage = () => {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
-      <Title>직무 추가</Title>
+      <Title>직무 추가 서비스</Title>
+      <Description>
+        공고에 올리고 싶은 직무가 없으세요?<br />
+        원하시는 직무를 만들어 드릴게요!
+      </Description>
       <Form onSubmit={handleSubmit}>
         <FormGroup>
           <Label>산업 카테고리</Label>
@@ -232,7 +322,7 @@ const AddJobPage = () => {
             onChange={handleCategoryChange}
             required
           >
-            <option value="">카테고리 선택</option>
+           <option value="">카테고리 선택</option>
             {Object.entries(INDUSTRY_CATEGORIES).map(([key, value]) => (
               <option key={key} value={key}>{value}</option>
             ))}
@@ -253,18 +343,6 @@ const AddJobPage = () => {
               <option key={key} value={key}>{name}</option>
             ))}
           </Select>
-        </FormGroup>
-
-        <FormGroup>
-          <Label>직무 코드</Label>
-          <Input
-            type="text"
-            name="jobCode"
-            value={formData.jobCode}
-            onChange={handleChange}
-            placeholder="예: FOOD001"
-            required
-          />
         </FormGroup>
         
         <FormGroup>

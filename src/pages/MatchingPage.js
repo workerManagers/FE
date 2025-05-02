@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 const Container = styled.div`
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2.5rem 1.5rem;
+  padding: 7rem 1.5rem 2.5rem 1.5rem;
 `;
 
 const Title = styled.h1`
@@ -372,7 +372,7 @@ const MatchingPage = () => {
       <Container>
         <LoadingContainer>
           <LoadingSpinner />
-          <LoadingMessage>데이터를 불러오는 중...</LoadingMessage>
+          <LoadingMessage>데이터를 불러오는 중입니다...</LoadingMessage>
         </LoadingContainer>
       </Container>
     );
@@ -435,7 +435,7 @@ const MatchingPage = () => {
               <MatchingList>
                 <h2 style={{ marginBottom: '1.5rem' }}>매칭된 지원자 목록</h2>
                 {loading ? (
-                  <LoadingMessage>매칭 결과를 불러오는 중...</LoadingMessage>
+                  <LoadingMessage>매칭 결과를 불러오는 중입니다...</LoadingMessage>
                 ) : matchingResults.length === 0 ? (
                   <p>매칭된 지원자가 없습니다.</p>
                 ) : (

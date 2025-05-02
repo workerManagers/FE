@@ -6,84 +6,180 @@ import { showToast } from '../components/common/Toast';
 import Toast from '../components/common/Toast';
 
 const Container = styled.div`
-  max-width: 800px;
+  max-width: 1100px;
   margin: 0 auto;
-  padding: 2rem;
-`;
-
-const Title = styled.h1`
-  font-size: 2rem;
-  margin-bottom: 2rem;
-  color: #333;
-`;
-
-const Form = styled.form`
+  padding: 6.5rem 1.5rem 2.5rem 1.5rem;
+  background: #f8f9fa;
+  min-height: 80vh;
+  border-radius: 28px;
+  box-shadow: 0 8px 32px 0 rgba(0,0,0,0.10);
+  border: 2.5px solid #e5e7eb;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  align-items: flex-start;
 `;
 
-const FormGroup = styled.div`
+const CompanyName = styled.span`
+  font-size: 1.08rem;
+  font-weight: 600;
+  color: #6366f1;
+  margin-bottom: 1.2rem;
+  background: #f3f4f6;
+  border-radius: 8px;
+  padding: 0.4rem 1.1rem;
+  box-shadow: 0 1px 6px rgba(124,58,237,0.07);
+  border: 1.2px solid #e5e7eb;
+  display: inline-block;
+`;
+
+const InfoGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0px;
+  margin-bottom: 2.2rem;
+  width: 100%;
+  background: #f4f5f7;
+  border-radius: 14px 14px 0 0;
+  overflow: hidden;
+  border: 1.5px solid #e5e7eb;
+  box-shadow: 0 2px 8px rgba(180,180,200,0.09);
+`;
+
+const InfoItem = styled.div`
+  background: #fff;
+  border-right: 1.5px solid #e5e7eb;
+  border-bottom: 1.5px solid #e5e7eb;
+  padding: 1.2rem 1rem 1.1rem 1rem;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-`;
-
-const Label = styled.label`
-  font-weight: bold;
-  color: #333;
-`;
-
-const Input = styled.input`
-  padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 1rem;
-`;
-
-const TextArea = styled.textarea`
-  padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 1rem;
-  min-height: 100px;
-  resize: vertical;
-`;
-
-const ButtonGroup = styled.div`
-  display: flex;
-  gap: 1rem;
-  margin-top: 2rem;
-`;
-
-const Button = styled.button`
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 4px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background-color 0.2s;
-
-  &:hover {
-    opacity: 0.9;
+  gap: 0.3rem;
+  align-items: flex-start;
+  min-width: 0;
+  &:last-child {
+    border-right: none;
+    border-bottom: none;
   }
 `;
 
-const SubmitButton = styled(Button)`
-  background-color: #007bff;
-  color: white;
+const InfoLabel = styled.label`
+  font-weight: 700;
+  color: #222;
+  font-size: 1.01rem;
+  margin-bottom: 0.2rem;
 `;
 
-const CancelButton = styled(Button)`
-  background-color: #6c757d;
-  color: white;
+const InfoInput = styled.input`
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 0.7rem;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 7px;
+  font-size: 1.01rem;
+  background: #f8fafc;
 `;
 
-const Select = styled.select`
-  padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 1rem;
+const InfoSelect = styled.select`
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 0.7rem;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 7px;
+  font-size: 1.01rem;
+  background: #f8fafc;
+`;
+
+const DetailGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0px;
+  width: 100%;
+  margin-bottom: 2.2rem;
+  background: #f4f5f7;
+  border-radius: 0 0 14px 14px;
+  overflow: hidden;
+  border-left: 1.5px solid #e5e7eb;
+  border-right: 1.5px solid #e5e7eb;
+  border-bottom: 1.5px solid #e5e7eb;
+  box-shadow: 0 2px 8px rgba(180,180,200,0.09);
+`;
+
+const DetailSection = styled.div`
+  background-color: #fff;
+  border-right: 1.5px solid #e5e7eb;
+  border-bottom: 1.5px solid #e5e7eb;
+  padding: 1.5rem 1.2rem 1.3rem 1.2rem;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  &:nth-child(2n) {
+    border-right: none;
+  }
+  &:last-child {
+    border-right: none;
+    border-bottom: none;
+    height: 100%;
+    justify-content: flex-end;
+  }
+`;
+
+const DetailLabel = styled.label`
+  font-size: 1.01rem;
+  font-weight: 700;
+  color: #23272f;
+  margin-bottom: 0.4rem;
+`;
+
+const DetailTextarea = styled.textarea`
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 0.7rem;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 7px;
+  font-size: 1.01rem;
+  background: #f8fafc;
+  min-height: 90px;
+  resize: none;
+`;
+
+const FloatingButtonGroup = styled.div`
+  display: flex;
+  gap: 0.7rem;
+  justify-content: flex-end;
+  width: 100%;
+  margin-top: 2.5rem;
+`;
+
+const FloatingButton = styled.button`
+  padding: 0.8rem 1.5rem;
+  border: 1.5px solid #d1d5db;
+  border-radius: 50px;
+  font-size: 0.97rem;
+  font-weight: 700;
+  background: linear-gradient(90deg, #f3f4f6 0%, #e5e7eb 100%);
+  color: #23272f;
+  box-shadow: 0 2px 12px rgba(180,180,200,0.13), 0 0 8px #fff;
+  cursor: pointer;
+  transition: background 0.18s, box-shadow 0.18s, color 0.13s, transform 0.13s;
+  letter-spacing: -0.2px;
+  &:hover {
+    background: linear-gradient(90deg, #e5e7eb 0%, #f3f4f6 100%);
+    color: #111;
+    box-shadow: 0 4px 20px rgba(180,180,200,0.18), 0 0 12px #fff;
+    transform: translateY(-2px) scale(1.03);
+  }
+  &:disabled {
+    background: #e5e7eb;
+    color: #bdbdbd;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+  }
 `;
 
 function EditJobPost() {
@@ -248,7 +344,7 @@ function EditJobPost() {
       <Container>
         <Toast />
         <div>{error}</div>
-        <CancelButton onClick={() => navigate(`/job-posts/${id}`)}>돌아가기</CancelButton>
+        <FloatingButton type="button" onClick={() => navigate(`/job-posts/${id}`)}>돌아가기</FloatingButton>
       </Container>
     );
   }
@@ -256,131 +352,125 @@ function EditJobPost() {
   return (
     <Container>
       <Toast />
-      <Title>채용공고 수정</Title>
-      
-      <Form onSubmit={handleSubmit}>
-        <FormGroup>
-          <Label>회사명</Label>
-          <Input
-            type="text"
-            name="companyName"
-            value={formData.companyName}
-            readOnly
-          />
-        </FormGroup>
-
-        <FormGroup>
-          <Label>근무지역</Label>
-          <Input
-            type="text"
-            name="jobRegion"
-            value={formData.jobRegion}
-            readOnly
-          />
-        </FormGroup>
-
-        <FormGroup>
-          <Label>채용공고명</Label>
-          <Input
-            type="text"
-            name="jobName"
-            value={formData.jobName}
-            onChange={handleChange}
-            required
-          />
-        </FormGroup>
-
-        <FormGroup>
-          <Label>경력 유형</Label>
-          <Select
-            name="careerType"
-            value={formData.careerType}
-            onChange={handleChange}
-            required
-          >
-            <option value="NEWCOMER">신입</option>
-            <option value="EXPERIENCED">경력</option>
-            <option value="ANY">신입/경력</option>
-          </Select>
-        </FormGroup>
-
-        <FormGroup>
-          <Label>모집공고 설명</Label>
-          <TextArea
-            name="jobPostDescription"
-            value={formData.jobPostDescription}
-            onChange={handleChange}
-            required
-          />
-        </FormGroup>
-
-        <FormGroup>
-          <Label>주요 업무</Label>
-          <TextArea
-            name="mainTasks"
-            value={formData.mainTasks}
-            onChange={handleChange}
-            required
-          />
-        </FormGroup>
-
-        <FormGroup>
-          <Label>자격요건</Label>
-          <TextArea
-            name="qualifications"
-            value={formData.qualifications}
-            onChange={handleChange}
-            required
-          />
-        </FormGroup>
-
-        <FormGroup>
-          <Label>우대사항</Label>
-          <TextArea
-            name="preferredQualifications"
-            value={formData.preferredQualifications}
-            onChange={handleChange}
-          />
-        </FormGroup>
-
-        <FormGroup>
-          <Label>인재상</Label>
-          <TextArea
-            name="idealCandidate"
-            value={formData.idealCandidate}
-            onChange={handleChange}
-          />
-        </FormGroup>
-
-        <FormGroup>
-          <Label>고용 기간</Label>
-          <Input
-            type="text"
-            name="jobPeriod"
-            value={formData.jobPeriod}
-            onChange={handleChange}
-            required
-            placeholder="예: 2년"
-          />
-        </FormGroup>
-
-        <FormGroup>
-          <Label>마감일</Label>
-          <Input
-            type="date"
-            name="deadline"
-            value={formData.deadline}
-            onChange={handleChange}
-            min={getTodayDate()}
-            required
-          />
-        </FormGroup>
-
-        <ButtonGroup>
-          <SubmitButton type="submit">수정하기</SubmitButton>
-          <CancelButton type="button" onClick={() => navigate(`/jobpost/${id}`)}>취소</CancelButton>
-        </ButtonGroup>
-      </Form>
+      <CompanyName>{formData.companyName}</CompanyName>
+      <form onSubmit={handleSubmit} style={{width:'100%'}}>
+        <InfoGrid>
+          <InfoItem>
+            <InfoLabel htmlFor="jobName">직무</InfoLabel>
+            <InfoInput
+              type="text"
+              name="jobName"
+              id="jobName"
+              value={formData.jobName}
+              onChange={handleChange}
+              required
+            />
+          </InfoItem>
+          <InfoItem>
+            <InfoLabel htmlFor="jobRegion">근무지역</InfoLabel>
+            <InfoInput
+              type="text"
+              name="jobRegion"
+              id="jobRegion"
+              value={formData.jobRegion}
+              readOnly
+            />
+          </InfoItem>
+          <InfoItem>
+            <InfoLabel htmlFor="jobPeriod">고용기간</InfoLabel>
+            <InfoInput
+              type="text"
+              name="jobPeriod"
+              id="jobPeriod"
+              value={formData.jobPeriod}
+              onChange={handleChange}
+              required
+            />
+          </InfoItem>
+          <InfoItem>
+            <InfoLabel htmlFor="careerType">경력 유형</InfoLabel>
+            <InfoSelect
+              name="careerType"
+              id="careerType"
+              value={formData.careerType}
+              onChange={handleChange}
+              required
+            >
+              <option value="NEWCOMER">신입</option>
+              <option value="EXPERIENCED">경력</option>
+              <option value="ANY">신입/경력</option>
+            </InfoSelect>
+          </InfoItem>
+          <InfoItem>
+            <InfoLabel htmlFor="deadline">마감일</InfoLabel>
+            <InfoInput
+              type="date"
+              name="deadline"
+              id="deadline"
+              value={formData.deadline}
+              onChange={handleChange}
+              min={getTodayDate()}
+              required
+            />
+          </InfoItem>
+        </InfoGrid>
+        <DetailGrid>
+          <DetailSection>
+            <DetailLabel htmlFor="jobPostDescription">모집공고 설명</DetailLabel>
+            <DetailTextarea
+              name="jobPostDescription"
+              id="jobPostDescription"
+              value={formData.jobPostDescription}
+              onChange={handleChange}
+              required
+            />
+          </DetailSection>
+          <DetailSection>
+            <DetailLabel htmlFor="mainTasks">주요 업무</DetailLabel>
+            <DetailTextarea
+              name="mainTasks"
+              id="mainTasks"
+              value={formData.mainTasks}
+              onChange={handleChange}
+              required
+            />
+          </DetailSection>
+          <DetailSection>
+            <DetailLabel htmlFor="qualifications">자격요건</DetailLabel>
+            <DetailTextarea
+              name="qualifications"
+              id="qualifications"
+              value={formData.qualifications}
+              onChange={handleChange}
+              required
+            />
+          </DetailSection>
+          <DetailSection>
+            <DetailLabel htmlFor="preferredQualifications">우대사항</DetailLabel>
+            <DetailTextarea
+              name="preferredQualifications"
+              id="preferredQualifications"
+              value={formData.preferredQualifications}
+              onChange={handleChange}
+            />
+          </DetailSection>
+          <DetailSection>
+            <DetailLabel htmlFor="idealCandidate">인재상</DetailLabel>
+            <DetailTextarea
+              name="idealCandidate"
+              id="idealCandidate"
+              value={formData.idealCandidate}
+              onChange={handleChange}
+            />
+          </DetailSection>
+          <DetailSection>
+            <FloatingButtonGroup>
+              <FloatingButton type="submit">저장</FloatingButton>
+              <FloatingButton type="button" onClick={() => navigate(`/jobpost/${id}`)}>취소</FloatingButton>
+            </FloatingButtonGroup>
+          </DetailSection>
+        </DetailGrid>
+      </form>
     </Container>
   );
 }

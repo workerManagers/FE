@@ -11,7 +11,7 @@ const PageContainer = styled(motion.div)`
   max-width: 1200px;
   margin: 0 auto;
   min-height: 100vh;
-  background-color: #f8f9fa;
+  background-color: transparent;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -21,7 +21,6 @@ const PageContainer = styled(motion.div)`
 const Title = styled.h1`
   color: #000000;
   font-size: 2.2rem;
-  margin-bottom: 2.5rem;
   text-align: center;
   font-weight: 600;
   position: relative;
@@ -31,16 +30,25 @@ const Title = styled.h1`
     position: absolute;
     left: 50%;
     bottom: -10px;
-    width: 60px;
-    height: 3px;
+    width: 100px;
+    height: 3.2px;
     background-color: #000000;
     transform: translateX(-50%);
     transition: width 0.3s ease;
   }
 
   &:hover:after {
-    width: 120px;
+    width: 300px;
   }
+`;
+
+const Description = styled.p`
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 1.1rem;
+  text-align: center;
+  margin-bottom: 2.0rem;
+  margin-top: 2.0rem;
+  line-height: 1.6;
 `;
 
 const PredictForm = styled.form`
@@ -845,6 +853,11 @@ const PredictPage = () => {
     >
       <Toast />
       <Title>요양기간 예측 서비스</Title>
+      <Description>
+        급구당이 산재 피해 직원의 요양기간을 예측해드립니다!<br />
+        병명을 입력하면 자동완성으로 관련 질병을 찾을 수 있어요.<br />
+        산재 피해 직원의 요양기간을 예측하고 대체인력 매칭까지 한 번에 해결하세요!
+      </Description>
       <PredictForm onSubmit={handleSubmit}>
         <FormGroup>
           <Label>병명</Label>

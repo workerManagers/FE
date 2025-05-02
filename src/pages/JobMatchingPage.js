@@ -208,7 +208,7 @@ const JobMatchingPage = () => {
               onClick={handleRefresh}
               disabled={refreshing}
             >
-              {refreshing ? '매칭 중...' : '매칭 다시하기'}
+              {refreshing ? '매칭 중입니다...' : '매칭 다시하기'}
             </RefreshButton>
           )}
         </TitleContainer>

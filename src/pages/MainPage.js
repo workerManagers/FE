@@ -16,7 +16,7 @@ const PageContainer = styled(motion.div)`
 `;
 
 const MainContent = styled.main`
-  padding-top: 5rem;
+  padding-top: 70px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -26,15 +26,9 @@ const MainContent = styled.main`
 const SearchSection = styled.section`
   width: 100%;
   max-width: 800px;
-  margin: 4rem auto;
-  padding: 2rem;
+  margin: 1.5rem auto 0 auto;
+  padding: 1rem;
   text-align: center;
-`;
-
-const SearchTitle = styled.h2`
-  font-size: 2rem;
-  color: #212529;
-  margin-bottom: 1.5rem;
 `;
 
 const SearchBox = styled.div`
@@ -72,15 +66,17 @@ const SearchIcon = styled(FaSearch)`
 
 const JobSection = styled.section`
   width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem;
+  max-width: 1320px;
+  margin: 3.2rem auto 0 auto;
+  padding: 0.5rem 0 1.5rem 0;
 `;
 
 const JobList = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 2rem;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2.5rem;
+  justify-items: center;
+  justify-content: center;
 `;
 
 const PaginationContainer = styled.div`
@@ -121,7 +117,7 @@ const PageButton = styled(motion.button)`
 const FilterSection = styled.section`
   width: 100%;
   max-width: 800px;
-  margin: -4.5rem auto 0 auto;
+  margin: 0 auto;
   padding: 0 2rem;
   text-align: center;
   display: flex;
@@ -287,6 +283,7 @@ const MainPage = () => {
   const [selectedSubcategory, setSelectedSubcategory] = useState('all');
   const [selectedCareerType, setSelectedCareerType] = useState('ALL');
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+  const [searchText, setSearchText] = useState('');
 
   useEffect(() => {
     const checkLoginStatus = async () => {
@@ -404,6 +401,16 @@ const MainPage = () => {
   // 필터링 함수
   const filteredJobPosts = jobPosts.filter(post => {
     const jobCategory = jobCategories[post.jobName];
+    // 검색어 필터링 (직무명, 근무지역, 회사명 포함)
+    if (searchText.trim() !== '') {
+      const lower = searchText.trim().toLowerCase();
+      const jobName = (post.jobName || '').toLowerCase();
+      const jobRegion = (post.jobRegion || '').toLowerCase();
+      const companyName = (post.companyName || '').toLowerCase();
+      if (!jobName.includes(lower) && !jobRegion.includes(lower) && !companyName.includes(lower)) {
+        return false;
+      }
+    }
     // 카테고리 필터링
     if (selectedCategory !== 'all') {
       if (!jobCategory || jobCategory.industryCategory !== selectedCategory) {
@@ -463,9 +470,12 @@ const MainPage = () => {
     >
       <MainContent>
         <SearchSection>
-          <SearchTitle>대체인력 찾기</SearchTitle>
           <SearchBox>
-            <SearchInput placeholder="직무, 지역, 회사명으로 검색하세요" />
+            <SearchInput 
+              placeholder="직무, 지역, 회사명으로 검색하세요"
+              value={searchText}
+              onChange={e => setSearchText(e.target.value)}
+            />
             <SearchIcon />
           </SearchBox>
         </SearchSection>

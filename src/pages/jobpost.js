@@ -9,7 +9,13 @@ import Toast from '../components/common/Toast';
 const Container = styled.div`
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 6rem 2rem 2rem;
+  min-height: 100vh;
+  background-color: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
 `;
 
 const LoadingContainer = styled.div`
@@ -17,14 +23,14 @@ const LoadingContainer = styled.div`
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  min-height: calc(100vh - 200px); // 헤더 높이 등을 고려한 높이
+  min-height: calc(100vh - 200px);
 `;
 
 const LoadingSpinner = styled.div`
   width: 50px;
   height: 50px;
   border: 5px solid #f3f3f3;
-  border-top: 5px solid #007bff;
+  border-top: 5px solid #7c3aed;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 1rem;
@@ -43,66 +49,69 @@ const LoadingMessage = styled.div`
 `;
 
 const Title = styled.h1`
-  font-size: 2rem;
-  margin-bottom: 2rem;
-  color: #333;
+  font-size: 1.35rem;
+  margin-bottom: 1.5rem;
+  color: #23272f;
+  font-weight: 700;
+  text-align: center;
+  letter-spacing: -0.5px;
+  background: rgba(255,255,255,0.7);
+  border-radius: 16px;
+  box-shadow: 0 2px 16px 0 rgba(124,58,237,0.07);
+  padding: 1.1rem 2.2rem 1rem 2.2rem;
+  display: inline-block;
 `;
 
-const FilterSection = styled.div`
+const TitleRow = styled.div`
   display: flex;
-  gap: 1rem;
-  margin-bottom: 2rem;
-  flex-wrap: wrap;
-`;
-
-const FilterGroup = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-`;
-
-const FilterLabel = styled.label`
-  font-size: 1rem;
-  color: #666;
-`;
-
-const FilterSelect = styled.select`
-  padding: 0.5rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 1rem;
-  min-width: 150px;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-bottom: 2.2rem;
+  width: 100%;
 `;
 
 const JobList = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 2rem;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 2.2rem;
+  width: 100%;
+  justify-items: center;
 `;
 
 const JobCard = styled.div`
-  background: white;
-  border-radius: 8px;
-  padding: 1.5rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: rgba(255,255,255,0.95);
+  border-radius: 18px;
+  padding: 2rem 1.5rem 1.5rem 1.5rem;
+  box-shadow: 0 4px 24px 0 rgba(124,58,237,0.08), 0 1.5px 8px 0 rgba(0,0,0,0.04);
   cursor: pointer;
-  transition: transform 0.2s;
-
+  transition: background 0.18s, box-shadow 0.18s, transform 0.18s;
+  border: 2.5px solid rgba(124,58,237,0.07);
+  min-width: 270px;
+  max-width: 370px;
+  width: 100%;
   &:hover {
-    transform: translateY(-5px);
+    background: #f5f6fa;
+    box-shadow: 0 8px 32px 0 rgba(180,180,200,0.18), 0 0 16px #fff;
+    border: 2.5px solid #e5e7eb;
+    transform: translateY(-7px) scale(1.025);
   }
 `;
 
 const JobTitle = styled.h2`
-  font-size: 1.25rem;
-  margin-bottom: 0.5rem;
-  color: #333;
+  font-size: 1.08rem;
+  margin-bottom: 0.4rem;
+  color: #23272f;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  text-align: center;
 `;
 
 const CompanyName = styled.p`
-  font-size: 1rem;
-  color: #666;
-  margin-bottom: 1rem;
+  font-size: 0.98rem;
+  color: #6b7280;
+  margin-bottom: 0.7rem;
+  text-align: center;
 `;
 
 const JobInfo = styled.div`
@@ -110,39 +119,51 @@ const JobInfo = styled.div`
   flex-wrap: wrap;
   gap: 0.5rem;
   margin-bottom: 1rem;
+  justify-content: center;
 `;
 
 const InfoTag = styled.span`
-  background: #f0f0f0;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.875rem;
-  color: #666;
+  background: #f3f4f6;
+  padding: 0.28rem 0.7rem;
+  border-radius: 7px;
+  font-size: 0.89rem;
+  color: #6366f1;
+  font-weight: 500;
+  letter-spacing: -0.2px;
+  transition: background 0.18s, box-shadow 0.18s, color 0.18s;
+  cursor: default;
 `;
 
 const Deadline = styled.p`
-  font-size: 0.875rem;
-  color: #999;
-  margin-top: 1rem;
+  font-size: 0.93rem;
+  color: #a1a1aa;
+  margin-top: 1.1rem;
+  text-align: center;
 `;
 
-const NewPostButton = styled.button`
+const FloatingNewPostButton = styled.button`
   position: fixed;
-  bottom: 2rem;
-  right: 2rem;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 60px;
-  height: 60px;
-  font-size: 1.5rem;
+  right: 3.2vw;
+  bottom: 3.2vw;
+  z-index: 200;
+  background: linear-gradient(90deg, #f3f4f6 0%, #e5e7eb 100%);
+  color: #23272f;
+  border: 1.5px solid #d1d5db;
+  border-radius: 50px;
+  font-size: 1.13rem;
+  font-weight: 700;
+  padding: 1.1rem 2.1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
   cursor: pointer;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  transition: transform 0.2s;
-
+  box-shadow: 0 4px 24px rgba(180,180,200,0.13), 0 0 8px #fff;
+  transition: background 0.18s, box-shadow 0.18s, color 0.13s, transform 0.13s;
   &:hover {
-    transform: scale(1.1);
+    background: linear-gradient(90deg, #e5e7eb 0%, #f3f4f6 100%);
+    color: #111;
+    box-shadow: 0 8px 32px rgba(180,180,200,0.18), 0 0 16px #fff;
+    transform: translateY(-2px) scale(1.04);
   }
 `;
 
@@ -427,7 +448,7 @@ function JobPost() {
       <Container>
         <LoadingContainer>
           <LoadingSpinner />
-          <LoadingMessage>채용공고를 불러오는 중...</LoadingMessage>
+          <LoadingMessage>채용공고를 불러오는 중입니다...</LoadingMessage>
         </LoadingContainer>
       </Container>
     );
@@ -437,7 +458,7 @@ function JobPost() {
     return (
       <Container>
         <Toast />
-        <div>{error}</div>
+        <div style={{textAlign:'center', color:'#a1a1aa', fontSize:'1.08rem', marginTop:'2.5rem'}}>{error}</div>
       </Container>
     );
   }
@@ -445,58 +466,21 @@ function JobPost() {
   return (
     <Container>
       <Toast />
-      <Title>
-        {userInfo?.userType === 'COMPANY' ? '내 모집공고 관리' : '채용공고 목록'}
-      </Title>
-
-      <FilterSection>
-        <FilterGroup>
-          <FilterLabel>카테고리</FilterLabel>
-          <FilterSelect
-            value={selectedCategory}
-            onChange={(e) => handleCategoryClick(e.target.value)}
-          >
-            {CATEGORIES.map((category) => (
-              <option key={category.id} value={category.id}>{category.name}</option>
-            ))}
-          </FilterSelect>
-        </FilterGroup>
-
-        <FilterGroup>
-          <FilterLabel>세부 카테고리</FilterLabel>
-          <FilterSelect
-            value={selectedSubcategory}
-            onChange={(e) => handleSubcategoryClick(e.target.value)}
-          >
-            <option value="all">전체</option>
-            {selectedCategory !== 'all' &&
-              INDUSTRY_SUBCATEGORIES[selectedCategory]?.map((subcategory) => (
-                <option key={subcategory.id} value={subcategory.id}>
-                  {subcategory.name}
-                </option>
-              ))}
-          </FilterSelect>
-        </FilterGroup>
-      </FilterSection>
-
-      <FilterSection>
-        <FilterGroup>
-          <FilterLabel>경력 유형</FilterLabel>
-          <FilterSelect
-            value={selectedCareerType}
-            onChange={(e) => handleCareerTypeChange(e.target.value)}
-          >
-            {CAREER_TYPES.map((type) => (
-              <option key={type.id} value={type.id}>{type.name}</option>
-            ))}
-          </FilterSelect>
-        </FilterGroup>
-      </FilterSection>
+      <TitleRow>
+        <Title>
+          {userInfo?.userType === 'COMPANY' ? '내 모집공고 관리' : '채용공고 목록'}
+        </Title>
+      </TitleRow>
+      {userInfo?.userType === 'COMPANY' && (
+        <FloatingNewPostButton onClick={() => navigate('/jobpost/new')}>
+          <span style={{fontSize: '1.2em', fontWeight: '900'}}>＋</span> 새 공고 등록
+        </FloatingNewPostButton>
+      )}
 
       {error ? (
-        <div>{error}</div>
+        <div style={{textAlign:'center', color:'#a1a1aa', fontSize:'1.08rem', marginTop:'2.5rem'}}>{error}</div>
       ) : jobPosts.length === 0 ? (
-        <div>
+        <div style={{textAlign:'center', color:'#a1a1aa', fontSize:'1.08rem', marginTop:'2.5rem'}}>
           {userInfo?.userType === 'COMPANY' 
             ? '등록된 모집공고가 없습니다.' 
             : '현재 등록된 채용공고가 없습니다.'}
@@ -523,10 +507,6 @@ function JobPost() {
             );
           })}
         </JobList>
-      )}
-
-      {userInfo?.userType === 'COMPANY' && (
-        <NewPostButton onClick={() => navigate('/jobpost/new')}>+</NewPostButton>
       )}
     </Container>
   );

@@ -3,6 +3,8 @@ import styled, { keyframes } from 'styled-components';
 import { userApi } from '../../services/api';
 import { showToast } from './Toast';
 import { motion, AnimatePresence } from 'framer-motion';
+import { createPortal } from 'react-dom';
+import { useNavigate } from 'react-router-dom';
 
 const fadeIn = keyframes`
   from { opacity: 0; }
@@ -19,7 +21,7 @@ const ModalOverlay = styled(motion.div)`
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 3000;
   animation: ${fadeIn} 0.2s;
 `;
 
@@ -94,12 +96,30 @@ const CloseButton = styled(Button)`
 
 const SessionExtendModal = ({ onClose }) => {
   const [isExtending, setIsExtending] = useState(false);
+  const navigate = useNavigate();
 
   const handleExtend = async () => {
     try {
       setIsExtending(true);
+      const token = localStorage.getItem('token');
+      if (!token) {
+        showToast.error('시간이 지나 로그아웃되었습니다.');
+        localStorage.removeItem('token');
+        localStorage.removeItem('tokenExpiry');
+        onClose();
+        navigate('/login');
+        return;
+      }
       const response = await userApi.extendSession();
       const { accessToken, accessTokenExpiresIn } = response.data;
+      if (!accessToken) {
+        showToast.error('시간이 지나 로그아웃되었습니다.');
+        localStorage.removeItem('token');
+        localStorage.removeItem('tokenExpiry');
+        onClose();
+        navigate('/login');
+        return;
+      }
       // 새로운 토큰 저장
       const refreshToken = localStorage.getItem('refreshToken');
       localStorage.setItem('token', accessToken);
@@ -108,13 +128,17 @@ const SessionExtendModal = ({ onClose }) => {
       onClose();
     } catch (error) {
       console.error('세션 연장 실패:', error);
-      showToast.error('세션 연장에 실패했습니다.');
+      showToast.error('시간이 지나 로그아웃되었습니다.');
+      localStorage.removeItem('token');
+      localStorage.removeItem('tokenExpiry');
+      onClose();
+      navigate('/login');
     } finally {
       setIsExtending(false);
     }
   };
 
-  return (
+  return createPortal(
     <AnimatePresence>
       <ModalOverlay
         initial={{ opacity: 0 }}
@@ -151,7 +175,8 @@ const SessionExtendModal = ({ onClose }) => {
           </ButtonGroup>
         </ModalContent>
       </ModalOverlay>
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 };
 

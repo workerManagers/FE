@@ -13,101 +13,122 @@ const HeaderContainer = styled.header`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 2rem;
-  background: linear-gradient(135deg,rgb(0, 0, 0) 0%,rgb(0, 0, 0) 100%);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 1.05rem 4vw 1.05rem 4vw;
+  background: rgba(245,246,248,0.97);
+  backdrop-filter: blur(18px) saturate(180%);
+  box-shadow: 0 8px 32px rgba(30,41,59,0.07), 0 1.5px 6px rgba(0,0,0,0.03);
+  border-radius: 0;
+  border: none;
+  border-bottom: 1.8px solidrgb(200, 206, 216);
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   z-index: 1000;
+  max-height: 75px;
 `;
 
 const LogoSection = styled.div`
   display: flex;
   align-items: center;
-  gap: 2rem;
+  gap: 2.8rem;
 `;
 
 const Logo = styled.h1`
-  color: white;
-  font-size: 1.8rem;
-  font-weight: 700;
+  color: #23272f;
+  font-size: 2.3rem;
+  font-weight: 900;
   margin: 0;
   cursor: pointer;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  letter-spacing: -2.5px;
+  text-shadow: 0 2px 16px rgba(163,170,184,0.10);
+  transition: color 0.18s;
+  border-radius: 14px;
+  padding: 0.1rem 1.2rem 0.1rem 0.7rem;
+  background: none;
+  &:hover {
+    color: #23272f;
+    background: none;
+    text-shadow: none;
+  }
 `;
 
 const NavMenu = styled.nav`
   display: flex;
-  gap: 1rem;
+  gap: 0.7rem;
 `;
 
 const NavLink = styled.a`
-  color: rgba(255, 255, 255, 0.9);
+  color: #23272f;
   text-decoration: none;
-  font-size: 1rem;
-  font-weight: 500;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  padding: 0.7rem 1.8rem;
+  border-radius: 999px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: color 0.18s;
   position: relative;
+  background: none;
+  box-shadow: none;
+  border: none;
 
   &:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    color: white;
+    color: #23272f;
+    background: none;
+    box-shadow: none;
   }
-
   &.active {
-    color: white;
-    background-color: rgba(255, 255, 255, 0.15);
-    font-weight: 600;
+    color: #6B7280;
+    font-weight: 900;
+    background: none;
+    box-shadow: none;
   }
 `;
 
 const UnreadBadge = styled.span`
   position: absolute;
-  top: -5px;
-  right: -5px;
-  background-color: #ff4757;
-  color: white;
-  font-size: 0.7rem;
-  padding: 1px 6px;
-  border-radius: 10px;
+  top: -7px;
+  right: -7px;
+  background: linear-gradient(90deg, #A3AAB8 0%, #E5E7EB 100%);
+  color: #23272f;
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  border-radius: 12px;
   font-weight: bold;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 8px rgba(163,170,184,0.13);
 `;
 
 const UserSection = styled.div`
   display: flex;
   align-items: center;
-  gap: 0.8rem;
+  gap: 1.5rem;
 `;
 
 const WelcomeMessage = styled.span`
-  color: white;
-  font-size: 0.9rem;
-  font-weight: 500;
+  color: #23272f;
+  font-size: 1.01rem;
+  font-weight: 600;
   margin-right: 0.5rem;
+  letter-spacing: -0.5px;
 `;
 
 const IconButton = styled.button`
   background: none;
   border: none;
-  color: white;
+  color: #6B7280;
   font-size: 1.5rem;
   cursor: pointer;
   display: flex;
   align-items: center;
   padding: 0.5rem;
   border-radius: 50%;
-  transition: all 0.2s ease;
+  transition: background 0.18s, color 0.18s;
   position: relative;
   margin-right: -0.5rem;
 
   &:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+    background: rgba(163,170,184,0.09);
+    color: #23272f;
   }
 `;
 
@@ -115,8 +136,8 @@ const BookmarkCount = styled.span`
   position: absolute;
   top: 0;
   right: 0;
-  background-color: #ff4757;
-  color: white;
+  background: linear-gradient(90deg, #A3AAB8 0%, #E5E7EB 100%);
+  color: #23272f;
   font-size: 0.7rem;
   padding: 0.1rem 0.4rem;
   border-radius: 10px;
@@ -127,33 +148,36 @@ const BookmarkCount = styled.span`
 const ProfileButton = styled.button`
   background: none;
   border: none;
-  color: white;
+  color: #6B7280;
   font-size: 1.5rem;
   cursor: pointer;
   display: flex;
   align-items: center;
   padding: 0.5rem;
   border-radius: 50%;
-  transition: all 0.2s ease;
+  transition: background 0.18s, color 0.18s;
 
   &:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+    background: rgba(163,170,184,0.09);
+    color: #23272f;
   }
 `;
 
 const AuthButton = styled(motion.button)`
-  padding: 0.5rem 1rem;
+  padding: 0.5rem 1.2rem;
   border: none;
-  border-radius: 4px;
-  font-size: 0.9rem;
-  font-weight: 500;
+  border-radius: 8px;
+  font-size: 1.01rem;
+  font-weight: 600;
   cursor: pointer;
-  background-color: ${props => props.variant === 'login' ? 'white' : 'rgba(255, 255, 255, 0.1)'};
-  color: ${props => props.variant === 'login' ? '#1a237e' : 'white'};
-  transition: all 0.2s ease;
+  background: ${props => props.variant === 'login' ? 'linear-gradient(90deg, #A3AAB8 0%, #E5E7EB 100%)' : 'rgba(163,170,184,0.08)'};
+  color: ${props => props.variant === 'login' ? '#23272f' : '#6B7280'};
+  box-shadow: 0 2px 8px rgba(163,170,184,0.07);
+  transition: all 0.18s;
 
   &:hover {
-    background-color: ${props => props.variant === 'login' ? '#f8f9fa' : 'rgba(255, 255, 255, 0.2)'};
+    background: ${props => props.variant === 'login' ? 'linear-gradient(90deg, #E5E7EB 0%, #A3AAB8 100%)' : 'rgba(163,170,184,0.13)'};
+    color: #23272f;
   }
 `;
 
@@ -161,62 +185,65 @@ const ProfileDropdown = styled(motion.div)`
   position: absolute;
   top: calc(100% + 0.5rem);
   right: 2rem;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  padding: 0.5rem;
-  min-width: 200px;
+  background: rgba(245,246,248,0.98);
+  border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(163,170,184,0.13);
+  padding: 0.7rem 0.5rem;
+  min-width: 210px;
   z-index: 1001;
   margin-top: -0.5rem;
+  border: 1.5px solid #E5E7EB;
 `;
 
 const DropdownItem = styled.div`
-  padding: 0.6rem 1rem;
-  color: #333;
+  padding: 0.7rem 1.2rem;
+  color: #23272f;
   cursor: pointer;
-  border-radius: 4px;
-  transition: all 0.2s ease;
+  border-radius: 8px;
+  transition: background 0.18s, color 0.18s;
   display: flex;
   align-items: center;
   gap: 0.5rem;
 
   &:hover {
-    background-color: #f8f9fa;
+    background: #F3F4F6;
+    color: #6B7280;
   }
 `;
 
 const Divider = styled.div`
   height: 1px;
-  background-color: #dee2e6;
+  background: #e6eaf1;
   margin: 0.3rem 0;
 `;
 
 const TimerToggleButton = styled(motion.button)`
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: white;
+  background: rgba(123, 90, 255, 0.08);
+  border: 1.5px solid #e6eaf1;
+  color: #7B5AFF;
   cursor: pointer;
-  font-size: 0.82rem;
-  padding: 0.15rem 0.6rem;
-  border-radius: 4px;
+  font-size: 0.92rem;
+  padding: 0.18rem 0.8rem;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.3rem;
-  height: 28px;
-  min-width: 90px;
+  height: 32px;
+  min-width: 100px;
   white-space: nowrap;
-  font-weight: 500;
+  font-weight: 600;
   position: static;
   margin: 0 -20px;
-  
+  box-shadow: 0 2px 8px rgba(123,90,255,0.07);
+  transition: background 0.18s, color 0.18s;
   &:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(123, 90, 255, 0.13);
+    color: #5F3DC4;
   }
-
   &::before {
     content: '⏳';
-    font-size: 1rem;
+    font-size: 1.1rem;
   }
 `;
 
@@ -224,9 +251,9 @@ const TimerWrapper = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 28px;
-  min-width: 100px;
-  margin-right: 1rem;
+  height: 32px;
+  min-width: 110px;
+  margin-right: 1.2rem;
 `;
 
 const Header = ({ isLoggedIn, userInfo, onLoginStatusChange }) => {
@@ -335,7 +362,7 @@ const Header = ({ isLoggedIn, userInfo, onLoginStatusChange }) => {
         <NavMenu>
           {isLoggedIn && userInfo?.userType === 'COMPANY' && (
             <>
-              <NavLink onClick={() => navigate('/jobpost')}>채용공고</NavLink>
+              {/* <NavLink onClick={() => navigate('/jobpost')}>채용공고</NavLink> */}
               <NavLink onClick={() => navigate('/add-job')}>직무 추가</NavLink>
               <NavLink onClick={() => navigate('/predict')}>요양기간 예측</NavLink>
               <NavLink onClick={() => navigate('/matching')}>대체인력 매칭</NavLink>
@@ -373,7 +400,7 @@ const Header = ({ isLoggedIn, userInfo, onLoginStatusChange }) => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  타이머 표시
+                  타이머
                 </TimerToggleButton>
               )}
               {showTimer && <SessionTimer onToggle={toggleTimer} />}
@@ -403,6 +430,17 @@ const Header = ({ isLoggedIn, userInfo, onLoginStatusChange }) => {
                 }}>
                   내 정보
                 </DropdownItem>
+                {userInfo?.userType === 'COMPANY' && (
+                  <>
+                    <Divider />
+                    <DropdownItem onClick={() => {
+                      navigate('/jobpost');
+                      setIsProfileOpen(false);
+                    }}>
+                      내 공고
+                    </DropdownItem>
+                  </>
+                )}
                 {userInfo?.userType === 'INDIVIDUAL' && (
                   <>
                     <Divider />

@@ -6,14 +6,21 @@ import BookmarkButton from './BookmarkButton';
 const Card = styled.div`
   background: #fff;
   border-radius: 18px;
-  padding: 2rem 1.7rem 1.5rem 1.7rem;
+  padding: 1.5rem 1.1rem 2.5rem 1.0rem;
   box-shadow: 0 4px 24px rgba(0,0,0,0.07), 0 1.5px 6px rgba(0,0,0,0.04);
   border: 1.5px solid #f2f2f2;
   cursor: pointer;
   transition: box-shadow 0.22s cubic-bezier(.4,0,.2,1), transform 0.18s cubic-bezier(.4,0,.2,1);
-  min-width: 270px;
-  max-width: 370px;
-  margin: 0 auto;
+  min-width: 0;
+  min-width: 420px;
+  width: 100%;
+  height: 280px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-sizing: border-box;
+  overflow: hidden;
 
   &:hover {
     box-shadow: 0 8px 32px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.07);
@@ -24,31 +31,37 @@ const Card = styled.div`
 
 const TopRow = styled.div`
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 0.2rem;
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: 0.1rem;
+  width: 100%;
 `;
 
 const JobTitle = styled.h2`
-  font-size: 1.35rem;
-  font-weight: 700;
-  margin-bottom: 0.7rem;
+  font-size: 1.2rem;
+  font-weight: 370;
+  margin-bottom: 0.8rem;
   color: #181818;
   letter-spacing: -0.5px;
+  text-align: center;
+  width: 100%;
 `;
 
 const CompanyName = styled.p`
-  font-size: 1.05rem;
-  color: #444;
-  margin-bottom: 1.1rem;
-  font-weight: 500;
+  font-size: 1.5rem;
+  color: #181818;
+  font-weight: 600;
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: 0.5rem;
 `;
 
 const JobInfo = styled.div`
   display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
   flex-wrap: nowrap;
-  gap: 0.6rem;
-  margin-bottom: 1.2rem;
   overflow-x: auto;
   white-space: nowrap;
   scrollbar-width: none;
@@ -69,17 +82,16 @@ const InfoTag = styled.span`
   letter-spacing: -0.2px;
   border: 1px solid #ececec;
   transition: background 0.18s;
-
-  &:not(:last-child) {
-    margin-right: 0.1rem;
-  }
+  text-align: center;
 `;
 
 const Deadline = styled.p`
   font-size: 0.97rem;
   color: #888;
-  margin-top: 1.1rem;
+  margin-top: 0.7rem;
+  margin-bottom: -0.5rem;
   font-weight: 400;
+  text-align: center;
 `;
 
 const JobCard = ({ job, jobCategory, industryCategories, industrySubcategories, getCareerTypeLabel, onClick, isBookmarked, bookmarkId, onBookmarkChange }) => {

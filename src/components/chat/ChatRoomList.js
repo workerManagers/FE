@@ -11,15 +11,19 @@ const PageContainer = styled(motion.div)`
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background-color: white;
-  padding: 6rem 2rem 2rem;
+  background-color: #f8f9fa;
+  padding: 6rem 0 2rem;
 `;
 
 const RoomListContainer = styled.div`
-  max-width: 800px;
+  max-width: 1100px;
   width: 100%;
   margin: 0 auto;
   min-height: calc(100vh - 8rem);
+  background: #fff;
+  border-radius: 28px;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.09);
+  padding: 2.5rem 2.5rem 2.5rem 2.5rem;
 `;
 
 const Header = styled.div`
@@ -29,71 +33,73 @@ const Header = styled.div`
   position: sticky;
   top: 0;
   z-index: 10;
-  background: white;
-  padding: 1rem 0;
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(8px);
+  padding: 1.2rem 0 1.2rem 0;
+  border-radius: 18px 18px 0 0;
+  box-shadow: 0 2px 8px rgba(180,180,200,0.07);
 `;
 
 const BackButton = styled(motion.button)`
   display: flex;
   align-items: center;
   padding: 0.8rem 1.5rem;
-  background: rgba(0, 0, 0, 0.8);
-  color: white;
+  background: linear-gradient(90deg, #f3f4f6 0%, #e5e7eb 100%);
+  color: #23272f;
   border: none;
-  border-radius: 12px;
+  border-radius: 18px;
   font-size: 1rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
-
+  box-shadow: 0 2px 8px rgba(180,180,200,0.13);
+  transition: all 0.2s;
+  margin-right: 1.2rem;
   &:hover {
-    background: rgba(0, 0, 0, 0.9);
-    transform: translateY(-2px);
+    background: linear-gradient(90deg, #e5e7eb 0%, #f3f4f6 100%);
+    color: #6366f1;
+    box-shadow: 0 4px 20px rgba(180,180,200,0.18);
+    transform: translateY(-2px) scale(1.03);
   }
 `;
 
 const Title = styled.h2`
   margin: 0;
-  font-size: 2rem;
-  color: #000000;
-  font-weight: 600;
+  font-size: 2.1rem;
+  color: #23272f;
+  font-weight: 700;
   margin-left: 1.5rem;
   position: relative;
-
+  letter-spacing: -0.5px;
   &:after {
     content: '';
     position: absolute;
     left: 0;
     bottom: -10px;
-    width: 60px;
+    width: 90px;
     height: 3px;
-    background-color: #000000;
+    background-color: #6366f1;
     transition: width 0.3s ease;
   }
-
   &:hover:after {
-    width: 120px;
+    width: 170px;
   }
 `;
 
 const RoomCard = styled(motion.div)`
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(10px);
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-  border-radius: 24px;
-  border: 3px solid rgba(0, 0, 0, 0.3);
+  background: #fff;
+  padding: 1.5rem 1.3rem 1.3rem 1.3rem;
+  margin-bottom: 1.2rem;
+  border-radius: 18px;
+  border: 1.5px solid #e5e7eb;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
+  transition: all 0.2s;
+  box-shadow: 0 2px 12px rgba(180,180,200,0.10);
   position: relative;
-
   &:hover {
-    transform: translateY(-5px);
-    border: 3px solid rgba(0, 0, 0, 0.4);
-    box-shadow: 0 12px 48px 0 rgba(0, 0, 0, 0.2);
+    transform: translateY(-5px) scale(1.02);
+    border: 1.5px solid #6366f1;
+    box-shadow: 0 8px 32px 0 rgba(99,102,241,0.13);
   }
-
   &:first-child {
     margin-top: 1rem;
   }
@@ -101,26 +107,26 @@ const RoomCard = styled(motion.div)`
 
 const RoomTitle = styled.h3`
   margin: 0;
-  color: #000000;
-  font-size: 1.2rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
+  color: #23272f;
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-bottom: 0.7rem;
 `;
 
 const RoomInfo = styled.div`
   display: flex;
   justify-content: space-between;
-  margin-top: 1rem;
-  color: rgba(0, 0, 0, 0.6);
-  font-size: 0.9rem;
+  margin-top: 0.5rem;
+  color: #6b7280;
+  font-size: 0.97rem;
   gap: 1rem;
   flex-wrap: wrap;
 `;
 
 const LastMessage = styled.p`
   margin: 1rem 0 0;
-  color: rgba(0, 0, 0, 0.6);
-  font-size: 0.9rem;
+  color: #23272f;
+  font-size: 0.97rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -130,16 +136,16 @@ const LastMessage = styled.p`
 `;
 
 const UnreadBadge = styled.span`
-  background: #ff4757;
+  background: #6366f1;
   color: white;
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-size: 0.8rem;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 0.85rem;
   font-weight: bold;
   position: absolute;
   top: -10px;
   left: -10px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 4px rgba(99,102,241,0.13);
 `;
 
 const HeaderUnreadBadge = styled(UnreadBadge)`
@@ -156,14 +162,17 @@ const NewMessageIndicator = styled.span`
 
 const EmptyState = styled.div`
   text-align: center;
-  padding: 3rem;
-  color: rgba(0, 0, 0, 0.6);
-  font-size: 1.1rem;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(10px);
+  padding: 3rem 1rem;
+  color: #a3aab8;
+  font-size: 1.13rem;
+  background: #f4f5f7;
   border-radius: 24px;
-  border: 3px solid rgba(0, 0, 0, 0.3);
+  border: 1.5px solid #e5e7eb;
   margin-top: 2rem;
+  box-shadow: 0 2px 8px rgba(180,180,200,0.07);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 `;
 
 const LoadingContainer = styled.div`
@@ -171,21 +180,20 @@ const LoadingContainer = styled.div`
   justify-content: center;
   align-items: center;
   min-height: 200px;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(10px);
+  background: #f4f5f7;
   border-radius: 24px;
-  border: 3px solid rgba(0, 0, 0, 0.3);
+  border: 1.5px solid #e5e7eb;
   margin-top: 2rem;
+  box-shadow: 0 2px 8px rgba(180,180,200,0.07);
 `;
 
 const LoadingSpinner = styled.div`
-  width: 50px;
-  height: 50px;
-  border: 5px solid #f3f3f3;
-  border-top: 5px solid #3498db;
+  width: 44px;
+  height: 44px;
+  border: 5px solid #e5e7eb;
+  border-top: 5px solid #6366f1;
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  
   @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
@@ -324,7 +332,7 @@ const ChatRoomList = () => {
                 whileTap={{ scale: 0.98 }}
               >
                 {isUnreadMessage && <UnreadBadge>NEW</UnreadBadge>}
-                <RoomTitle>{room.jobName || '1대1 문의'}</RoomTitle>
+                <RoomTitle>{room.jobName}</RoomTitle>
                 <RoomInfo>
                   <span>
                     {localStorage.getItem('userType') === 'COMPANY' ? '문의자' : '담당자'}
