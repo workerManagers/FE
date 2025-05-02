@@ -186,35 +186,21 @@ const ChatRoom = () => {
       }
     };
 
-    // SockJS + STOMP 연결
-    const socket = new SockJS('http://localhost:8080/ws-chat');
-    // const socket = new SockJS('wss://port-0-workermangers-be-m9ax68es6a756190.sel4.cloudtype.app/ws-chat');
-    stompClient.current = new Client({
-      webSocketFactory: () => socket,
-      connectHeaders: {
-        Authorization: `Bearer ${token}`,
-      },
-      onConnect: () => {
-        // 구독
-        stompClient.current.subscribe(`/topic/chat.${roomId}`, async (message) => {
-          try {
-            const parsed = JSON.parse(message.body);
-            setMessages((prev) => Array.isArray(prev) ? [...prev, parsed] : [parsed]);
-            
-            // 새 메시지가 상대방으로부터 온 경우 읽음 처리
-            if (parsed.senderId !== userId) {
-              await markAsRead();
-            }
-          } catch (e) {}
-        });
-      },
-      onStompError: (frame) => {
-        console.error('STOMP error:', frame);
-      },
-    });
-    stompClient.current.activate();
+    // WebSocket 연결 설정
+    const onMessage = async (message) => {
+      setMessages(prev => Array.isArray(prev) ? [...prev, message] : [message]);
+      if (message.senderId !== userId) {
+        await markAsRead();
+      }
+    };
 
-    markAsRead(); // 채팅방 입장 시 읽음 처리
+    try {
+      stompClient.current = chatApi.createWebSocketClient(token, roomId, onMessage);
+      markAsRead();
+    } catch (error) {
+      console.error('WebSocket 연결 실패:', error);
+      showToast.error('채팅 연결에 실패했습니다. 페이지를 새로고침해주세요.');
+    }
 
     return () => {
       if (stompClient.current) {
@@ -231,18 +217,8 @@ const ChatRoom = () => {
   }, [messages]);
 
   const handleSendMessage = () => {
-    if (
-      stompClient.current &&
-      stompClient.current.connected &&
-      newMessage.trim()
-    ) {
-      stompClient.current.publish({
-        destination: '/app/chat.send',
-        body: JSON.stringify({
-          chatRoomId: roomId,
-          content: newMessage,
-        }),
-      });
+    if (newMessage.trim()) {
+      chatApi.sendMessage(stompClient.current, roomId, newMessage);
       setNewMessage('');
     }
   };

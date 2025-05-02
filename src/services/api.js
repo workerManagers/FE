@@ -1,8 +1,11 @@
 import axios from 'axios';
+import SockJS from 'sockjs-client';
+import { Client } from '@stomp/stompjs';
 
 // API 기본 URL 설정
 const API_BASE_URL = 'https://port-0-workermangers-be-m9ax68es6a756190.sel4.cloudtype.app';
 // const API_BASE_URL = 'http://localhost:8080';
+
 // axios 인스턴스 생성
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -440,6 +443,11 @@ export const applicationApi = {
   }
 };
 
+// WebSocket 관련 상수
+const WS_BASE_URL = 'https://port-0-workermangers-be-m9ax68es6a756190.sel4.cloudtype.app';
+// const WS_BASE_URL = 'http://localhost:8080';
+
+// 채팅 관련 API
 export const chatApi = {
   // 채팅방 생성
   createChatRoom: async (targetUserId) => {
@@ -505,7 +513,55 @@ export const chatApi = {
       console.error('메시지 삭제 실패:', error);
       throw error;
     }
-  }
+  },
+
+  // WebSocket 연결 설정
+  createWebSocketClient: (token, roomId, onMessage) => {
+    const socket = new SockJS(`${API_BASE_URL}/ws-chat`);
+    const stompClient = new Client({
+      webSocketFactory: () => socket,
+      connectHeaders: {
+        Authorization: `Bearer ${token}`,
+      },
+      onConnect: () => {
+        stompClient.subscribe(`/topic/chat.${roomId}`, (message) => {
+          try {
+            const parsed = JSON.parse(message.body);
+            onMessage(parsed);
+          } catch (e) {
+            console.error('메시지 파싱 실패:', e);
+          }
+        });
+      },
+      onStompError: (frame) => {
+        // STOMP 에러는 개발자 콘솔에만 표시
+        console.debug('STOMP error:', frame);
+      },
+      onWebSocketError: (event) => {
+        // WebSocket 에러는 개발자 콘솔에만 표시
+        console.debug('WebSocket error:', event);
+      },
+      debug: (str) => {
+        // 디버그 로그는 개발자 콘솔에만 표시
+        console.debug(str);
+      },
+    });
+    stompClient.activate();
+    return stompClient;
+  },
+
+  // 메시지 전송
+  sendMessage: (stompClient, roomId, content) => {
+    if (stompClient && stompClient.connected) {
+      stompClient.publish({
+        destination: '/app/chat.send',
+        body: JSON.stringify({
+          chatRoomId: roomId,
+          content: content,
+        }),
+      });
+    }
+  },
 };
 
 export const matchingApi = {
