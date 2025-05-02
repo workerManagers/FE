@@ -1,9 +1,10 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import LoginForm from '../components/LoginForm';
 import { showToast } from '../components/common/Toast';
+import { tokenService, userApi } from '../services/api';
 
 const PageContainer = styled(motion.div)`
   display: flex;
@@ -22,6 +23,10 @@ const PageContainer = styled(motion.div)`
 
 const LoginPage = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [userEmail, setUserEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   useEffect(() => {
     if (location.state?.message) {
@@ -32,6 +37,29 @@ const LoginPage = () => {
       }
     }
   }, [location]);
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const response = await userApi.login({
+        userEmail,
+        password
+      });
+
+      const { accessToken, refreshToken, accessTokenExpiresIn } = response;
+      
+      // 토큰 저장
+      tokenService.saveTokens(accessToken, refreshToken, accessTokenExpiresIn);
+      
+      navigate('/');
+    } catch (error) {
+      console.error('로그인 실패:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <PageContainer

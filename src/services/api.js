@@ -6,6 +6,53 @@ import { Client } from '@stomp/stompjs';
 const API_BASE_URL = 'https://port-0-workermangers-be-m9ax68es6a756190.sel4.cloudtype.app';
 // const API_BASE_URL = 'http://localhost:8080';
 
+// 토큰 관리 관련 상수
+const TOKEN_KEY = 'token';
+const REFRESH_TOKEN_KEY = 'refreshToken';
+const TOKEN_EXPIRY_KEY = 'tokenExpiry';
+const SHOW_TIMER_KEY = 'showTimer';
+
+// 토큰 관리 함수들
+export const tokenService = {
+  // 토큰 저장
+  saveTokens: (accessToken, refreshToken) => {
+    localStorage.setItem(TOKEN_KEY, accessToken);
+    localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+    // 로그인 시점부터 59:59로 세션 타이머 시작
+    const expiry = Date.now() + 59 * 60 * 1000 + 59 * 1000; // 59분 59초
+    localStorage.setItem(TOKEN_EXPIRY_KEY, expiry.toString());
+  },
+
+  // 토큰 조회
+  getAccessToken: () => localStorage.getItem(TOKEN_KEY),
+  getRefreshToken: () => localStorage.getItem(REFRESH_TOKEN_KEY),
+  getTokenExpiry: () => parseInt(localStorage.getItem(TOKEN_EXPIRY_KEY) || '0'),
+
+  // 토큰 삭제
+  clearTokens: () => {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(REFRESH_TOKEN_KEY);
+    localStorage.removeItem(TOKEN_EXPIRY_KEY);
+  },
+
+  // 토큰 만료 시간 계산
+  getRemainingTime: () => {
+    const expiry = tokenService.getTokenExpiry();
+    if (!expiry) return 0;
+    return expiry - Date.now();
+  },
+
+  // 토큰 만료 여부 확인
+  isTokenExpired: () => {
+    const remainingTime = tokenService.getRemainingTime();
+    return remainingTime <= 0;
+  },
+
+  // 타이머 표시 설정
+  setShowTimer: (show) => localStorage.setItem(SHOW_TIMER_KEY, show.toString()),
+  getShowTimer: () => localStorage.getItem(SHOW_TIMER_KEY) === 'true',
+};
+
 // axios 인스턴스 생성
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -13,19 +60,15 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
   withCredentials: false,
-  timeout: 15000,
+  timeout: 6000000,
 });
 
-// 요청 인터셉터 설정
+// 요청 인터셉터
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    const token = tokenService.getAccessToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-    } else {
-      if (window.location.pathname !== '/login' && window.location.pathname !== '/signup') {
-        window.location.href = '/login';
-      }
     }
     return config;
   },
@@ -34,33 +77,43 @@ api.interceptors.request.use(
   }
 );
 
-// 응답 인터셉터 설정
+// 응답 인터셉터
 api.interceptors.response.use(
-  (response) => {
-    return response;
-  },
-  (error) => {
-    if (error.response) {
-      if (error.response.status === 401) {
-        // 401: 인증 실패 (토큰이 없거나 만료)
-        localStorage.removeItem('token');
-        if (window.location.pathname !== '/login' && window.location.pathname !== '/signup') {
-          window.location.href = '/login';
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    // 토큰 만료 에러 처리
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        // 리프레시 토큰으로 새로운 액세스 토큰 요청
+        const refreshToken = tokenService.getRefreshToken();
+        if (!refreshToken) {
+          throw new Error('리프레시 토큰이 없습니다.');
         }
-      } else if (error.response.status === 403) {
-        // 403: 권한 없음 (토큰은 유효하지만 접근 권한이 없음)
-        // 토큰을 삭제하지 않고 에러만 전달
-        console.error('접근 권한이 없습니다:', error.response.data);
-      } else if (error.response.status === 404) {
-        // 404: 리소스를 찾을 수 없음
-        return Promise.reject(error);
+
+        const response = await api.post('/auth/refresh', null, {
+          headers: {
+            'Refresh-Token': refreshToken
+          }
+        });
+
+        const { accessToken, refreshToken: newRefreshToken, accessTokenExpiresIn } = response.data;
+        tokenService.saveTokens(accessToken, newRefreshToken);
+
+        // 실패한 요청 재시도
+        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+        return api(originalRequest);
+      } catch (refreshError) {
+        // 리프레시 토큰도 만료된 경우 로그아웃 처리
+        tokenService.clearTokens();
+        window.location.href = '/login';
+        return Promise.reject(refreshError);
       }
-      console.error('API 오류:', error.response.data);
-    } else if (error.request) {
-      console.error('서버 연결 오류:', error.request);
-    } else {
-      console.error('요청 오류:', error.message);
     }
+
     return Promise.reject(error);
   }
 );
@@ -90,13 +143,11 @@ export const userApi = {
     try {
       const response = await api.post('/users/login', credentials);
       console.log('로그인 응답:', response.data); // 로그인 응답 확인
-      // 로그인 성공 시 토큰과 사용자 정보 저장
       if (response.data.accessToken) {
-        localStorage.setItem('token', response.data.accessToken);
+        tokenService.saveTokens(response.data.accessToken, response.data.refreshToken);
         localStorage.setItem('userType', response.data.userType);
         localStorage.setItem('userName', response.data.userName);
         localStorage.setItem('userId', response.data.userId);
-        // 회사 정보 저장
         if (response.data.companyName) {
           localStorage.setItem('companyName', response.data.companyName);
           localStorage.setItem('jobRegion', response.data.jobRegion);
@@ -178,6 +229,15 @@ export const userApi = {
       return response.data;
     } catch (error) {
       console.error('사용자 정보 조회 실패:', error);
+      throw error;
+    }
+  },
+
+  extendSession: async () => {
+    try {
+      const response = await api.post('/auth/extend');
+      return response;
+    } catch (error) {
       throw error;
     }
   },
@@ -442,10 +502,6 @@ export const applicationApi = {
     }
   }
 };
-
-// WebSocket 관련 상수
-const WS_BASE_URL = 'https://port-0-workermangers-be-m9ax68es6a756190.sel4.cloudtype.app';
-// const WS_BASE_URL = 'http://localhost:8080';
 
 // 채팅 관련 API
 export const chatApi = {
