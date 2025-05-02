@@ -3,9 +3,11 @@ import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
 import { FaUserCircle, FaBookmark } from 'react-icons/fa';
-import { userApi } from '../../services/api';
+import { userApi, tokenService } from '../../services/api';
 import { showToast } from './Toast';
 import { chatApi } from '../../services/api';
+import SessionTimer from './SessionTimer';
+import SessionExtendModal from './SessionExtendModal';
 
 const HeaderContainer = styled.header`
   display: flex;
@@ -189,11 +191,57 @@ const Divider = styled.div`
   margin: 0.3rem 0;
 `;
 
+const TimerToggleButton = styled(motion.button)`
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  cursor: pointer;
+  font-size: 0.82rem;
+  padding: 0.15rem 0.6rem;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  height: 28px;
+  min-width: 90px;
+  white-space: nowrap;
+  font-weight: 500;
+  position: static;
+  margin: 0 -20px;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  &::before {
+    content: '⏳';
+    font-size: 1rem;
+  }
+`;
+
+const TimerWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  min-width: 100px;
+  margin-right: 1rem;
+`;
+
 const Header = ({ isLoggedIn, userInfo, onLoginStatusChange }) => {
   const navigate = useNavigate();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [bookmarkCount, setBookmarkCount] = useState(0);
   const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
+  const [showExtendModal, setShowExtendModal] = useState(false);
+  const [showTimer, setShowTimer] = useState(localStorage.getItem('showTimer') !== 'false');
+
+  const toggleTimer = () => {
+    const newShowTimer = !showTimer;
+    setShowTimer(newShowTimer);
+    localStorage.setItem('showTimer', newShowTimer.toString());
+  };
 
   const checkUnreadMessages = async () => {
     if (!isLoggedIn) return;
@@ -253,16 +301,27 @@ const Header = ({ isLoggedIn, userInfo, onLoginStatusChange }) => {
     };
   }, [isProfileOpen]);
 
+  // 세션 만료 체크
+  useEffect(() => {
+    if (isLoggedIn) {
+      const checkSessionExpiry = () => {
+        const remainingTime = tokenService.getRemainingTime();
+        if (remainingTime <= 5 * 60 * 1000 && remainingTime > 0) {
+          setShowExtendModal(true);
+        }
+      };
+
+      // 1분마다 세션 만료 체크
+      const expiryCheckInterval = setInterval(checkSessionExpiry, 60000);
+      return () => clearInterval(expiryCheckInterval);
+    }
+  }, [isLoggedIn]);
+
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('userType');
-    localStorage.removeItem('userName');
-    localStorage.removeItem('userId');
-    
+    tokenService.clearTokens();
     if (onLoginStatusChange) {
       onLoginStatusChange(false, null);
     }
-    
     navigate('/login', { replace: true });
     setTimeout(() => {
       showToast.success('로그아웃되었습니다.');
@@ -307,6 +366,18 @@ const Header = ({ isLoggedIn, userInfo, onLoginStatusChange }) => {
       <UserSection>
         {isLoggedIn ? (
           <>
+            <TimerWrapper>
+              {!showTimer && (
+                <TimerToggleButton
+                  onClick={toggleTimer}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  타이머 표시
+                </TimerToggleButton>
+              )}
+              {showTimer && <SessionTimer onToggle={toggleTimer} />}
+            </TimerWrapper>
             {userInfo?.userType === 'INDIVIDUAL' && (
               <IconButton onClick={() => navigate('/bookmarks')} title="찜한 공고">
                 <FaBookmark />
@@ -372,6 +443,9 @@ const Header = ({ isLoggedIn, userInfo, onLoginStatusChange }) => {
           </>
         )}
       </UserSection>
+      {showExtendModal && (
+        <SessionExtendModal onClose={() => setShowExtendModal(false)} />
+      )}
     </HeaderContainer>
   );
 };
