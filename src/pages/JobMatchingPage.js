@@ -7,7 +7,7 @@ import { showToast } from '../components/common/Toast';
 const Container = styled.div`
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2.5rem 1.5rem;
+  padding: 6rem 1.5rem 2.5rem;
 `;
 
 const Title = styled.h1`
@@ -90,71 +90,105 @@ const LoadingMessage = styled.div`
   color: #666;
 `;
 
+const RefreshButton = styled.button`
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  &:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+  }
+
+  &:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+`;
+
+const TitleContainer = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+`;
+
 const JobMatchingPage = () => {
   const [matchingResults, setMatchingResults] = useState([]);
   const [loading, setLoading] = useState(true);
   const [hasResume, setHasResume] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchMatchingResults = async () => {
-      try {
-        // 세션 스토리지에서 캐시된 결과 확인
-        const cachedResults = sessionStorage.getItem('matchingResults');
-        const cachedTimestamp = sessionStorage.getItem('matchingResultsTimestamp');
+  const fetchMatchingResults = async (forceRefresh = false) => {
+    try {
+      setLoading(true);
+      // 세션 스토리지에서 캐시된 결과 확인
+      const cachedResults = sessionStorage.getItem('matchingResults');
+      const cachedTimestamp = sessionStorage.getItem('matchingResultsTimestamp');
+      
+      // 강제 새로고침이 아니고, 캐시가 있고 30분이 지나지 않았다면 캐시된 결과 사용
+      if (!forceRefresh && cachedResults && cachedTimestamp) {
+        const now = new Date().getTime();
+        const timestamp = parseInt(cachedTimestamp);
+        const thirtyMinutes = 30 * 60 * 1000;
         
-        // 캐시가 있고 30분이 지나지 않았다면 캐시된 결과 사용
-        if (cachedResults && cachedTimestamp) {
-          const now = new Date().getTime();
-          const timestamp = parseInt(cachedTimestamp);
-          const thirtyMinutes = 30 * 60 * 1000;
-          
-          if (now - timestamp < thirtyMinutes) {
-            setMatchingResults(JSON.parse(cachedResults));
-            setHasResume(true);
-            setLoading(false);
-            return;
-          }
-        }
-
-        // 이력서 확인
-        const resumeData = await resumeApi.getResume();
-        if (!resumeData || !resumeData.resumeId) {
-          setHasResume(false);
+        if (now - timestamp < thirtyMinutes) {
+          setMatchingResults(JSON.parse(cachedResults));
+          setHasResume(true);
           setLoading(false);
           return;
         }
-        
-        setHasResume(true);
-        
-        // 새로운 매칭 결과 조회
-        const results = await matchingApi.getJobMatchingScores(resumeData.resumeId);
-        const sortedResults = results.sort((a, b) => b.matchingScore - a.matchingScore);
-        
-        // 결과를 세션 스토리지에 캐시
-        sessionStorage.setItem('matchingResults', JSON.stringify(sortedResults));
-        sessionStorage.setItem('matchingResultsTimestamp', new Date().getTime().toString());
-        
-        setMatchingResults(sortedResults);
-      } catch (error) {
-        showToast.error('매칭 결과를 불러오는데 실패했습니다.');
-        setMatchingResults([]);
-      } finally {
+      }
+
+      // 이력서 확인
+      const resumeData = await resumeApi.getResume();
+      if (!resumeData || !resumeData.resumeId) {
+        setHasResume(false);
         setLoading(false);
+        return;
       }
-    };
+      
+      setHasResume(true);
+      
+      // 새로운 매칭 결과 조회
+      const results = await matchingApi.getJobMatchingScores(resumeData.resumeId);
+      const sortedResults = results.sort((a, b) => b.matchingScore - a.matchingScore);
+      
+      // 결과를 세션 스토리지에 캐시
+      sessionStorage.setItem('matchingResults', JSON.stringify(sortedResults));
+      sessionStorage.setItem('matchingResultsTimestamp', new Date().getTime().toString());
+      
+      setMatchingResults(sortedResults);
+    } catch (error) {
+      console.error('매칭 결과 조회 실패:', error);
+      showToast.error('매칭 결과를 불러오는데 실패했습니다.');
+      setMatchingResults([]);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
 
+  useEffect(() => {
     fetchMatchingResults();
-
-    // 컴포넌트 언마운트 시 캐시 정리 (옵션)
-    return () => {
-      // 페이지를 완전히 나갈 때만 캐시 삭제
-      if (window.performance.navigation.type !== 2) { // 2는 뒤로가기를 의미
-        sessionStorage.removeItem('matchingResults');
-        sessionStorage.removeItem('matchingResultsTimestamp');
-      }
-    };
   }, []);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchMatchingResults(true);
+    showToast.success('매칭 결과가 갱신되었습니다.');
+  };
 
   const handleCardClick = (jobPostId) => {
     navigate(`/jobpost/${jobPostId}`);
@@ -167,7 +201,17 @@ const JobMatchingPage = () => {
   if (loading) {
     return (
       <Container>
-        <Title>직무 매칭</Title>
+        <TitleContainer>
+          <Title>직무 매칭</Title>
+          {hasResume && !loading && (
+            <RefreshButton 
+              onClick={handleRefresh}
+              disabled={refreshing}
+            >
+              {refreshing ? '매칭 중...' : '매칭 다시하기'}
+            </RefreshButton>
+          )}
+        </TitleContainer>
         <LoadingMessage>매칭 결과를 불러오는 중...</LoadingMessage>
       </Container>
     );
@@ -176,7 +220,17 @@ const JobMatchingPage = () => {
   if (!hasResume) {
     return (
       <Container>
-        <Title>직무 매칭</Title>
+        <TitleContainer>
+          <Title>직무 매칭</Title>
+          {hasResume && !loading && (
+            <RefreshButton 
+              onClick={handleRefresh}
+              disabled={refreshing}
+            >
+              {refreshing ? '매칭 중...' : '매칭 다시하기'}
+            </RefreshButton>
+          )}
+        </TitleContainer>
         <NoResumeMessage>
           <p>이력서를 먼저 등록해주세요.</p>
           <CreateResumeButton onClick={handleCreateResume}>
@@ -189,7 +243,17 @@ const JobMatchingPage = () => {
 
   return (
     <Container>
-      <Title>직무 매칭</Title>
+      <TitleContainer>
+        <Title>직무 매칭</Title>
+        {hasResume && !loading && (
+          <RefreshButton 
+            onClick={handleRefresh}
+            disabled={refreshing}
+          >
+            {refreshing ? '매칭 중...' : '매칭 다시하기'}
+          </RefreshButton>
+        )}
+      </TitleContainer>
       <MatchingList>
         {matchingResults.map((result) => (
           <MatchingCard

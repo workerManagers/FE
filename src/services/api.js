@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 // API 기본 URL 설정
-const API_BASE_URL = 'https://port-0-workermangers-be-m9ax68es6a756190.sel4.cloudtype.app';
-// const API_BASE_URL = 'http://localhost:8080';
+// const API_BASE_URL = 'https://port-0-workermangers-be-m9ax68es6a756190.sel4.cloudtype.app';
+const API_BASE_URL = 'http://localhost:8080';
 // axios 인스턴스 생성
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -10,7 +10,7 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
   withCredentials: false,
-  timeout: 15000,
+  timeout: 6000000, 
 });
 
 // 요청 인터셉터 설정
@@ -522,97 +522,30 @@ export const matchingApi = {
   // 이력서 기반 직무 매칭 점수 조회 (일반회원용)
   getJobMatchingScores: async (resumeId) => {
     try {
-      const response = await api.post('/ai-matchings/match', { resumeId });
+      const token = localStorage.getItem('token');
+      console.log('Token:', localStorage.getItem('token'));
+      if (!token) {
+        throw new Error('인증 토큰이 없습니다.');
+      }
+
+      const response = await api.post('/ai-matchings/match', 
+        { resumeId },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
       return response.data;
     } catch (error) {
+      console.error('직무 매칭 점수 조회 실패:', error);
+      if (error.response?.status === 403) {
+        throw new Error('접근 권한이 없습니다. 로그인 상태와 사용자 권한을 확인해주세요.');
+      }
       throw error;
     }
   },
 };
-
-// WebSocket 서비스 클래스
-class WebSocketService {
-  constructor() {
-    this.socket = null;
-    this.messageHandlers = new Map();
-    this.pendingSubscriptions = [];
-  }
-
-  connect() {
-    const token = localStorage.getItem('token');
-    // this.socket = new WebSocket(`wss://port-0-workermangers-be-m9ax68es6a756190.sel4.cloudtype.app/ws-chat?token=${token}`);
-    this.socket = new WebSocket(`ws://localhost:8080/ws-chat?token=${token}`);
-    
-    this.socket.onopen = () => {
-      console.log('WebSocket 연결 성공');
-      // 연결이 열린 후에만 구독 메시지 전송
-      this.pendingSubscriptions.forEach(({ roomId }) => {
-        this.socket.send(JSON.stringify({ type: 'SUBSCRIBE', roomId }));
-      });
-      this.pendingSubscriptions = [];
-    };
-
-    this.socket.onmessage = (event) => {
-      const message = JSON.parse(event.data);
-      const handlers = this.messageHandlers.get(message.chatRoomId) || [];
-      handlers.forEach(handler => handler(message));
-    };
-
-    this.socket.onclose = () => {
-      console.log('WebSocket 연결 종료');
-    };
-
-    this.socket.onerror = (error) => {
-      console.error('WebSocket 에러:', error);
-    };
-  }
-
-  subscribe(roomId, handler) {
-    if (!this.messageHandlers.has(roomId)) {
-      this.messageHandlers.set(roomId, []);
-    }
-    this.messageHandlers.get(roomId).push(handler);
-
-    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-      this.socket.send(JSON.stringify({ 
-        type: 'SUBSCRIBE', 
-        destination: `/topic/chat.${roomId}` 
-      }));
-    } else {
-      this.pendingSubscriptions.push({ roomId });
-    }
-  }
-
-  unsubscribe(roomId, handler) {
-    const handlers = this.messageHandlers.get(roomId);
-    if (handlers) {
-      const index = handlers.indexOf(handler);
-      if (index > -1) {
-        handlers.splice(index, 1);
-      }
-    }
-  }
-
-  sendMessage(roomId, content) {
-    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-      this.socket.send(JSON.stringify({
-        destination: '/chat.send',
-        chatRoomId: roomId,
-        content: content
-      }));
-    } else {
-      console.error('WebSocket이 연결되어 있지 않습니다.');
-    }
-  }
-
-  disconnect() {
-    if (this.socket) {
-      this.socket.close();
-    }
-  }
-}
-
-// WebSocket 서비스 인스턴스 생성 및 내보내기
-export const websocketService = new WebSocketService();
 
 export default api; 
