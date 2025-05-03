@@ -6,6 +6,8 @@ import { chatApi } from '../../services/api';
 import { userApi } from '../../services/api';
 import { showToast } from '../common/Toast';
 import { IoArrowBack } from 'react-icons/io5';
+import penguinImg from '../../assets/img/img2.png';
+import Loading from '../../components/common/Loading';
 
 const PageContainer = styled(motion.div)`
   display: flex;
@@ -16,14 +18,13 @@ const PageContainer = styled(motion.div)`
 `;
 
 const RoomListContainer = styled.div`
-  max-width: 1100px;
-  width: 100%;
+  max-width: 640px;
   margin: 0 auto;
-  min-height: calc(100vh - 8rem);
-  background: #fff;
-  border-radius: 28px;
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.09);
-  padding: 2.5rem 2.5rem 2.5rem 2.5rem;
+  padding-top: 6rem;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
 `;
 
 const Header = styled.div`
@@ -40,99 +41,126 @@ const Header = styled.div`
   box-shadow: 0 2px 8px rgba(180,180,200,0.07);
 `;
 
-const BackButton = styled(motion.button)`
+
+const PhoneContainer = styled.div`
+  max-width: 640px;
+  min-width: 320px;
+  width: 100%;
+  background: linear-gradient(135deg, #23272f 60%, #18181b 100%);
+  opacity: 0.97;
+  border-radius: 38px 38px 32px 32px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.25);
+  border: 2.5px solid #e5e7eb;
+  padding: 2.5rem 1.5rem;
+  margin-top: -25px;
   display: flex;
-  align-items: center;
-  padding: 0.8rem 1.5rem;
-  background: linear-gradient(90deg, #f3f4f6 0%, #e5e7eb 100%);
-  color: #23272f;
-  border: none;
-  border-radius: 18px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(180,180,200,0.13);
-  transition: all 0.2s;
-  margin-right: 1.2rem;
-  &:hover {
-    background: linear-gradient(90deg, #e5e7eb 0%, #f3f4f6 100%);
-    color: #6366f1;
-    box-shadow: 0 4px 20px rgba(180,180,200,0.18);
-    transform: translateY(-2px) scale(1.03);
-  }
+  flex-direction: column;
+  align-items: stretch;
+  min-height: 600px;
+  position: relative;
 `;
 
-const Title = styled.h2`
-  margin: 0;
-  font-size: 2.1rem;
-  color: #23272f;
-  font-weight: 700;
-  margin-left: 1.5rem;
-  position: relative;
-  letter-spacing: -0.5px;
-  &:after {
-    content: '';
-    position: absolute;
-    left: 0;
-    bottom: -10px;
-    width: 90px;
-    height: 3px;
-    background-color: #6366f1;
-    transition: width 0.3s ease;
-  }
-  &:hover:after {
-    width: 170px;
-  }
+const NotchBar = styled.div`
+  width: 60px;
+  height: 7px;
+  background: #e5e7eb;
+  border-radius: 8px;
+  margin: 0 auto 1.2rem auto;
+`;
+
+const RoomList = styled.div`
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 400px;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  padding: 1.2rem 1.2rem;
 `;
 
 const RoomCard = styled(motion.div)`
-  background: #fff;
-  padding: 1.5rem 1.3rem 1.3rem 1.3rem;
-  margin-bottom: 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  background: #f3f4f6;
+  padding: 1.1rem 1.5rem;
   border-radius: 18px;
   border: 1.5px solid #e5e7eb;
   cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 2px 12px rgba(180,180,200,0.10);
+  transition: none;
+  box-shadow: 0 2px 8px rgba(180,180,200,0.06);
   position: relative;
-  &:hover {
-    transform: translateY(-5px) scale(1.02);
-    border: 1.5px solid #6366f1;
-    box-shadow: 0 8px 32px 0 rgba(99,102,241,0.13);
-  }
-  &:first-child {
-    margin-top: 1rem;
-  }
 `;
 
-const RoomTitle = styled.h3`
-  margin: 0;
-  color: #23272f;
-  font-size: 1.15rem;
+const ProfileCircle = styled.div`
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1 60%, #a5b4fc 100%);
+  color: #fff;
+  font-size: 1.35rem;
   font-weight: 700;
-  margin-bottom: 0.7rem;
-`;
-
-const RoomInfo = styled.div`
   display: flex;
-  justify-content: space-between;
-  margin-top: 0.5rem;
-  color: #6b7280;
-  font-size: 0.97rem;
-  gap: 1rem;
-  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
 `;
 
-const LastMessage = styled.p`
-  margin: 1rem 0 0;
+const RoomMain = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+`;
+
+const RoomTitleRow = styled.div`
+  display: flex;
+  align-items: center;
+  background: transparent;
+  justify-content: space-between;
+  gap: 1rem;
+`;
+
+const RoomTitle = styled.div`
+  font-size: 1.08rem;
+  font-weight: 700;
   color: #23272f;
-  font-size: 0.97rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+`;
+
+const RoomTime = styled.div`
+  font-size: 0.93rem;
+  color: #a1a1aa;
+  min-width: 70px;
+  text-align: right;
+`;
+
+const RoomSub = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.7rem;
+  margin-top: 0.1rem;
+`;
+
+const RoomName = styled.div`
+  font-size: 0.97rem;
+  color: #6366f1;
+  font-weight: 500;
+`;
+
+const LastMessage = styled.div`
+  font-size: 0.97rem;
+  color: #6b7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
 `;
 
 const UnreadBadge = styled.span`
@@ -142,16 +170,7 @@ const UnreadBadge = styled.span`
   border-radius: 12px;
   font-size: 0.85rem;
   font-weight: bold;
-  position: absolute;
-  top: -10px;
-  left: -10px;
-  box-shadow: 0 2px 4px rgba(99,102,241,0.13);
-`;
-
-const HeaderUnreadBadge = styled(UnreadBadge)`
-  position: static;
-  font-size: 0.7rem;
-  padding: 1px 6px;
+  margin-left: 0.7rem;
 `;
 
 const NewMessageIndicator = styled.span`
@@ -173,31 +192,6 @@ const EmptyState = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-`;
-
-const LoadingContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 200px;
-  background: #f4f5f7;
-  border-radius: 24px;
-  border: 1.5px solid #e5e7eb;
-  margin-top: 2rem;
-  box-shadow: 0 2px 8px rgba(180,180,200,0.07);
-`;
-
-const LoadingSpinner = styled.div`
-  width: 44px;
-  height: 44px;
-  border: 5px solid #e5e7eb;
-  border-top: 5px solid #6366f1;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
 `;
 
 const ChatRoomList = () => {
@@ -298,66 +292,50 @@ const ChatRoomList = () => {
     >
       <RoomListContainer>
         <Header>
-          <BackButton
-            onClick={handleGoBack}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <IoArrowBack style={{ marginRight: '0.5rem' }} />
-            뒤로가기
-          </BackButton>
-          <Title>{jobPostId ? '1대1 문의 목록' : '전체 채팅방'}</Title>
+          {/* <Title>{jobPostId ? '1대1 문의 목록' : '전체 채팅방'}</Title> */}
         </Header>
         
         {loading ? (
-          <LoadingContainer>
-            <LoadingSpinner />
-          </LoadingContainer>
+          <Loading message="채팅방 목록을 불러오는 중입니다..." />
         ) : rooms.length === 0 ? (
           <EmptyState>
             {jobPostId ? '이 공고에 대한 1대1 문의가 없습니다.' : '1대1 문의가 없습니다.'}
           </EmptyState>
         ) : (
-          rooms.map((room) => {
-            const isUnreadMessage = room.unreadCount > 0;
-            const currentUserName = localStorage.getItem('userName');
-            const isLastMessageFromOther = room.lastMessage && currentUserName === room.user1Name ? 
-              room.user2Name : room.user1Name;
-
-            return (
-              <RoomCard
-                key={room.id}
-                onClick={() => handleRoomClick(room.id)}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                {isUnreadMessage && <UnreadBadge>NEW</UnreadBadge>}
-                <RoomTitle>{room.jobName}</RoomTitle>
-                <RoomInfo>
-                  <span>
-                    {localStorage.getItem('userType') === 'COMPANY' ? '문의자' : '담당자'}
-                    : {currentUserName === room.user1Name ? room.user2Name : room.user1Name}
-                  </span>
-                  <span>{new Date(room.createdAt).toLocaleString()}</span>
-                </RoomInfo>
-                {room.lastMessage && (
-                  <LastMessage>
-                    <span style={{
-                      color: isUnreadMessage && isLastMessageFromOther ? '#000' : 'inherit',
-                      fontWeight: isUnreadMessage && isLastMessageFromOther ? 'bold' : 'normal'
-                    }}>
-                      {room.lastMessage}
-                    </span>
-                    {room.lastMessageTime && (
-                      <span style={{ fontSize: '0.8rem', color: 'rgba(0, 0, 0, 0.5)' }}>
-                        ({new Date(room.lastMessageTime).toLocaleString()})
-                      </span>
-                    )}
-                  </LastMessage>
-                )}
-              </RoomCard>
-            );
-          })
+          <PhoneContainer>
+            <NotchBar />
+            <RoomList>
+              {rooms.map((room) => {
+                const isUnreadMessage = room.unreadCount > 0;
+                const currentUserName = localStorage.getItem('userName');
+                const otherUserName = currentUserName === room.user1Name ? room.user2Name : room.user1Name;
+                const initials = otherUserName ? otherUserName[0] : '?';
+                return (
+                  <RoomCard
+                    key={room.id}
+                    onClick={() => handleRoomClick(room.id)}
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <ProfileCircle>
+                      <img src={penguinImg} alt="profile" style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}} />
+                    </ProfileCircle>
+                    <RoomMain>
+                      <RoomTitleRow>
+                        <RoomTitle>{room.jobName}</RoomTitle>
+                        <RoomTime>{room.lastMessageTime ? new Date(room.lastMessageTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}</RoomTime>
+                      </RoomTitleRow>
+                      <RoomSub>
+                        <RoomName>{otherUserName}</RoomName>
+                        <LastMessage>{room.lastMessage || ''}</LastMessage>
+                        {isUnreadMessage && <UnreadBadge>NEW</UnreadBadge>}
+                      </RoomSub>
+                    </RoomMain>
+                  </RoomCard>
+                );
+              })}
+            </RoomList>
+          </PhoneContainer>
         )}
       </RoomListContainer>
     </PageContainer>

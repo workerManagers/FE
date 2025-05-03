@@ -17,7 +17,7 @@ const ModalOverlay = styled(motion.div)`
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(30, 32, 38, 0.7);
+  background: rgba(240, 245, 255, 0.7);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -26,13 +26,13 @@ const ModalOverlay = styled(motion.div)`
 `;
 
 const ModalContent = styled(motion.div)`
-  background: linear-gradient(135deg, #232526 0%, #414345 100%);
+  background: linear-gradient(135deg,rgb(202, 222, 240) 0%,rgb(205, 222, 241) 100%);
   padding: 2.2rem 2rem 1.5rem 2rem;
   border-radius: 18px;
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.10);
   max-width: 370px;
   width: 92%;
-  color: #fff;
+  color: #23272f;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -41,7 +41,7 @@ const ModalContent = styled(motion.div)`
 
 const Title = styled.h3`
   margin: 0 0 1.1rem;
-  color: #ffd700;
+  color: #2563eb;
   font-size: 1.25rem;
   font-weight: 700;
   letter-spacing: 0.5px;
@@ -50,7 +50,7 @@ const Title = styled.h3`
 
 const Message = styled.p`
   margin: 0 0 1.7rem;
-  color: #f1f1f1;
+  color: #444;
   font-size: 1.05rem;
   text-align: center;
   line-height: 1.6;
@@ -76,21 +76,21 @@ const Button = styled(motion.button)`
 `;
 
 const ExtendButton = styled(Button)`
-  background: linear-gradient(90deg, #1a1a1a 0%, #485563 100%);
-  color: #fff;
+  background: #e0e7ef;
+  color: #2563eb;
   &:hover {
-    background: linear-gradient(90deg, #1a1a1a 0%, #485563 100%);
-    color: #ffd700;
+    background: #2563eb;
+    color: #fff;
   }
 `;
 
 const CloseButton = styled(Button)`
-  background: #232526;
-  color: #fff;
-  border: 1px solid #444;
+  background: #fff;
+  color: #23272f;
+  border: 1.5px solid #e0e7ef;
   &:hover {
-    background: #333;
-    color: #ffd700;
+    background:rgb(240, 243, 247);
+    color: #2563eb;
   }
 `;
 

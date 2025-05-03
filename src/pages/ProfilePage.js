@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { userApi } from '../services/api';
 import { showToast } from '../components/common/Toast';
 import penguin from '../assets/img/img2.png';
+import Loading from '../components/common/Loading';
 
 const PageContainer = styled(motion.div)`
   min-height: 100vh;
@@ -44,7 +45,8 @@ const ProfileHeader = styled.div`
 const ProfileImageContainer = styled.div`
   width: 150px;
   height: 150px;
-  padding: 0.8rem;
+  padding: 0.2rem;
+  margin-top: -0.5rem;
   background: white;
   border-radius: 16px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -156,15 +158,6 @@ const InfoValue = styled.div`
   letter-spacing: -0.3px;
 `;
 
-const LoadingContainer = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 50vh;
-  font-size: 1.1rem;
-  color: #666;
-`;
-
 const getUserTypeLabel = (userType) => {
   switch (userType) {
     case 'INDIVIDUAL':
@@ -200,7 +193,7 @@ const ProfilePage = () => {
   if (loading) {
     return (
       <PageContainer>
-        <LoadingContainer>로딩 중...</LoadingContainer>
+        <Loading message="프로필 정보를 불러오는 중입니다." />
       </PageContainer>
     );
   }

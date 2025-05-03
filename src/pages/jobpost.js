@@ -5,6 +5,7 @@ import { jobPostApi } from '../services/api';
 import { userApi } from '../services/api';
 import { showToast } from '../components/common/Toast';
 import Toast from '../components/common/Toast';
+import Loading from '../components/common/Loading';
 
 const Container = styled.div`
   max-width: 1200px;
@@ -446,10 +447,7 @@ function JobPost() {
   if (isLoading) {
     return (
       <Container>
-        <LoadingContainer>
-          <LoadingSpinner />
-          <LoadingMessage>채용공고를 불러오는 중입니다...</LoadingMessage>
-        </LoadingContainer>
+        <Loading message="채용공고를 불러오는 중입니다." />
       </Container>
     );
   }

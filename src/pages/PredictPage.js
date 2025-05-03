@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { userApi } from '../services/api';
 import { showToast } from '../components/common/Toast';
 import Toast from '../components/common/Toast';
+import Loading from '../components/common/Loading';
 
 const PageContainer = styled(motion.div)`
   padding: 6rem 2rem 2rem;
@@ -384,79 +385,6 @@ const CloseButton = styled.button`
   }
 `;
 
-const LoadingSpinner = styled(motion.div)`
-  width: 60px;
-  height: 60px;
-  border: 3px solid rgba(0, 0, 0, 0.1);
-  border-top: 3px solid #000;
-  border-right: 3px solid #000;
-  border-radius: 50%;
-  margin: 0 auto;
-  position: relative;
-
-  &:before {
-    content: '';
-    position: absolute;
-    top: -10px;
-    left: -10px;
-    right: -10px;
-    bottom: -10px;
-    border: 3px solid rgba(0, 0, 0, 0.05);
-    border-radius: 50%;
-  }
-`;
-
-const LoadingMessage = styled(motion.div)`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.5rem;
-  margin-top: 2rem;
-`;
-
-const LoadingTitle = styled(motion.p)`
-  color: #000;
-  font-size: 1.4rem;
-  font-weight: 600;
-  margin: 0;
-  opacity: 0.8;
-`;
-
-const LoadingSubText = styled(motion.p)`
-  color: rgba(0, 0, 0, 0.6);
-  font-size: 1rem;
-  margin: 0;
-  text-align: center;
-  max-width: 80%;
-  line-height: 1.5;
-`;
-
-const LoadingOverlay = styled(motion.div)`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(8px);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-`;
-
-const LoadingBox = styled(motion.div)`
-  background: white;
-  padding: 3rem;
-  border-radius: 24px;
-  border: 3px solid rgba(0, 0, 0, 0.3);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-width: 300px;
-`;
-
 const ActionButton = styled(motion.button)`
   background: rgba(0, 0, 0, 0.8);
   color: white;
@@ -802,45 +730,7 @@ const PredictPage = () => {
   if (loading) {
     return (
       <PageContainer>
-        <LoadingOverlay
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        >
-          <LoadingBox
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: "spring", duration: 0.5 }}
-          >
-            <LoadingSpinner
-              animate={{ 
-                rotate: 360,
-                transition: {
-                  duration: 1.5,
-                  ease: "linear",
-                  repeat: Infinity
-                }
-              }}
-            />
-            <LoadingMessage>
-              <LoadingTitle
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-              >
-                예측 분석 중
-              </LoadingTitle>
-              <LoadingSubText
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-              >
-                정확한 예측을 위해 데이터를 분석하고 있습니다.
-                <br />잠시만 기다려주세요.
-              </LoadingSubText>
-            </LoadingMessage>
-          </LoadingBox>
-        </LoadingOverlay>
+        <Loading message="예측 분석 중입니다. 잠시만 기다려주세요." />
       </PageContainer>
     );
   }

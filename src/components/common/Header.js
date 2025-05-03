@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
-import { FaUserCircle, FaBookmark } from 'react-icons/fa';
+import { FaUserCircle, FaBookmark, FaComments } from 'react-icons/fa';
 import { userApi, tokenService } from '../../services/api';
 import { showToast } from './Toast';
 import { chatApi } from '../../services/api';
 import SessionTimer from './SessionTimer';
 import SessionExtendModal from './SessionExtendModal';
+import ChatRoomListDropdown from '../chat/ChatRoomListDropdown';
 
 const HeaderContainer = styled.header`
   display: flex;
@@ -263,6 +264,8 @@ const Header = ({ isLoggedIn, userInfo, onLoginStatusChange }) => {
   const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
   const [showExtendModal, setShowExtendModal] = useState(false);
   const [showTimer, setShowTimer] = useState(localStorage.getItem('showTimer') !== 'false');
+  const [showChatList, setShowChatList] = useState(false);
+  const chatIconRef = useRef();
 
   const toggleTimer = () => {
     const newShowTimer = !showTimer;
@@ -344,6 +347,18 @@ const Header = ({ isLoggedIn, userInfo, onLoginStatusChange }) => {
     }
   }, [isLoggedIn]);
 
+  // 외부 클릭 시 닫기
+  useEffect(() => {
+    if (!showChatList) return;
+    const handleClick = (e) => {
+      if (chatIconRef.current && !chatIconRef.current.contains(e.target)) {
+        setShowChatList(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [showChatList]);
+
   const handleLogout = () => {
     tokenService.clearTokens();
     if (onLoginStatusChange) {
@@ -366,25 +381,11 @@ const Header = ({ isLoggedIn, userInfo, onLoginStatusChange }) => {
               <NavLink onClick={() => navigate('/add-job')}>직무 추가</NavLink>
               <NavLink onClick={() => navigate('/predict')}>요양기간 예측</NavLink>
               <NavLink onClick={() => navigate('/matching')}>대체인력 매칭</NavLink>
-              <NavLink 
-                onClick={() => navigate('/chat')}
-                style={{ position: 'relative' }}
-              >
-                채팅목록
-                {hasUnreadMessages && <UnreadBadge>NEW</UnreadBadge>}
-              </NavLink>
             </>
           )}
           {isLoggedIn && userInfo?.userType === 'INDIVIDUAL' && (
             <>
               <NavLink onClick={() => navigate('/job-matching')}>직무 매칭</NavLink>
-              <NavLink 
-                onClick={() => navigate('/chat')}
-                style={{ position: 'relative' }}
-              >
-                채팅목록
-                {hasUnreadMessages && <UnreadBadge>NEW</UnreadBadge>}
-              </NavLink>
             </>
           )}
         </NavMenu>
@@ -411,6 +412,18 @@ const Header = ({ isLoggedIn, userInfo, onLoginStatusChange }) => {
                 {bookmarkCount > 0 && <BookmarkCount>{bookmarkCount}</BookmarkCount>}
               </IconButton>
             )}
+            <IconButton
+              ref={chatIconRef}
+              style={{ position: 'relative' }}
+              onClick={() => setShowChatList(v => !v)}
+              title="채팅 목록"
+            >
+              <FaComments />
+              {hasUnreadMessages && <UnreadBadge>NEW</UnreadBadge>}
+              {showChatList && (
+                <ChatRoomListDropdown onClose={() => setShowChatList(false)} />
+              )}
+            </IconButton>
             <ProfileButton 
               className="profile-menu"
               onClick={() => setIsProfileOpen(!isProfileOpen)}

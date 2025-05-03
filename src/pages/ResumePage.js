@@ -5,45 +5,88 @@ import { showToast } from '../components/common/Toast';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
 
-const PageContainer = styled.div`
-  padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
+const PageContainer = styled(motion.div)`
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  padding: 7.5rem 2rem 2rem;
 `;
 
 const ResumeContainer = styled.div`
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  max-width: 1200px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+  display: flex;
   gap: 2rem;
-  margin-top: 2rem;
-
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
+  @media (max-width: 900px) {
+    flex-direction: column;
   }
 `;
 
 const Section = styled.div`
   background: white;
-  padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem 3rem;
+  position: relative;
+  z-index: 2;
+`;
+
+const LeftSection = styled(Section)`
+  flex: 1;
+  padding-right: 2rem;
+`;
+
+const RightSection = styled(Section)`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+`;
+
+const ButtonContainer = styled.div`
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: auto;
+  padding-top: 2rem;
 `;
 
 const Title = styled.h2`
-  font-size: 1.5rem;
+  font-size: 1.3rem;
+  color: rgb(74, 80, 86);
   margin-bottom: 1.5rem;
-  color: #333;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+  position: relative;
+  padding-left: 1rem;
+  display: flex;
+  align-items: center;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 18px;
+    background: linear-gradient(to bottom, rgb(183, 209, 241), rgb(142, 197, 194));
+    border-radius: 2px;
+  }
 `;
 
 const FormGroup = styled.div`
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.7rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 `;
 
 const Label = styled.label`
-  display: block;
-  margin-bottom: 0.5rem;
   font-weight: 500;
   color: #555;
+  min-width: 120px;
 `;
 
 const Input = styled.input`
@@ -52,10 +95,12 @@ const Input = styled.input`
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 1rem;
+  background: #f8f9fa;
   
   &:focus {
     outline: none;
-    border-color: #007bff;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
   }
 `;
 
@@ -65,10 +110,12 @@ const Select = styled.select`
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 1rem;
+  background: #f8f9fa;
   
   &:focus {
     outline: none;
-    border-color: #007bff;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
   }
 `;
 
@@ -80,12 +127,12 @@ const TextArea = styled.textarea`
   font-size: 1rem;
   height: 150px;
   resize: none;
-  overflow-y: auto;
-  white-space: pre-wrap;
+  background: #f8f9fa;
   
   &:focus {
     outline: none;
-    border-color: #007bff;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
   }
 `;
 
@@ -107,7 +154,7 @@ const ButtonGroup = styled.div`
   margin-top: 1.5rem;
 `;
 
-const Button = styled.button`
+const Button = styled(motion.button)`
   padding: 0.75rem 1.5rem;
   border: none;
   border-radius: 4px;
@@ -116,12 +163,13 @@ const Button = styled.button`
   transition: all 0.2s;
   
   &:hover {
-    opacity: 0.9;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
 `;
 
 const SaveButton = styled(Button)`
-  background-color: #007bff;
+  background-color: #6366f1;
   color: white;
 `;
 
@@ -388,26 +436,30 @@ const ResumePage = () => {
   }
 
   return (
-    <PageContainer>
-      <Title>내 이력서</Title>
+    <PageContainer
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
       <ResumeContainer>
-        <Section>
+        <LeftSection>
+          <Title>기본 정보</Title>
           {isEditing ? (
             <>
               <FormGroup>
                 <Label>성별</Label>
-                <DisabledInput
+                <Input
                   type="text"
                   value={sections.gender}
-                  disabled
+                  onChange={(e) => setSections({...sections, gender: e.target.value})}
                 />
               </FormGroup>
               <FormGroup>
                 <Label>나이</Label>
-                <DisabledInput
+                <Input
                   type="text"
                   value={sections.age}
-                  disabled
+                  onChange={(e) => setSections({...sections, age: e.target.value})}
                 />
               </FormGroup>
               <FormGroup>
@@ -428,20 +480,9 @@ const ResumePage = () => {
                   value={sections.introduction}
                   onChange={(e) => setSections({...sections, introduction: e.target.value})}
                   placeholder="자기소개를 입력하세요"
+                  style={{ height: '300px' }}
                 />
               </FormGroup>
-              <FormGroup>
-                <Label>직무 경험 및 관련 활동</Label>
-                <TextArea
-                  value={sections.workExperience}
-                  onChange={(e) => setSections({...sections, workExperience: e.target.value})}
-                  placeholder="직무 경험 및 관련 활동을 입력하세요"
-                />
-              </FormGroup>
-              <ButtonGroup>
-                <SaveButton onClick={handleSave}>저장</SaveButton>
-                <CancelButton onClick={() => setIsEditing(false)}>취소</CancelButton>
-              </ButtonGroup>
             </>
           ) : (
             <>
@@ -459,40 +500,102 @@ const ResumePage = () => {
               </FormGroup>
               <FormGroup>
                 <Label>자기소개</Label>
-                <ContentBox>{sections.introduction || '미입력'}</ContentBox>
+                <div style={{ 
+                  padding: '1rem', 
+                  background: '#f8f9fa', 
+                  borderRadius: '4px',
+                  whiteSpace: 'pre-wrap',
+                  minHeight: '300px',
+                  width: '100%'
+                }}>
+                  {sections.introduction || '미입력'}
+                </div>
               </FormGroup>
-              <FormGroup>
-                <Label>직무 경험 및 관련 활동</Label>
-                <ContentBox>{sections.workExperience || '미입력'}</ContentBox>
-              </FormGroup>
-              <ButtonGroup>
-                <SaveButton onClick={handleEdit}>수정</SaveButton>
-                <DeleteButton onClick={handleDelete}>삭제</DeleteButton>
-              </ButtonGroup>
             </>
           )}
-        </Section>
-        <Section>
-          <Label>나의 성향 (최대 3개 선택)</Label>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '0.5rem' }}>
-            {personalityTraits.map(trait => (
-              <Button
-                key={trait.id}
-                onClick={() => handleTraitSelection(trait.text)}
-                style={{
-                  backgroundColor: sections.selectedTraits.includes(trait.text) ? '#007bff' : '#f8f9fa',
-                  color: sections.selectedTraits.includes(trait.text) ? 'white' : '#333',
-                  opacity: !isEditing || (sections.selectedTraits.length >= 3 && !sections.selectedTraits.includes(trait.text)) ? 0.5 : 1,
-                  cursor: !isEditing ? 'not-allowed' : 'pointer'
-                }}
-                disabled={!isEditing || (sections.selectedTraits.length >= 3 && !sections.selectedTraits.includes(trait.text))}
-              >
-                {trait.text}
-              </Button>
-            ))}
-          </div>
-        </Section>
+        </LeftSection>
+
+        <RightSection>
+          <Title>직무 경험 및 관련 활동</Title>
+          {isEditing ? (
+            <FormGroup>
+              <TextArea
+                value={sections.workExperience}
+                onChange={(e) => setSections({...sections, workExperience: e.target.value})}
+                placeholder="직무 경험 및 관련 활동을 입력하세요"
+                style={{ height: '300px' }}
+              />
+            </FormGroup>
+          ) : (
+            <FormGroup>
+              <div style={{
+                padding: '1rem',
+                background: '#f8f9fa',
+                borderRadius: '4px',
+                whiteSpace: 'pre-wrap',
+                minHeight: '300px',
+                width: '100%'
+              }}>
+                {sections.workExperience || '미입력'}
+              </div>
+            </FormGroup>
+          )}
+        </RightSection>
       </ResumeContainer>
+
+      <div style={{
+        maxWidth: '1200px',
+        margin: '2.5rem auto 0',
+        background: 'white',
+        borderRadius: '16px',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+        padding: '2rem 3rem',
+      }}>
+        <Title>나의 성향 (최대 3개 선택)</Title>
+        <div style={{
+          display: 'grid',
+          gridTemplateRows: 'repeat(3, 1fr)',
+          gridAutoFlow: 'column',
+          gap: '0.5rem',
+          width: '100%'
+        }}>
+          {personalityTraits.map(trait => (
+            <Button
+              key={trait.id}
+              onClick={() => handleTraitSelection(trait.text)}
+              style={{
+                backgroundColor: sections.selectedTraits.includes(trait.text) ? '#6366f1' : '#f8f9fa',
+                color: sections.selectedTraits.includes(trait.text) ? 'white' : '#333',
+                opacity: !isEditing || (sections.selectedTraits.length >= 3 && !sections.selectedTraits.includes(trait.text)) ? 0.5 : 1,
+                cursor: !isEditing ? 'not-allowed' : 'pointer',
+                padding: '0.5rem 1rem',
+                borderRadius: '4px',
+                border: '1px solid #ddd',
+                fontSize: '0.9rem',
+                minWidth: '100px',
+                textAlign: 'center',
+                transition: 'all 0.2s ease'
+              }}
+              disabled={!isEditing || (sections.selectedTraits.length >= 3 && !sections.selectedTraits.includes(trait.text))}
+            >
+              {trait.text}
+            </Button>
+          ))}
+        </div>
+        <ButtonContainer>
+          {isEditing ? (
+            <>
+              <SaveButton onClick={handleSave}>저장</SaveButton>
+              <CancelButton onClick={() => setIsEditing(false)}>취소</CancelButton>
+            </>
+          ) : (
+            <>
+              <SaveButton onClick={handleEdit}>수정</SaveButton>
+              <DeleteButton onClick={handleDelete}>삭제</DeleteButton>
+            </>
+          )}
+        </ButtonContainer>
+      </div>
     </PageContainer>
   );
 };

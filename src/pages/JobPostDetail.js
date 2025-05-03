@@ -156,9 +156,9 @@ const FloatingButtonGroup = styled.div`
 `;
 
 const FloatingButton = styled.button`
-  padding: 0.8rem 1.5rem;
+  padding: 0.8rem 1rem;
   border: 1.5px solid #d1d5db;
-  border-radius: 50px;
+  border-radius: 12px;
   font-size: 0.97rem;
   font-weight: 700;
   background: linear-gradient(90deg, #f3f4f6 0%, #e5e7eb 100%);

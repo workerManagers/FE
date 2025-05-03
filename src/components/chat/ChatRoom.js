@@ -285,7 +285,7 @@ const ChatRoom = () => {
           </div>
           {otherUserName && (
             <span style={{ fontWeight: 600, fontSize: '1.08rem', color: '#6366f1', marginLeft: '1.2rem' }}>
-              {otherUserName}과 채팅중입니다.
+              {otherUserName}님과 채팅중입니다.
             </span>
           )}
         </Header>
