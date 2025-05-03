@@ -216,7 +216,7 @@ const DontShowAgain = styled.div`
 
 const subscriptionPlans = [
   {
-    name: "Standard 요금제",
+    name: "스탠다드 요금제",
     type: "구독형 유료 서비스",
     price: "180,000",
     period: "월",
