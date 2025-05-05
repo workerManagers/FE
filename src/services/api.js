@@ -3,8 +3,8 @@ import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
 
 // API 기본 URL 설정
-const API_BASE_URL = 'https://port-0-workermangers-be-m9ax68es6a756190.sel4.cloudtype.app';
-// const API_BASE_URL = 'http://localhost:8080';
+// const API_BASE_URL = 'https://port-0-workermangers-be-m9ax68es6a756190.sel4.cloudtype.app';
+const API_BASE_URL = 'http://localhost:8080';
 
 // 토큰 관리 관련 상수
 const TOKEN_KEY = 'token';
@@ -163,6 +163,8 @@ export const userApi = {
   logout: async () => {
     try {
       const response = await api.post('/users/logout');
+      const userId = localStorage.getItem('userId');
+      
       // 로그아웃 시 모든 사용자 정보 및 세션 스토리지 제거
       localStorage.removeItem('token');
       localStorage.removeItem('userType');
@@ -170,6 +172,13 @@ export const userApi = {
       localStorage.removeItem('userId');
       localStorage.removeItem('companyName');
       localStorage.removeItem('jobRegion');
+      
+      // 매칭 관련 세션 스토리지 항목 명시적 제거 (사용자별)
+      if (userId) {
+        sessionStorage.removeItem(`matchingResults_${userId}`);
+        sessionStorage.removeItem(`matchingResultsTimestamp_${userId}`);
+      }
+      
       // 세션 스토리지 완전히 비우기
       sessionStorage.clear();
       return response.data;
@@ -243,6 +252,16 @@ export const userApi = {
       return response;
     } catch (error) {
       throw error;
+    }
+  },
+
+  // 매칭 상태 변경
+  updateMatchingStatus: async (matchingEnabled) => {
+    try {
+      const response = await api.put('/users/matching-status', { matchingEnabled });
+      return response.data;
+    } catch (error) {
+      throw error.response.data;
     }
   },
 };
@@ -404,6 +423,26 @@ export const resumeApi = {
   getResume: async () => {
     try {
       const response = await api.get('/resumes');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // 특정 이력서 조회
+  getResumeById: async (resumeId) => {
+    try {
+      const response = await api.get(`/resumes/${resumeId}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // 사용자 ID로 이력서 조회
+  getResumeByUserId: async (userId) => {
+    try {
+      const response = await api.get(`/resumes/user/${userId}`);
       return response.data;
     } catch (error) {
       throw error;
@@ -628,9 +667,27 @@ export const matchingApi = {
   // 공고별 매칭 점수 조회 (기업회원용)
   getMatchingScores: async (jobPostId) => {
     try {
-      const response = await api.post('/company-matchings/match', { jobPostId });
+      // 먼저 매칭 허용된 이력서 목록을 가져옴
+      const matchingEnabledResumes = await api.get('/resumes/matching-enabled');
+      
+      // 각 이력서에 대해 매칭 점수 계산
+      const response = await api.post('/company-matchings/match', { 
+        jobPostId,
+        resumes: matchingEnabledResumes.data 
+      });
       return response.data;
     } catch (error) {
+      throw error;
+    }
+  },
+
+  // 매칭 허용된 이력서 목록 조회
+  getMatchingEnabledResumes: async () => {
+    try {
+      const response = await api.get('/resumes/matching-enabled');
+      return response.data;
+    } catch (error) {
+      console.error('매칭 허용된 이력서 목록 조회 실패:', error);
       throw error;
     }
   },

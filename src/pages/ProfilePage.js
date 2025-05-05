@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import { userApi } from '../services/api';
 import { showToast } from '../components/common/Toast';
+import Toast from '../components/common/Toast';
 import penguin from '../assets/img/img2.png';
 
 const PageContainer = styled(motion.div)`
@@ -165,6 +166,67 @@ const LoadingContainer = styled.div`
   color: #666;
 `;
 
+const ToggleContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  margin-top: 1.5rem;
+`;
+
+const ToggleLabel = styled.span`
+  font-size: 1rem;
+  color: #495057;
+  flex: 1;
+`;
+
+const ToggleSwitch = styled.label`
+  position: relative;
+  display: inline-block;
+  width: 52px;
+  height: 28px;
+
+  input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  span {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 34px;
+
+    &:before {
+      position: absolute;
+      content: "";
+      height: 20px;
+      width: 20px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+  }
+
+  input:checked + span {
+    background-color: #6366f1;
+  }
+
+  input:checked + span:before {
+    transform: translateX(24px);
+  }
+`;
+
 const getUserTypeLabel = (userType) => {
   switch (userType) {
     case 'INDIVIDUAL':
@@ -179,6 +241,7 @@ const getUserTypeLabel = (userType) => {
 const ProfilePage = () => {
   const [userInfo, setUserInfo] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [matchingEnabled, setMatchingEnabled] = useState(false);
 
   useEffect(() => {
     const fetchUserInfo = async () => {
@@ -186,6 +249,7 @@ const ProfilePage = () => {
         const data = await userApi.getUserInfo();
         console.log('받아온 사용자 정보:', data);
         setUserInfo(data);
+        setMatchingEnabled(data.matchingEnabled);
       } catch (error) {
         console.error('사용자 정보 조회 실패:', error);
         showToast.error('사용자 정보를 불러오는데 실패했습니다.');
@@ -196,6 +260,17 @@ const ProfilePage = () => {
 
     fetchUserInfo();
   }, []);
+
+  const handleMatchingToggle = async () => {
+    try {
+      await userApi.updateMatchingStatus(!matchingEnabled);
+      setMatchingEnabled(!matchingEnabled);
+      showToast.success('매칭 상태가 변경되었습니다.');
+    } catch (error) {
+      console.error('매칭 상태 변경 실패:', error);
+      showToast.error('매칭 상태 변경에 실패했습니다.');
+    }
+  };
 
   if (loading) {
     return (
@@ -252,8 +327,23 @@ const ProfilePage = () => {
               </>
             )}
           </InfoGrid>
+
+          {userInfo?.userType === 'INDIVIDUAL' && (
+            <ToggleContainer>
+              <ToggleLabel>매칭 서비스 활성화</ToggleLabel>
+              <ToggleSwitch>
+                <input
+                  type="checkbox"
+                  checked={matchingEnabled}
+                  onChange={handleMatchingToggle}
+                />
+                <span />
+              </ToggleSwitch>
+            </ToggleContainer>
+          )}
         </ProfileSection>
       </ProfileContainer>
+      <Toast />
     </PageContainer>
   );
 };

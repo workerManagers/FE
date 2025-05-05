@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
-import { jobPostApi, userApi, bookmarkApi, applicationApi, chatApi } from '../services/api';
+import { jobPostApi, userApi, bookmarkApi, applicationApi, chatApi, resumeApi } from '../services/api';
 import { showToast } from '../components/common/Toast';
 import Toast from '../components/common/Toast';
 import { IoArrowBack } from 'react-icons/io5';
 import BookmarkButton from '../components/common/BookmarkButton';
+import ResumeModal from '../components/ResumeModal';
 
 const Container = styled.div`
   max-width: 1100px;
@@ -182,6 +183,62 @@ const FloatingButton = styled.button`
   }
 `;
 
+const ApplicantSection = styled.div`
+  background: white;
+  border-radius: 8px;
+  padding: 2rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  margin-top: 2rem;
+  width: 100%;
+`;
+
+const ApplicantList = styled.div`
+  margin-top: 1.5rem;
+`;
+
+const ApplicantItem = styled.div`
+  padding: 1.5rem;
+  border-bottom: 1px solid #eee;
+  display: grid;
+  grid-template-columns: 1fr 2fr auto;
+  gap: 1rem;
+  align-items: center;
+
+  &:last-child {
+    border-bottom: none;
+  }
+`;
+
+const ApplicantName = styled.span`
+  font-weight: 600;
+  color: #333;
+`;
+
+const ResumeText = styled.p`
+  color: #666;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+`;
+
+const ChatButton = styled.button`
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #218838;
+  }
+`;
+
 function JobPostDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -194,6 +251,8 @@ function JobPostDetail() {
   const [bookmarkId, setBookmarkId] = useState(null);
   const [bookmarkLoading, setBookmarkLoading] = useState(true);
   const [hasApplied, setHasApplied] = useState(false);
+  const [applicants, setApplicants] = useState([]);
+  const [selectedResume, setSelectedResume] = useState(null);
   const userType = localStorage.getItem('userType');
 
   const formatDate = (dateString) => {
@@ -284,6 +343,24 @@ function JobPostDetail() {
     }
   };
 
+  useEffect(() => {
+    const fetchApplicants = async () => {
+      if (userInfo?.userType === 'COMPANY' && jobPost?.companyName === userInfo?.companyInfo?.companyName) {
+        try {
+          const applicantsData = await applicationApi.getJobPostApplications(id);
+          console.log('지원자 데이터:', applicantsData);
+          setApplicants(applicantsData);
+        } catch (error) {
+          console.error('지원자 목록 조회 실패:', error);
+        }
+      }
+    };
+
+    if (jobPost && userInfo) {
+      fetchApplicants();
+    }
+  }, [id, jobPost, userInfo]);
+
   const handleEdit = () => {
     navigate(`/jobpost/${id}/edit`);
   };
@@ -319,18 +396,39 @@ function JobPostDetail() {
     }
   };
 
-  const handleChatClick = async () => {
+  const handleChatClick = async (applicantName) => {
     try {
-      if (!jobPost.authorId) {
-        showToast.error('채팅 기능을 사용할 수 없습니다.');
+      const userData = await userApi.getUserByName(applicantName);
+      if (!userData || !userData.userId) {
+        showToast.error('사용자 정보를 찾을 수 없습니다.');
         return;
       }
-      const response = await chatApi.createChatRoom(jobPost.authorId);
-      console.log('채팅방 생성 응답:', response);
+      
+      const response = await chatApi.createChatRoom(userData.userId);
       navigate(`/chat/${response.id}`);
     } catch (error) {
       console.error('채팅방 생성 실패:', error);
       showToast.error('채팅방 생성에 실패했습니다.');
+    }
+  };
+
+  const handleApplicantClick = async (applicant) => {
+    try {
+      console.log('클릭한 지원자 정보:', applicant);
+      if (!applicant.userId) {
+        showToast.error('지원자의 ID 정보를 찾을 수 없습니다.');
+        return;
+      }
+      const resumeData = await resumeApi.getResumeByUserId(applicant.userId);
+      console.log('받아온 이력서 데이터:', resumeData);
+      if (!resumeData) {
+        showToast.error('이력서 정보를 찾을 수 없습니다.');
+        return;
+      }
+      setSelectedResume(resumeData);
+    } catch (error) {
+      console.error('이력서 정보 조회 실패:', error);
+      showToast.error('이력서 정보를 불러오는데 실패했습니다.');
     }
   };
 
@@ -436,7 +534,7 @@ function JobPostDetail() {
         </DetailSection>
         <DetailSection>
           <FloatingButtonGroup>
-            <FloatingButton onClick={() => navigate('/jobpost')}>
+            <FloatingButton onClick={() => navigate(-1)}>
               <IoArrowBack style={{ marginRight: '0.1rem', marginTop: '0.1rem', fontSize: '1.2rem' }} />
             </FloatingButton>
             {userInfo?.userType === 'COMPANY' && userInfo?.companyInfo?.companyName === jobPost?.companyName && (
@@ -450,12 +548,50 @@ function JobPostDetail() {
                 <FloatingButton onClick={handleApply} disabled={hasApplied}>
                   {hasApplied ? '지원완료' : '지원하기'}
                 </FloatingButton>
-                <FloatingButton onClick={handleChatClick}>1대1 문의하기</FloatingButton>
               </>
             )}
           </FloatingButtonGroup>
         </DetailSection>
       </DetailGrid>
+      {isAuthor && (
+        <ApplicantSection>
+          <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>
+            지원자 목록
+            <span style={{ fontSize: '1rem', color: '#666', marginLeft: '1rem' }}>
+              총 {applicants.length}명의 지원자
+            </span>
+          </h2>
+          <ApplicantList>
+            {applicants.length === 0 ? (
+              <p>아직 지원자가 없습니다.</p>
+            ) : (
+              applicants.map((applicant, index) => (
+                <ApplicantItem key={index}>
+                  <ApplicantName 
+                    onClick={() => handleApplicantClick(applicant)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    {applicant.userName}
+                  </ApplicantName>
+                  <ResumeText>{applicant.resumeText}</ResumeText>
+                  <ChatButton 
+                    onClick={() => handleChatClick(applicant.userName)}
+                  >
+                    1:1 채팅
+                  </ChatButton>
+                </ApplicantItem>
+              ))
+            )}
+          </ApplicantList>
+        </ApplicantSection>
+      )}
+
+      {selectedResume && (
+        <ResumeModal 
+          resume={selectedResume} 
+          onClose={() => setSelectedResume(null)} 
+        />
+      )}
     </Container>
   );
 }
