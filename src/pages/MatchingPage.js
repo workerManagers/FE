@@ -739,6 +739,28 @@ const MatchingButton = styled(motion.button)`
   }
 `;
 
+const BackButton = styled.button`
+  background: linear-gradient(135deg, #e6eaf3 0%, #cfd8dc 100%);
+  color: #23272f;
+  border: none;
+  border-radius: 10px;
+  padding: 0.8rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: absolute;
+  top: 1.5rem;
+  left: 2rem;
+  z-index: 2;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  &:hover {
+    background: #cfd8dc;
+    color: #23272f;
+  }
+`;
+
 const MatchingPage = () => {
   const [jobPosts, setJobPosts] = useState([]);
   const [selectedJobPost, setSelectedJobPost] = useState(null);

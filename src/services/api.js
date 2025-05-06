@@ -3,8 +3,8 @@ import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
 
 // API 기본 URL 설정
-const API_BASE_URL = 'https://port-0-workermangers-be-m9ax68es6a756190.sel4.cloudtype.app';
-// const API_BASE_URL = 'http://localhost:8080';
+// const API_BASE_URL = 'https://port-0-workermangers-be-m9ax68es6a756190.sel4.cloudtype.app';
+const API_BASE_URL = 'http://localhost:8080';
 
 // 토큰 관리 관련 상수
 const TOKEN_KEY = 'token';
@@ -639,7 +639,6 @@ export const matchingApi = {
   getJobMatchingScores: async (resumeId) => {
     try {
       const token = localStorage.getItem('token');
-      console.log('Token:', localStorage.getItem('token'));
       if (!token) {
         throw new Error('인증 토큰이 없습니다.');
       }
@@ -653,7 +652,15 @@ export const matchingApi = {
           }
         }
       );
-      return response.data;
+
+      // 매칭 점수를 내림차순으로 정렬
+      const sortedMatches = response.data.sort((a, b) => b.matchingScore - a.matchingScore);
+
+      // 점수를 소수점 1자리까지 반올림
+      return sortedMatches.map(match => ({
+        ...match,
+        matchingScore: Math.round(match.matchingScore * 10) / 10
+      }));
     } catch (error) {
       console.error('직무 매칭 점수 조회 실패:', error);
       if (error.response?.status === 403) {
