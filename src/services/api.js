@@ -1,7 +1,7 @@
 import axios from 'axios';
 import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
-
+import { showToast } from '../components/common/Toast';
 // API 기본 URL 설정
 // const API_BASE_URL = 'https://port-0-workermangers-be-m9ax68es6a756190.sel4.cloudtype.app';
 const API_BASE_URL = 'http://localhost:8080';
@@ -83,26 +83,22 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // 토큰 만료 에러 처리
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // 인증(토큰) 만료/실패만 로그아웃
+    if ((error.response?.status === 401 || error.response?.status === 403) && !originalRequest._retry) {
       originalRequest._retry = true;
-
       try {
         // 리프레시 토큰으로 새로운 액세스 토큰 요청
         const refreshToken = tokenService.getRefreshToken();
         if (!refreshToken) {
           throw new Error('리프레시 토큰이 없습니다.');
         }
-
         const response = await api.post('/auth/refresh', null, {
           headers: {
             'Refresh-Token': refreshToken
           }
         });
-
         const { accessToken, refreshToken: newRefreshToken, accessTokenExpiresIn } = response.data;
         tokenService.saveTokens(accessToken, newRefreshToken);
-
         // 실패한 요청 재시도
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         return api(originalRequest);
@@ -112,6 +108,18 @@ api.interceptors.response.use(
         window.location.href = '/login';
         return Promise.reject(refreshError);
       }
+    }
+
+    // 서버 에러(500/502/503)는 안내만 하고 로그아웃하지 않음
+    if ([500, 502, 503].includes(error.response?.status)) {
+      if (typeof window !== 'undefined' && window.showToast) {
+        window.showToast.error('서버에 문제가 발생했습니다. 잠시 후 다시 시도해주세요.');
+      } else if (typeof showToast !== 'undefined') {
+        showToast.error('서버에 문제가 발생했습니다. 잠시 후 다시 시도해주세요.');
+      } else {
+        alert('서버에 문제가 발생했습니다. 잠시 후 다시 시도해주세요.');
+      }
+      return Promise.reject(error);
     }
 
     return Promise.reject(error);
@@ -142,7 +150,6 @@ export const userApi = {
   login: async (credentials) => {
     try {
       const response = await api.post('/users/login', credentials);
-      console.log('로그인 응답:', response.data); // 로그인 응답 확인
       if (response.data.accessToken) {
         tokenService.saveTokens(response.data.accessToken, response.data.refreshToken);
         localStorage.setItem('userType', response.data.userType);
@@ -187,7 +194,6 @@ export const userApi = {
       }
 
       const response = await api.get('/users/me');
-      console.log('사용자 정보 응답:', response.data); // 응답 데이터 확인
       
       // 회사 정보가 있는 경우 localStorage에 저장
       if (response.data.companyInfo) {
@@ -197,7 +203,6 @@ export const userApi = {
       
       return response.data;
     } catch (error) {
-      console.error('사용자 정보 조회 중 오류:', error);
       throw error;
     }
   },
@@ -218,7 +223,6 @@ export const userApi = {
       });
       return response.data;
     } catch (error) {
-      console.error('예측 API 오류:', error);
       if (error.code === 'ECONNABORTED') {
         throw new Error('서버 응답 시간이 초과되었습니다. 잠시 후 다시 시도해주세요.');
       }
@@ -232,7 +236,6 @@ export const userApi = {
       const response = await api.get(`/users/name/${userName}`);
       return response.data;
     } catch (error) {
-      console.error('사용자 정보 조회 실패:', error);
       throw error;
     }
   },
@@ -255,7 +258,6 @@ export const jobPostApi = {
       const response = await api.get('/companies');
       return response.data;
     } catch (error) {
-      console.error('회사 목록 조회 실패:', error);
       throw error;
     }
   },
@@ -266,7 +268,6 @@ export const jobPostApi = {
       const response = await api.get('/job-codes');
       return response.data;
     } catch (error) {
-      console.error('직종 코드 조회 실패:', error);
       throw error;
     }
   },
@@ -291,7 +292,6 @@ export const jobPostApi = {
       const response = await api.post('/job-posts', formattedData);
       return response.data;
     } catch (error) {
-      console.error('채용공고 생성 실패:', error);
       if (error.response) {
         console.error('응답 데이터:', error.response.data);
         console.error('응답 상태:', error.response.status);
@@ -307,7 +307,6 @@ export const jobPostApi = {
       const response = await api.get(`/job-posts/${jobPostId}`);
       return response.data;
     } catch (error) {
-      console.error('채용공고 조회 실패:', error);
       if (error.response?.status === 404) {
         console.error('채용공고를 찾을 수 없음:', error.response.data.message);
       }
@@ -326,7 +325,6 @@ export const jobPostApi = {
       const response = await api.put(`/job-posts/${jobPostId}`, formattedData);
       return response.data;
     } catch (error) {
-      console.error('채용공고 수정 실패:', error);
       if (error.response?.status === 403) {
         localStorage.removeItem('token');
         throw new Error('토큰이 만료되었거나 유효하지 않습니다. 다시 로그인해주세요.');
@@ -341,7 +339,6 @@ export const jobPostApi = {
       const response = await api.delete(`/job-posts/${jobPostId}`);
       return response.data;
     } catch (error) {
-      console.error('채용공고 삭제 실패:', error);
       throw error;
     }
   },
@@ -355,7 +352,6 @@ export const jobPostApi = {
       }
       throw new Error('채용공고를 불러오는데 실패했습니다.');
     } catch (error) {
-      console.error('API 오류:', error);
       if (error.response?.status === 403) {
         localStorage.removeItem('token');
         throw new Error('세션이 만료되었습니다. 다시 로그인해주세요.');
@@ -379,7 +375,6 @@ export const jobPostApi = {
       }
       return null;
     } catch (error) {
-      console.error('직종 코드 조회 실패:', error);
       if (error.response?.status === 403) {
         console.error('토큰이 만료되었거나 유효하지 않음');
       }
@@ -515,7 +510,6 @@ export const chatApi = {
       const response = await api.post('/chat/rooms', { targetUserId });
       return response.data;
     } catch (error) {
-      console.error('채팅방 생성 실패:', error);
       throw error;
     }
   },
@@ -526,7 +520,6 @@ export const chatApi = {
       const response = await api.get('/chat/rooms');
       return response.data;
     } catch (error) {
-      console.error('채팅방 목록 조회 실패:', error);
       throw error;
     }
   },
@@ -537,7 +530,6 @@ export const chatApi = {
       const response = await api.get(`/chat/rooms/${roomId}/messages`);
       return response.data;
     } catch (error) {
-      console.error('채팅 메시지 조회 실패:', error);
       throw error;
     }
   },
@@ -548,7 +540,6 @@ export const chatApi = {
       const response = await api.put(`/chat/rooms/${roomId}/read`);
       return response.data;
     } catch (error) {
-      console.error('메시지 읽음 처리 실패:', error);
       throw error;
     }
   },
@@ -559,7 +550,6 @@ export const chatApi = {
       const response = await api.delete(`/chat/rooms/${roomId}`);
       return response.data;
     } catch (error) {
-      console.error('채팅방 나가기 실패:', error);
       throw error;
     }
   },
@@ -570,7 +560,6 @@ export const chatApi = {
       const response = await api.delete(`/chat/messages/${messageId}`);
       return response.data;
     } catch (error) {
-      console.error('메시지 삭제 실패:', error);
       throw error;
     }
   },
@@ -662,7 +651,6 @@ export const matchingApi = {
         matchingScore: Math.round(match.matchingScore * 10) / 10
       }));
     } catch (error) {
-      console.error('직무 매칭 점수 조회 실패:', error);
       if (error.response?.status === 403) {
         throw new Error('접근 권한이 없습니다. 로그인 상태와 사용자 권한을 확인해주세요.');
       }

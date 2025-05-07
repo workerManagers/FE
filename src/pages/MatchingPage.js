@@ -828,16 +828,13 @@ const MatchingPage = () => {
     setLoading(true);
 
     try {
-      console.log('매칭 시작 - 공고 ID:', jobPost.jobPostId);
       const results = await matchingApi.getMatchingScores(jobPost.jobPostId);
-      console.log('매칭 결과:', results);
       
       if (!results || !Array.isArray(results)) {
         throw new Error('매칭 결과가 올바르지 않습니다.');
       }
 
       const sortedResults = results.sort((a, b) => b.matchingScore - a.matchingScore);
-      console.log('정렬된 매칭 결과:', sortedResults);
       
       setMatchingResults(sortedResults);
       setShowMatching(true);
@@ -949,31 +946,22 @@ const MatchingPage = () => {
             </Description>
             <MatchingForm
               onSubmit={async (e) => {
-                console.log('매칭 폼 제출 시작');
                 e.preventDefault();
                 if (!selectedJobId) {
-                  console.log('선택된 공고가 없습니다');
                   return;
                 }
-                console.log('선택된 공고 ID:', selectedJobId);
-                console.log('전체 공고 목록:', jobPosts);
                 setPendingMatch(true);
                 const job = jobPosts.find(j => {
-                  console.log('비교 중인 공고:', j);
                   return j.jobPostId === parseInt(selectedJobId);
                 });
-                console.log('찾은 공고:', job);
                 if (job) {
-                  console.log('매칭 시작');
                   await handleJobPostClick(job);
                   setSelectedJob(job);
                   setShowMatching(true);
                 } else {
-                  console.log('공고를 찾을 수 없습니다');
                   showToast.error('선택한 공고를 찾을 수 없습니다.');
                 }
                 setPendingMatch(false);
-                console.log('매칭 폼 제출 완료');
               }}
             >
               <MatchingFormGroup>
@@ -994,14 +982,6 @@ const MatchingPage = () => {
               </MatchingFormGroup>
               <MatchingButton
                 type="submit"
-                onClick={(e) => {
-                  console.log('매칭하기 버튼 클릭');
-                  e.preventDefault();
-                  const form = e.target.closest('form');
-                  if (form) {
-                    form.requestSubmit();
-                  }
-                }}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >

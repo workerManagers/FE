@@ -209,21 +209,10 @@ const ChatRoomList = () => {
       setLoading(true);
       try {
         const chatRooms = await chatApi.getChatRooms();
-        console.log('채팅방 목록:', chatRooms);
         
         // 각 채팅방의 사용자 정보를 조회하여 기업/일반회원 구분
         const roomsWithUserTypes = chatRooms.map(room => {
           try {
-            console.log(`\n채팅방 ${room.id} 사용자 정보:`);
-            console.log('User1:', {
-              name: room.user1Name,
-              email: room.user1Email
-            });
-            console.log('User2:', {
-              name: room.user2Name,
-              email: room.user2Email
-            });
-
             // 이메일이 test1@naver.com인 사용자가 기업회원
             const isUser1Company = room.user1Email === 'test1@naver.com';
             const isUser2Company = room.user2Email === 'test1@naver.com';
@@ -235,25 +224,8 @@ const ChatRoomList = () => {
               applicantName: isUser2Company ? room.user1Name : room.user2Name
             };
 
-            console.log('변환된 채팅방 정보:', {
-              id: room.id,
-              user1: {
-                name: room.user1Name,
-                email: room.user1Email,
-                isCompany: isUser1Company
-              },
-              user2: {
-                name: room.user2Name,
-                email: room.user2Email,
-                isCompany: isUser2Company
-              },
-              recruiter: updatedRoom.recruiterName,
-              applicant: updatedRoom.applicantName
-            });
-
             return updatedRoom;
           } catch (error) {
-            console.error(`채팅방 ${room.id} 사용자 정보 조회 실패:`, error);
             return room;
           }
         });
@@ -263,10 +235,8 @@ const ChatRoomList = () => {
           .filter(room => room.lastMessage)
           .filter(room => !jobPostId || room.jobPostId === Number(jobPostId));
 
-        console.log('최종 필터링된 채팅방 목록:', filteredRooms);
         setRooms(filteredRooms);
       } catch (error) {
-        console.error('채팅방 목록 로드 실패:', error);
         showToast.error('채팅방 목록을 불러오는데 실패했습니다.');
       } finally {
         setLoading(false);

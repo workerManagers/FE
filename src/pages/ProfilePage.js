@@ -177,7 +177,6 @@ const ProfilePage = () => {
     const fetchUserInfo = async () => {
       try {
         const data = await userApi.getUserInfo();
-        console.log('받아온 사용자 정보:', data);
         setUserInfo(data);
       } catch (error) {
         console.error('사용자 정보 조회 실패:', error);

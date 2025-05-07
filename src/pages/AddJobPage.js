@@ -287,7 +287,6 @@ const AddJobPage = () => {
     e.preventDefault();
     try {
       const response = await api.post('/job-codes', formData);
-      console.log('직무 등록 응답:', response);
       
       // 토스트 메시지 표시
       showToast.success('직무 추가가 완료되었습니다.');

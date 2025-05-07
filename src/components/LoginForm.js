@@ -172,9 +172,6 @@ const LoginForm = () => {
     try {
       const response = await userApi.login(data);
       
-      // 응답 구조 확인
-      console.log('로그인 응답:', response);
-      
       if (!response.accessToken) {
         throw new Error('토큰이 없습니다.');
       }
