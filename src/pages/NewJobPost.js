@@ -217,10 +217,8 @@ function NewJobPost() {
     const fetchUserInfo = async () => {
       try {
         const userData = await userApi.getUserInfo();
-        console.log('사용자 정보:', userData);
         setUserInfo(userData);
         if (userData.companyInfo) {
-          console.log('회사 정보:', userData.companyInfo);
           setFormData(prev => ({
             ...prev,
             companyName: userData.companyInfo.companyName,
@@ -228,7 +226,6 @@ function NewJobPost() {
           }));
         }
       } catch (error) {
-        console.error('사용자 정보 조회 실패:', error);
         showToast.error('사용자 정보를 불러오는데 실패했습니다.');
       }
     };
@@ -238,7 +235,6 @@ function NewJobPost() {
         const companiesData = await jobPostApi.getCompanies();
         setCompanies(companiesData);
       } catch (error) {
-        console.error('회사 목록 조회 실패:', error);
         showToast.error('회사 목록을 불러오는데 실패했습니다.');
       }
     };
@@ -248,7 +244,6 @@ function NewJobPost() {
         const jobCodesData = await jobPostApi.getJobCodes();
         setJobCodes(jobCodesData);
       } catch (error) {
-        console.error('직종 코드 조회 실패:', error);
         showToast.error('직종 코드를 불러오는데 실패했습니다.');
       }
     };
@@ -307,15 +302,12 @@ function NewJobPost() {
         careerType: formData.careerType
       };
 
-      console.log('Sending job post data:', jobPostData); // 디버깅을 위한 로그 추가
-
       const response = await jobPostApi.createJobPost(jobPostData, token);
       showToast.success('채용 공고가 등록되었습니다.');
       setTimeout(() => {
         navigate('/jobpost');
       }, 2000);
     } catch (error) {
-      console.error('Error creating job post:', error);
       showToast.error('채용 공고 등록에 실패했습니다.');
     }
   };

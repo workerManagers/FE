@@ -739,6 +739,28 @@ const MatchingButton = styled(motion.button)`
   }
 `;
 
+const BackButton = styled.button`
+  background: linear-gradient(135deg, #e6eaf3 0%, #cfd8dc 100%);
+  color: #23272f;
+  border: none;
+  border-radius: 10px;
+  padding: 0.8rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: absolute;
+  top: 1.5rem;
+  left: 2rem;
+  z-index: 2;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  &:hover {
+    background: #cfd8dc;
+    color: #23272f;
+  }
+`;
+
 const MatchingPage = () => {
   const [jobPosts, setJobPosts] = useState([]);
   const [selectedJobPost, setSelectedJobPost] = useState(null);
@@ -806,16 +828,13 @@ const MatchingPage = () => {
     setLoading(true);
 
     try {
-      console.log('매칭 시작 - 공고 ID:', jobPost.jobPostId);
       const results = await matchingApi.getMatchingScores(jobPost.jobPostId);
-      console.log('매칭 결과:', results);
       
       if (!results || !Array.isArray(results)) {
         throw new Error('매칭 결과가 올바르지 않습니다.');
       }
 
       const sortedResults = results.sort((a, b) => b.matchingScore - a.matchingScore);
-      console.log('정렬된 매칭 결과:', sortedResults);
       
       setMatchingResults(sortedResults);
       setShowMatching(true);
@@ -927,31 +946,22 @@ const MatchingPage = () => {
             </Description>
             <MatchingForm
               onSubmit={async (e) => {
-                console.log('매칭 폼 제출 시작');
                 e.preventDefault();
                 if (!selectedJobId) {
-                  console.log('선택된 공고가 없습니다');
                   return;
                 }
-                console.log('선택된 공고 ID:', selectedJobId);
-                console.log('전체 공고 목록:', jobPosts);
                 setPendingMatch(true);
                 const job = jobPosts.find(j => {
-                  console.log('비교 중인 공고:', j);
                   return j.jobPostId === parseInt(selectedJobId);
                 });
-                console.log('찾은 공고:', job);
                 if (job) {
-                  console.log('매칭 시작');
                   await handleJobPostClick(job);
                   setSelectedJob(job);
                   setShowMatching(true);
                 } else {
-                  console.log('공고를 찾을 수 없습니다');
                   showToast.error('선택한 공고를 찾을 수 없습니다.');
                 }
                 setPendingMatch(false);
-                console.log('매칭 폼 제출 완료');
               }}
             >
               <MatchingFormGroup>
@@ -972,14 +982,6 @@ const MatchingPage = () => {
               </MatchingFormGroup>
               <MatchingButton
                 type="submit"
-                onClick={(e) => {
-                  console.log('매칭하기 버튼 클릭');
-                  e.preventDefault();
-                  const form = e.target.closest('form');
-                  if (form) {
-                    form.requestSubmit();
-                  }
-                }}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >

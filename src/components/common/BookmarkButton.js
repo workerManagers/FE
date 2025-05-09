@@ -51,9 +51,6 @@ const BookmarkButton = ({ jobPostId, isBookmarked, bookmarkId, onBookmarkChange,
         }
         if (onBookmarkChange) onBookmarkChange(true, res.bookmarkId);
       }
-      // 북마크 목록 재조회 및 콘솔 출력
-      const myBookmarks = await bookmarkApi.getMyBookmarks();
-      console.log('북마크 목록(getMyBookmarks):', myBookmarks);
     } catch (err) {
       let msg = '북마크 처리 중 오류가 발생했습니다.';
       if (err?.response?.data?.error) {

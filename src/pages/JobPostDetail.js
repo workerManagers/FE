@@ -218,7 +218,6 @@ function JobPostDetail() {
     const fetchUserInfo = async () => {
       try {
         const userData = await userApi.getUserInfo();
-        console.log('현재 사용자 정보:', userData);
         setUserInfo(userData);
       } catch (error) {
         console.error('사용자 정보 조회 실패:', error);
@@ -235,7 +234,6 @@ function JobPostDetail() {
     const fetchJobPost = async () => {
       try {
         const data = await jobPostApi.getJobPost(id);
-        console.log('채용공고 정보:', data);
         setJobPost(data);
         setError(null);
         if (userType === 'INDIVIDUAL') {
@@ -261,12 +259,8 @@ function JobPostDetail() {
       try {
         const data = await bookmarkApi.getMyBookmarks();
         const bookmarks = Array.isArray(data.bookmarks) ? data.bookmarks : [];
-        console.log('JobPostDetail 북마크 API 응답:', data);
         bookmarks.forEach(b => {
           const isMatch = Number(b.jobPostId) === Number(id);
-          console.log(
-            `[비교] jobPostId=${id} (type:${typeof id}), bookmark.jobPostId=${b.jobPostId} (type:${typeof b.jobPostId}), isMatch=${isMatch}`
-          );
         });
         const found = bookmarks.find(b => Number(b.jobPostId) === Number(id));
         if (found) {
@@ -333,7 +327,6 @@ function JobPostDetail() {
         return;
       }
       const response = await chatApi.createChatRoom(jobPost.authorId);
-      console.log('채팅방 생성 응답:', response);
       navigate(`/chat/${response.id}`);
     } catch (error) {
       console.error('채팅방 생성 실패:', error);

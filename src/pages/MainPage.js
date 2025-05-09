@@ -379,11 +379,9 @@ const MainPage = () => {
       setBookmarkLoading(true);
       try {
         const data = await bookmarkApi.getMyBookmarks();
-        console.log('북마크 API 응답:', data);
         setBookmarks(Array.isArray(data.bookmarks) ? data.bookmarks : []);
       } catch (e) {
         setBookmarks([]);
-        console.log('북마크 API 에러:', e);
       }
       setBookmarkLoading(false);
     };
@@ -439,24 +437,6 @@ const MainPage = () => {
 
   // 현재 페이지에 표시할 채용공고 계산
   const displayedJobs = filteredJobPosts.slice(currentPage * 6, (currentPage + 1) * 6);
-
-  // 진단용 로그
-  console.log('bookmarks(렌더 직전):', bookmarks);
-  console.log('jobPosts:', jobPosts);
-  console.log('displayedJobs:', displayedJobs);
-
-  // 상세 비교 로그
-  if (Array.isArray(displayedJobs) && Array.isArray(bookmarks)) {
-    displayedJobs.forEach(job => {
-      bookmarks.forEach(b => {
-        const isMatch = Number(b.jobPostId) === Number(job.jobPostId);
-        console.log(
-          `[비교] job.jobPostId=${job.jobPostId} (type:${typeof job.jobPostId}), ` +
-          `bookmark.jobPostId=${b.jobPostId} (type:${typeof b.jobPostId}), isMatch=${isMatch}`
-        );
-      });
-    });
-  }
 
   if (authLoading) {
     return null;
@@ -529,7 +509,6 @@ const MainPage = () => {
                   const bookmarkList = Array.isArray(bookmarks) ? bookmarks : [];
                   const bookmark = bookmarkList.find(b => {
                     const isMatch = Number(b.jobPostId) === Number(job.jobPostId);
-                    console.log(`비교: bookmarkId=${b.bookmarkId}, bookmark.jobPostId=${b.jobPostId}, job.jobPostId=${job.jobPostId}, isMatch=${isMatch}`);
                     return isMatch;
                   });
                   return (
