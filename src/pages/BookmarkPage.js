@@ -44,7 +44,7 @@ const Title = styled.h1`
   }
 
   &:hover:after {
-    width: 100px;
+    width: 140px;
   }
 `;
 

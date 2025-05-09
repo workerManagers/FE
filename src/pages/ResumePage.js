@@ -169,17 +169,17 @@ const Button = styled(motion.button)`
 `;
 
 const SaveButton = styled(Button)`
-  background-color: #6366f1;
-  color: white;
+  background-color: #e5e7eb;
+  color: #222;
 `;
 
 const CancelButton = styled(Button)`
-  background-color: #6c757d;
-  color: white;
+  background-color: #e5e7eb;
+  color: #222;
 `;
 
 const DeleteButton = styled(Button)`
-  background-color: #dc3545;
+  background-color: #2E7D32;
   color: white;
 `;
 

@@ -387,7 +387,7 @@ const Header = ({ isLoggedIn, userInfo, onLoginStatusChange }) => {
           )}
           {isLoggedIn && userInfo?.userType === 'INDIVIDUAL' && (
             <>
-              <NavLink onClick={() => navigate('/job-matching')}>직무 매칭</NavLink>
+              <NavLink onClick={() => navigate('/job-matching')}>채용공고 매칭</NavLink>
             </>
           )}
         </NavMenu>

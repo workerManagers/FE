@@ -29,6 +29,7 @@ const Button = styled.button`
 const BookmarkButton = ({ jobPostId, isBookmarked, bookmarkId, onBookmarkChange, disabled }) => {
   const [loading, setLoading] = useState(false);
   const userType = localStorage.getItem('userType');
+  const token = localStorage.getItem('token');
 
   // 기업 사용자인 경우 null 반환
   if (userType === 'COMPANY') {
@@ -38,6 +39,11 @@ const BookmarkButton = ({ jobPostId, isBookmarked, bookmarkId, onBookmarkChange,
   const handleClick = async (e) => {
     e.stopPropagation();
     if (loading || disabled) return;
+    // 로그인 여부 체크
+    if (!token) {
+      showToast.error('로그인 후 이용해주세요.');
+      return;
+    }
     setLoading(true);
     try {
       if (isBookmarked) {

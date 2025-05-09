@@ -203,30 +203,47 @@ function JobPostDetail() {
   const [hasApplied, setHasApplied] = useState(false);
   const userType = localStorage.getItem('userType');
 
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      weekday: 'long'
-    });
+  const formatDate = (dateValue) => {
+    if (!dateValue) return '마감일 없음';
+    try {
+      if (Array.isArray(dateValue)) {
+        const [year, month, day] = dateValue;
+        const date = new Date(year, month - 1, day);
+        return date.toLocaleDateString('ko-KR', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          weekday: 'long'
+        });
+      }
+      const date = new Date(dateValue);
+      if (isNaN(date.getTime())) return '날짜 형식 오류';
+      return date.toLocaleDateString('ko-KR', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        weekday: 'long'
+      });
+    } catch (error) {
+      console.error('날짜 변환 오류:', error);
+      return '날짜 형식 오류';
+    }
   };
 
   useEffect(() => {
-    const fetchUserInfo = async () => {
-      try {
-        const userData = await userApi.getUserInfo();
-        setUserInfo(userData);
-      } catch (error) {
-        console.error('사용자 정보 조회 실패:', error);
-      }
-    };
-
     const token = localStorage.getItem('token');
     if (token) {
+      const fetchUserInfo = async () => {
+        try {
+          const userData = await userApi.getUserInfo();
+          setUserInfo(userData);
+        } catch (error) {
+          console.error('사용자 정보 조회 실패:', error);
+        }
+      };
       fetchUserInfo();
+    } else {
+      setUserInfo(null);
     }
   }, []);
 
@@ -311,6 +328,11 @@ function JobPostDetail() {
   };
 
   const handleApply = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      showToast.error('로그인 후 이용해주세요.');
+      return;
+    }
     try {
       const response = await applicationApi.applyToJob(parseInt(id));
       setHasApplied(true);
@@ -321,6 +343,11 @@ function JobPostDetail() {
   };
 
   const handleChatClick = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      showToast.error('로그인 후 이용해주세요.');
+      return;
+    }
     try {
       if (!jobPost.authorId) {
         showToast.error('채팅 기능을 사용할 수 없습니다.');
@@ -343,8 +370,8 @@ function JobPostDetail() {
       <Container>
         <div>{error}</div>
         <FloatingButton onClick={() => {
-          if (location.state?.from) {
-            navigate(location.state.from);
+          if (window.history.length > 1) {
+            window.history.back();
           } else {
             navigate('/jobpost');
           }
@@ -437,7 +464,13 @@ function JobPostDetail() {
         </DetailSection>
         <DetailSection>
           <FloatingButtonGroup>
-            <FloatingButton onClick={() => navigate('/jobpost')}>
+            <FloatingButton onClick={() => {
+              if (window.history.length > 1) {
+                window.history.back();
+              } else {
+                navigate('/');
+              }
+            }}>
               <IoArrowBack style={{ marginRight: '0.1rem', marginTop: '0.1rem', fontSize: '1.2rem' }} />
             </FloatingButton>
             {userInfo?.userType === 'COMPANY' && userInfo?.companyInfo?.companyName === jobPost?.companyName && (
@@ -451,7 +484,7 @@ function JobPostDetail() {
                 <FloatingButton onClick={handleApply} disabled={hasApplied}>
                   {hasApplied ? '지원완료' : '지원하기'}
                 </FloatingButton>
-                <FloatingButton onClick={handleChatClick}>1대1 문의하기</FloatingButton>
+                <FloatingButton onClick={handleChatClick}>채용 담당자와 채팅</FloatingButton>
               </>
             )}
           </FloatingButtonGroup>
