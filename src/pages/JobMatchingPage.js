@@ -134,9 +134,15 @@ const JobMatchingPage = () => {
   const fetchMatchingResults = async (forceRefresh = false) => {
     try {
       setLoading(true);
+      const userId = localStorage.getItem('userId');
+      if (!userId) {
+        setLoading(false);
+        return;
+      }
+
       // 세션 스토리지에서 캐시된 결과 확인
-      const cachedResults = sessionStorage.getItem('matchingResults');
-      const cachedTimestamp = sessionStorage.getItem('matchingResultsTimestamp');
+      const cachedResults = sessionStorage.getItem(`matchingResults_${userId}`);
+      const cachedTimestamp = sessionStorage.getItem(`matchingResultsTimestamp_${userId}`);
       
       // 강제 새로고침이 아니고, 캐시가 있고 30분이 지나지 않았다면 캐시된 결과 사용
       if (!forceRefresh && cachedResults && cachedTimestamp) {
@@ -166,9 +172,9 @@ const JobMatchingPage = () => {
       const results = await matchingApi.getJobMatchingScores(resumeData.resumeId);
       const sortedResults = results.sort((a, b) => b.matchingScore - a.matchingScore);
       
-      // 결과를 세션 스토리지에 캐시
-      sessionStorage.setItem('matchingResults', JSON.stringify(sortedResults));
-      sessionStorage.setItem('matchingResultsTimestamp', new Date().getTime().toString());
+      // 결과를 세션 스토리지에 캐시 (사용자 ID 포함)
+      sessionStorage.setItem(`matchingResults_${userId}`, JSON.stringify(sortedResults));
+      sessionStorage.setItem(`matchingResultsTimestamp_${userId}`, new Date().getTime().toString());
       
       setMatchingResults(sortedResults);
     } catch (error) {

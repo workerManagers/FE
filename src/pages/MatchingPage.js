@@ -852,11 +852,17 @@ const MatchingPage = () => {
     
     setLoading(true);
     try {
+      const userId = localStorage.getItem('userId');
+      if (!userId) {
+        setLoading(false);
+        return;
+      }
+
       const results = await matchingApi.getMatchingScores(selectedJobPost.jobPostId);
       const sortedResults = results.sort((a, b) => b.matchingScore - a.matchingScore);
       
-      const cacheKey = `matchingResults_${selectedJobPost.jobPostId}`;
-      const timestampKey = `matchingResultsTimestamp_${selectedJobPost.jobPostId}`;
+      const cacheKey = `matchingResults_${selectedJobPost.jobPostId}_${userId}`;
+      const timestampKey = `matchingResultsTimestamp_${selectedJobPost.jobPostId}_${userId}`;
       
       sessionStorage.setItem(cacheKey, JSON.stringify(sortedResults));
       sessionStorage.setItem(timestampKey, new Date().getTime().toString());
