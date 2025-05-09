@@ -295,27 +295,35 @@ function JobPost() {
     try {
       setIsLoading(true);
       const token = localStorage.getItem('token');
-      if (!token) {
-        navigate('/login');
-        return;
+      
+      // 토큰이 있는 경우에만 사용자 정보 가져오기
+      if (token) {
+        try {
+          const userData = await userApi.getUserInfo();
+          setUserInfo(userData);
+          setIsLoggedIn(true);
+        } catch (error) {
+          console.error('사용자 정보 조회 실패:', error);
+          // 사용자 정보 조회 실패 시 로그인 상태 초기화
+          setUserInfo(null);
+          setIsLoggedIn(false);
+        }
+      } else {
+        setUserInfo(null);
+        setIsLoggedIn(false);
       }
 
-      // 사용자 정보 가져오기
-      const userData = await userApi.getUserInfo();
-      setUserInfo(userData);
-      setIsLoggedIn(true);
-
-      // 채용공고 가져오기
+      // 채용공고 가져오기 (로그인 여부와 관계없이)
       const response = await jobPostApi.getJobPosts();
       
       // 기업 사용자인 경우 자신의 공고만 필터링
-      if (userData?.userType === 'COMPANY') {
+      if (userInfo?.userType === 'COMPANY') {
         const filteredPosts = response.filter(post => 
-          post.companyName === userData.companyInfo.companyName
+          post.companyName === userInfo.companyInfo.companyName
         );
         setJobPosts(filteredPosts);
       } else {
-        // 일반 사용자인 경우 모든 공고 표시
+        // 일반 사용자이거나 비로그인 사용자인 경우 모든 공고 표시
         setJobPosts(response);
       }
 
@@ -337,9 +345,6 @@ function JobPost() {
     } catch (error) {
       console.error('데이터 로딩 실패:', error);
       setError('데이터를 불러오는데 실패했습니다.');
-      if (error.response?.status === 401) {
-        navigate('/login');
-      }
     } finally {
       setIsLoading(false);
     }

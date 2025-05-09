@@ -63,12 +63,28 @@ const api = axios.create({
   timeout: 6000000,
 });
 
+// 공개 API 엔드포인트 목록
+const publicEndpoints = [
+  '/job-posts',
+  '/job-posts/',
+  '/companies',
+  '/job-codes'
+];
+
+// 요청이 공개 API인지 확인하는 함수
+const isPublicEndpoint = (url) => {
+  return publicEndpoints.some(endpoint => url.includes(endpoint));
+};
+
 // 요청 인터셉터
 api.interceptors.request.use(
   (config) => {
-    const token = tokenService.getAccessToken();
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    // 공개 API가 아닌 경우에만 토큰 추가
+    if (!isPublicEndpoint(config.url)) {
+      const token = tokenService.getAccessToken();
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
     return config;
   },
@@ -87,25 +103,29 @@ api.interceptors.response.use(
     if ((error.response?.status === 401 || error.response?.status === 403) && !originalRequest._retry) {
       originalRequest._retry = true;
       try {
-        // 리프레시 토큰으로 새로운 액세스 토큰 요청
-        const refreshToken = tokenService.getRefreshToken();
-        if (!refreshToken) {
-          throw new Error('리프레시 토큰이 없습니다.');
-        }
-        const response = await api.post('/auth/refresh', null, {
-          headers: {
-            'Refresh-Token': refreshToken
+        // 공개 API가 아닌 경우에만 토큰 갱신 시도
+        if (!isPublicEndpoint(originalRequest.url)) {
+          const refreshToken = tokenService.getRefreshToken();
+          if (!refreshToken) {
+            tokenService.clearTokens();
+            window.location.href = '/login';
+            throw new Error('리프레시 토큰이 없습니다.');
           }
-        });
-        const { accessToken, refreshToken: newRefreshToken, accessTokenExpiresIn } = response.data;
-        tokenService.saveTokens(accessToken, newRefreshToken);
-        // 실패한 요청 재시도
-        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-        return api(originalRequest);
+          const response = await api.post('/auth/refresh', null, {
+            headers: {
+              'Refresh-Token': refreshToken
+            }
+          });
+          const { accessToken, refreshToken: newRefreshToken } = response.data;
+          tokenService.saveTokens(accessToken, newRefreshToken);
+          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+          return api(originalRequest);
+        }
       } catch (refreshError) {
-        // 리프레시 토큰도 만료된 경우 로그아웃 처리
-        tokenService.clearTokens();
-        window.location.href = '/login';
+        if (!isPublicEndpoint(originalRequest.url)) {
+          tokenService.clearTokens();
+          window.location.href = '/login';
+        }
         return Promise.reject(refreshError);
       }
     }
@@ -301,10 +321,14 @@ export const jobPostApi = {
     }
   },
 
-  // 채용공고 조회
+  // 채용공고 조회 - 로그인하지 않은 사용자도 접근 가능
   getJobPost: async (jobPostId) => {
     try {
-      const response = await api.get(`/job-posts/${jobPostId}`);
+      const response = await api.get(`/job-posts/${jobPostId}`, {
+        headers: {
+          'Authorization': undefined // 토큰 요구사항 제거
+        }
+      });
       return response.data;
     } catch (error) {
       if (error.response?.status === 404) {
@@ -343,10 +367,14 @@ export const jobPostApi = {
     }
   },
 
-  // 채용공고 목록 조회
+  // 채용공고 목록 조회 - 로그인하지 않은 사용자도 접근 가능
   getJobPosts: async () => {
     try {
-      const response = await api.get('/job-posts');
+      const response = await api.get('/job-posts', {
+        headers: {
+          'Authorization': undefined // 토큰 요구사항 제거
+        }
+      });
       if (response.status === 200) {
         return response.data;
       }

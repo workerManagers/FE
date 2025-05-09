@@ -237,8 +237,12 @@ function JobPostDetail() {
         try {
           const userData = await userApi.getUserInfo();
           setUserInfo(userData);
+          if (userData.userType === 'INDIVIDUAL') {
+            checkApplicationStatus();
+          }
         } catch (error) {
           console.error('사용자 정보 조회 실패:', error);
+          setUserInfo(null);
         }
       };
       fetchUserInfo();
@@ -253,9 +257,6 @@ function JobPostDetail() {
         const data = await jobPostApi.getJobPost(id);
         setJobPost(data);
         setError(null);
-        if (userType === 'INDIVIDUAL') {
-          checkApplicationStatus();
-        }
       } catch (error) {
         console.error('Error fetching job post:', error);
         setError('채용공고를 불러오는 중 오류가 발생했습니다.');
@@ -272,13 +273,16 @@ function JobPostDetail() {
 
   useEffect(() => {
     const fetchBookmark = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setBookmarkLoading(false);
+        return;
+      }
+
       setBookmarkLoading(true);
       try {
         const data = await bookmarkApi.getMyBookmarks();
         const bookmarks = Array.isArray(data.bookmarks) ? data.bookmarks : [];
-        bookmarks.forEach(b => {
-          const isMatch = Number(b.jobPostId) === Number(id);
-        });
         const found = bookmarks.find(b => Number(b.jobPostId) === Number(id));
         if (found) {
           setIsBookmarked(true);
@@ -287,7 +291,10 @@ function JobPostDetail() {
           setIsBookmarked(false);
           setBookmarkId(null);
         }
-      } catch (e) {}
+      } catch (e) {
+        setIsBookmarked(false);
+        setBookmarkId(null);
+      }
       setBookmarkLoading(false);
     };
     if (id) fetchBookmark();
@@ -394,25 +401,27 @@ function JobPostDetail() {
       <Toast />
       <HeaderContainer>
         <CompanyName>{jobPost.companyName}</CompanyName>
-        <BookmarkButton
-          jobPostId={jobPost.jobPostId}
-          isBookmarked={isBookmarked}
-          bookmarkId={bookmarkId}
-          onBookmarkChange={() => {
-            setBookmarkLoading(true);
-            (async () => {
-              try {
-                const data = await bookmarkApi.getMyBookmarks();
-                const bookmarks = Array.isArray(data.bookmarks) ? data.bookmarks : [];
-                const found = bookmarks.find(b => Number(b.jobPostId) === Number(jobPost.jobPostId));
-                setIsBookmarked(!!found);
-                setBookmarkId(found ? found.bookmarkId : null);
-              } catch (e) {}
-              setBookmarkLoading(false);
-            })();
-          }}
-          disabled={bookmarkLoading}
-        />
+        {userInfo && (
+          <BookmarkButton
+            jobPostId={jobPost.jobPostId}
+            isBookmarked={isBookmarked}
+            bookmarkId={bookmarkId}
+            onBookmarkChange={() => {
+              setBookmarkLoading(true);
+              (async () => {
+                try {
+                  const data = await bookmarkApi.getMyBookmarks();
+                  const bookmarks = Array.isArray(data.bookmarks) ? data.bookmarks : [];
+                  const found = bookmarks.find(b => Number(b.jobPostId) === Number(jobPost.jobPostId));
+                  setIsBookmarked(!!found);
+                  setBookmarkId(found ? found.bookmarkId : null);
+                } catch (e) {}
+                setBookmarkLoading(false);
+              })();
+            }}
+            disabled={bookmarkLoading}
+          />
+        )}
       </HeaderContainer>
 
       <InfoGrid>
@@ -462,33 +471,32 @@ function JobPostDetail() {
           <DetailTitle>인재상</DetailTitle>
           <DetailContent>{jobPost.idealCandidate}</DetailContent>
         </DetailSection>
-        <DetailSection>
-          <FloatingButtonGroup>
-            <FloatingButton onClick={() => {
-              if (window.history.length > 1) {
-                window.history.back();
-              } else {
-                navigate('/');
-              }
-            }}>
-              <IoArrowBack style={{ marginRight: '0.1rem', marginTop: '0.1rem', fontSize: '1.2rem' }} />
-            </FloatingButton>
-            {userInfo?.userType === 'COMPANY' && userInfo?.companyInfo?.companyName === jobPost?.companyName && (
-              <>
-                <FloatingButton onClick={handleEdit}>수정</FloatingButton>
-                <FloatingButton onClick={handleDelete}>삭제</FloatingButton>
-              </>
-            )}
-            {userInfo?.userType === 'INDIVIDUAL' && (
-              <>
-                <FloatingButton onClick={handleApply} disabled={hasApplied}>
-                  {hasApplied ? '지원완료' : '지원하기'}
-                </FloatingButton>
-                <FloatingButton onClick={handleChatClick}>채용 담당자와 채팅</FloatingButton>
-              </>
-            )}
-          </FloatingButtonGroup>
-        </DetailSection>
+        
+        <FloatingButtonGroup>
+          <FloatingButton onClick={() => {
+            if (window.history.length > 1) {
+              window.history.back();
+            } else {
+              navigate('/');
+            }
+          }}>
+            <IoArrowBack style={{ marginRight: '0.1rem', marginTop: '0.1rem', fontSize: '1.2rem' }} />
+          </FloatingButton>
+          {isAuthor && (
+            <>
+              <FloatingButton onClick={handleEdit}>수정</FloatingButton>
+              <FloatingButton onClick={handleDelete}>삭제</FloatingButton>
+            </>
+          )}
+          {userInfo?.userType === 'INDIVIDUAL' && (
+            <>
+              <FloatingButton onClick={handleApply} disabled={hasApplied}>
+                {hasApplied ? '지원완료' : '지원하기'}
+              </FloatingButton>
+              <FloatingButton onClick={handleChatClick}>채용 담당자와 채팅</FloatingButton>
+            </>
+          )}
+        </FloatingButtonGroup>
       </DetailGrid>
     </Container>
   );
