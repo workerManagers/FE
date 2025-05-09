@@ -309,7 +309,7 @@ const ResumeMetaItem = styled.div`
   flex-direction: column;
   align-items: flex-start;
   gap: 0.2rem;
-  min-width: 200px;
+  min-width: 210px;
   max-width: 400px;
   white-space: normal;
   overflow: visible;
@@ -1013,6 +1013,7 @@ const MatchingPage = () => {
                   const gender = result.resumeText.match(/성별:([^\n]*)/);
                   const age = result.resumeText.match(/나이:([^\n]*)/);
                   const region = result.resumeText.match(/원하는 근무지역:([^\n]*)/);
+                  const regionValue = region ? region[1].trim() : '';
                   return (
                     <MatchingItem
                       key={index}
@@ -1027,7 +1028,7 @@ const MatchingPage = () => {
                         <ResumeMetaItem>
                           <span>성별: {gender ? gender[1].trim() : '-'}</span>
                           <span>나이: {age ? age[1].trim() : '-'}</span>
-                          <span>원하는 근무지역: {region ? region[1].trim() : '-'}</span>
+                          <span>원하는 근무지역: {regionValue === '' ? '상관 없음' : regionValue}</span>
                         </ResumeMetaItem>
                       </ResumeMeta>
                       <div />

@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { matchingApi, resumeApi } from '../services/api';
 import { showToast } from '../components/common/Toast';
+import Loading from '../components/common/Loading';
 
 const Container = styled.div`
   max-width: 1200px;
@@ -212,7 +213,7 @@ const JobMatchingPage = () => {
             </RefreshButton>
           )}
         </TitleContainer>
-        <LoadingMessage>매칭 결과를 불러오는 중...</LoadingMessage>
+        <Loading message="매칭 결과를 불러오는 중..." />
       </Container>
     );
   }

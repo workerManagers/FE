@@ -9,15 +9,20 @@ const Button = styled.button`
   border: none;
   cursor: pointer;
   padding: 0.2rem;
-  margin-top: -0.8rem;
+  margin-top: -1.2rem;
   display: flex;
   align-items: center;
-  color: ${props => (props.active ? '#1a237e' : '#bbb')};
+  color: ${props => (props.active ? '#2E7D32' : '#bbb')};
   font-size: 1.7rem;
-  transition: color 0.18s;
+  transition: all 0.2s ease;
 
   &:hover {
-    color: #1a237e;
+    color: #2E7D32;
+    transform: scale(1.1);
+  }
+
+  &:active {
+    transform: scale(0.95);
   }
 `;
 

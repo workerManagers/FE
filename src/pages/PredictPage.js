@@ -615,6 +615,8 @@ const PredictPage = () => {
     const checkAccess = async () => {
       try {
         const token = localStorage.getItem('token');
+        console.log('현재 토큰:', token);
+
         if (!token) {
           showToast.error('로그인이 필요합니다.');
           navigate('/login');
@@ -622,7 +624,10 @@ const PredictPage = () => {
         }
 
         try {
+          console.log('사용자 정보 요청 시작');
           const userInfo = await userApi.getUserInfo();
+          console.log('받아온 사용자 정보:', userInfo);
+
           if (!userInfo) {
             showToast.error('사용자 정보를 가져올 수 없습니다.');
             navigate('/login');
@@ -637,6 +642,10 @@ const PredictPage = () => {
 
           setUserInfo(userInfo);
         } catch (error) {
+          console.error('사용자 정보 요청 중 에러:', error);
+          if (error.response) {
+            console.error('에러 응답:', error.response);
+          }
           if (error.response && (error.response.status === 401 || error.response.status === 403)) {
             showToast.error('세션이 만료되었습니다. 다시 로그인해주세요.');
             localStorage.removeItem('token');
@@ -690,14 +699,26 @@ const PredictPage = () => {
     setLoading(true);
 
     try {
-      const response = await userApi.predict(formData);
+      // 데이터 형식 변환
+      const requestData = {
+        disease: formData.disease,
+        sex: formData.sex,
+        surgery: formData.surgery,
+        age: formData.age,
+        region: formData.region
+      };
+
+      console.log('요청 데이터:', requestData); // 디버깅용 로그
+      const response = await userApi.predict(requestData);
       setPredictionResult(response);
       setShowModal(true);
       showToast.success('요양기간 예측이 완료되었습니다.');
     } catch (error) {
+      console.error('예측 요청 중 에러:', error); // 디버깅용 로그
       let errorMessage = '예측 중 오류가 발생했습니다.';
       
       if (error.response) {
+        console.error('에러 응답:', error.response); // 디버깅용 로그
         errorMessage = error.response.data.message || errorMessage;
       } else if (error.request) {
         errorMessage = '서버와 통신할 수 없습니다. 잠시 후 다시 시도해주세요.';
@@ -724,7 +745,7 @@ const PredictPage = () => {
   };
 
   const handleRedirectToSubstitute = () => {
-    navigate('/substitute');
+    navigate('/matching');
   };
 
   if (loading) {

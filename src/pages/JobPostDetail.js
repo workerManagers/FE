@@ -23,7 +23,7 @@ const Container = styled.div`
 
 const TitleRow = styled.div`
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   gap: 0.7rem;
   margin-bottom: 0.3rem;
   justify-content: center;
@@ -54,6 +54,13 @@ const CompanyName = styled.span`
   box-shadow: 0 1px 6px rgba(124,58,237,0.07);
   border: 1.2px solid #e5e7eb;
   display: inline-block;
+`;
+
+const HeaderContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-bottom: 1.2rem;
 `;
 
 const InfoGrid = styled.div`
@@ -365,8 +372,8 @@ function JobPostDetail() {
   return (
     <Container>
       <Toast />
-      <CompanyName>{jobPost.companyName}</CompanyName>
-      <TitleRow>
+      <HeaderContainer>
+        <CompanyName>{jobPost.companyName}</CompanyName>
         <BookmarkButton
           jobPostId={jobPost.jobPostId}
           isBookmarked={isBookmarked}
@@ -386,7 +393,8 @@ function JobPostDetail() {
           }}
           disabled={bookmarkLoading}
         />
-      </TitleRow>
+      </HeaderContainer>
+
       <InfoGrid>
         <InfoItem>
           <InfoLabel>직무</InfoLabel>

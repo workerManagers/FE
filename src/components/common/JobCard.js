@@ -31,20 +31,24 @@ const Card = styled.div`
 
 const TopRow = styled.div`
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: center;
   margin-bottom: 0.1rem;
   width: 100%;
+  position: relative;
 `;
 
 const JobTitle = styled.h2`
   font-size: 1.2rem;
   font-weight: 370;
-  margin-bottom: 0.8rem;
+  margin: 1.2rem 0 0.8rem 0;
   color: #181818;
   letter-spacing: -0.5px;
   text-align: center;
   width: 100%;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
 `;
 
 const CompanyName = styled.p`
@@ -118,6 +122,7 @@ const JobCard = ({ job, jobCategory, industryCategories, industrySubcategories, 
   return (
     <Card onClick={handleClick}>
       <TopRow>
+        <div style={{ width: '24px', marginTop: '3.2rem' }}></div>
         <JobTitle>{job.jobName}</JobTitle>
         <BookmarkButton
           jobPostId={job.jobPostId}

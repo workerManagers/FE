@@ -171,14 +171,16 @@ const AuthButton = styled(motion.button)`
   font-size: 1.01rem;
   font-weight: 600;
   cursor: pointer;
-  background: ${props => props.variant === 'login' ? 'linear-gradient(90deg, #A3AAB8 0%, #E5E7EB 100%)' : 'rgba(163,170,184,0.08)'};
-  color: ${props => props.variant === 'login' ? '#23272f' : '#6B7280'};
-  box-shadow: 0 2px 8px rgba(163,170,184,0.07);
+  background: rgba(79, 70, 229, 0.1);
+  color: #4F46E5;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.15);
   transition: all 0.18s;
 
   &:hover {
-    background: ${props => props.variant === 'login' ? 'linear-gradient(90deg, #E5E7EB 0%, #A3AAB8 100%)' : 'rgba(163,170,184,0.13)'};
-    color: #23272f;
+    background: rgba(79, 70, 229, 0.15);
+    color: #4F46E5;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
   }
 `;
 
