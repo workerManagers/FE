@@ -6,6 +6,7 @@ import { showToast } from '../components/common/Toast';
 import { userApi } from '../services/api';
 import api from '../services/api';
 import 'react-toastify/dist/ReactToastify.css';
+import { toast } from 'react-toastify';
 
 // 카테고리 상수 정의
 const INDUSTRY_CATEGORIES = {
@@ -286,13 +287,24 @@ const AddJobPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await api.post('/job-codes', formData);
+      // 불필요한 jobCode 필드 제거
+      const { jobName, industryCategory, industrySubcategory } = formData;
+      const data = { jobName, industryCategory, industrySubcategory };
+
+      // 토큰 포함
+      const response = await api.post('/job-codes', data, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        }
+      });
       
-      // 토스트 메시지 표시
-      showToast.success('직무 추가가 완료되었습니다.');
+      // 토스트 메시지 표시 및 id 저장
+      const toastId = showToast.success('직무 추가가 완료되었습니다.');
       
-      // 2초 후 페이지 이동
+      // 2초 후 토스트 닫고 메인페이지 이동
       setTimeout(() => {
+        toast.dismiss(toastId);
         navigate('/');
       }, 2000);
     } catch (error) {

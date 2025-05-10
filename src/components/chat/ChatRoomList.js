@@ -293,7 +293,23 @@ const ChatRoomList = () => {
                     <RoomMain>
                       <RoomTitleRow>
                         <RoomTitle>{room.jobName}</RoomTitle>
-                        <RoomTime>{room.lastMessageTime ? new Date(room.lastMessageTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}</RoomTime>
+                        <RoomTime>
+                          {room.lastMessageTime ? (() => {
+                            try {
+                              let date;
+                              if (Array.isArray(room.lastMessageTime)) {
+                                const [y, m, d, h, min] = room.lastMessageTime;
+                                date = new Date(y, m - 1, d, h, min);
+                              } else {
+                                date = new Date(room.lastMessageTime);
+                              }
+                              if (isNaN(date.getTime())) return '';
+                              return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                            } catch (error) {
+                              return '';
+                            }
+                          })() : ''}
+                        </RoomTime>
                       </RoomTitleRow>
                       <RoomSub>
                         <RoomName>{otherUserName}</RoomName>

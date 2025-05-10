@@ -47,7 +47,7 @@ const CompanyName = styled.span`
   font-size: 1.08rem;
   font-weight: 600;
   color: #6366f1;
-  margin-bottom: 1.2rem;
+  margin-bottom: 0;
   background: #f3f4f6;
   border-radius: 8px;
   padding: 0.4rem 1.1rem;
@@ -168,6 +168,8 @@ const FloatingButton = styled.button`
   border-radius: 12px;
   font-size: 0.97rem;
   font-weight: 700;
+  margin-top: 4.2rem;
+  max-height: 3.0rem;
   background: linear-gradient(90deg, #f3f4f6 0%, #e5e7eb 100%);
   color: #23272f;
   box-shadow: 0 2px 12px rgba(180,180,200,0.13), 0 0 8px #fff;
@@ -187,6 +189,9 @@ const FloatingButton = styled.button`
     box-shadow: none;
     transform: none;
   }
+  svg {
+    font-size: 1.1rem !important;
+  }
 `;
 
 function JobPostDetail() {
@@ -201,6 +206,9 @@ function JobPostDetail() {
   const [bookmarkId, setBookmarkId] = useState(null);
   const [bookmarkLoading, setBookmarkLoading] = useState(true);
   const [hasApplied, setHasApplied] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const [myApplicationId, setMyApplicationId] = useState(null);
+  const [hasHired, setHasHired] = useState(false);
   const userType = localStorage.getItem('userType');
 
   const formatDate = (dateValue) => {
@@ -300,10 +308,25 @@ function JobPostDetail() {
     if (id) fetchBookmark();
   }, [id]);
 
+  useEffect(() => {
+    const fetchApplicants = async () => {
+      try {
+        const applicants = await applicationApi.getJobPostApplications(id);
+        const hired = applicants.some(app => app.status === "HIRED");
+        setHasHired(hired);
+      } catch (e) {
+        setHasHired(false);
+      }
+    };
+    fetchApplicants();
+  }, [id]);
+
   const checkApplicationStatus = async () => {
     try {
       const applications = await applicationApi.getMyApplications();
-      setHasApplied(applications.some(app => app.jobPostId === parseInt(id)));
+      const found = applications.find(app => app.jobPostId === parseInt(id));
+      setHasApplied(!!found);
+      setMyApplicationId(found ? found.applicationId : null);
     } catch (error) {
       console.error('지원 상태 확인 실패:', error);
     }
@@ -368,6 +391,28 @@ function JobPostDetail() {
     }
   };
 
+  const handleCancelApplication = async () => {
+    console.log('지원 취소 버튼 클릭, myApplicationId:', myApplicationId);
+    if (!window.confirm('정말로 지원을 취소하시겠습니까?')) return;
+    if (!myApplicationId) {
+      showToast.error('지원 내역을 찾을 수 없습니다.');
+      return;
+    }
+    setCancelling(true);
+    try {
+      await applicationApi.cancelApplication(myApplicationId);
+      showToast.success('지원이 취소되었습니다.');
+      setHasApplied(false);
+      setMyApplicationId(null);
+      navigate('/applications/my-applications');
+    } catch (error) {
+      showToast.error('지원 취소에 실패했습니다.');
+      console.error('지원 취소 에러:', error);
+    } finally {
+      setCancelling(false);
+    }
+  };
+
   if (loading) {
     return <Container>Loading...</Container>;
   }
@@ -401,6 +446,32 @@ function JobPostDetail() {
       <Toast />
       <HeaderContainer>
         <CompanyName>{jobPost.companyName}</CompanyName>
+        {jobPost.recruitmentStatus && (
+          <span style={{
+            marginLeft: '1.2rem',
+            marginBottom: 0,
+            fontWeight: 'bold',
+            fontSize: '1.08rem',
+            color:
+              jobPost.recruitmentStatus === 'OPEN' ? '#22c55e' :
+              jobPost.recruitmentStatus === 'CLOSED' ? '#ef4444' :
+              jobPost.recruitmentStatus === 'HIRED' ? '#6366f1' :
+              jobPost.recruitmentStatus === 'CANCELLED' ? '#bdbdbd' : '#23272f',
+            background:
+              jobPost.recruitmentStatus === 'OPEN' ? '#e0fbe0' :
+              jobPost.recruitmentStatus === 'CLOSED' ? '#fee2e2' :
+              jobPost.recruitmentStatus === 'HIRED' ? '#e0e7ff' :
+              jobPost.recruitmentStatus === 'CANCELLED' ? '#f3f4f6' : '#fff',
+            borderRadius: '8px',
+            padding: '0.3rem 1.1rem',
+            display: 'inline-block',
+          }}>
+            {jobPost.recruitmentStatus === 'OPEN' && '지원 가능'}
+            {jobPost.recruitmentStatus === 'CLOSED' && '모집 마감'}
+            {jobPost.recruitmentStatus === 'HIRED' && '채용 완료'}
+            {jobPost.recruitmentStatus === 'CANCELLED' && '공고 취소'}
+          </span>
+        )}
         {userInfo && (
           <BookmarkButton
             jobPostId={jobPost.jobPostId}
@@ -484,17 +555,29 @@ function JobPostDetail() {
           </FloatingButton>
           {isAuthor && (
             <>
-              <FloatingButton onClick={handleEdit}>수정</FloatingButton>
+              {jobPost.recruitmentStatus === 'OPEN' && (
+                <>
+                  <FloatingButton onClick={handleEdit}>수정</FloatingButton>
+                  <FloatingButton onClick={() => navigate(`/applications/job-posts/${id}`)}>
+                    지원자 보기
+                  </FloatingButton>
+                </>
+              )}
               <FloatingButton onClick={handleDelete}>삭제</FloatingButton>
             </>
           )}
+          {userInfo?.userType === 'INDIVIDUAL' && !hasApplied && jobPost.recruitmentStatus === 'OPEN' && (
+            <FloatingButton onClick={handleApply} disabled={loading || hasHired}>
+              지원하기
+            </FloatingButton>
+          )}
+          {userInfo?.userType === 'INDIVIDUAL' && hasApplied && jobPost.recruitmentStatus === 'OPEN' && (
+            <FloatingButton onClick={handleCancelApplication} disabled={cancelling}>
+              {cancelling ? '취소 중...' : '지원 취소하기'}
+            </FloatingButton>
+          )}
           {userInfo?.userType === 'INDIVIDUAL' && (
-            <>
-              <FloatingButton onClick={handleApply} disabled={hasApplied}>
-                {hasApplied ? '지원완료' : '지원하기'}
-              </FloatingButton>
-              <FloatingButton onClick={handleChatClick}>채용 담당자와 채팅</FloatingButton>
-            </>
+            <FloatingButton onClick={handleChatClick}>채용 담당자와 채팅</FloatingButton>
           )}
         </FloatingButtonGroup>
       </DetailGrid>

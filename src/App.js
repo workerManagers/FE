@@ -21,6 +21,8 @@ import ChatRoomList from './components/chat/ChatRoomList';
 import ChatRoom from './components/chat/ChatRoom';
 import MatchingPage from './pages/MatchingPage';
 import JobMatchingPage from './pages/JobMatchingPage';
+import ApplicationHistory from './pages/ApplicationHistory';
+import ApplicantsList from './pages/ApplicantsList';
 import './App.css';
 
 const AppContainer = styled.div`
@@ -105,6 +107,8 @@ function App() {
         <Route path="/chat/recruiter" element={<ChatRoomList />} />
         <Route path="/matching" element={<MatchingPage />} />
         <Route path="/job-matching" element={<JobMatchingPage />} />
+        <Route path="/applications/my-applications" element={<ApplicationHistory />} />
+        <Route path="/applications/job-posts/:jobPostId" element={<ApplicantsList />} />
       </Routes>
       <Toast />
     </AppContainer>

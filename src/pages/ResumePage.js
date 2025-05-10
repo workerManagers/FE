@@ -392,7 +392,10 @@ const ResumePage = () => {
       setResume(updatedResume);
       parseResumeText(updatedResume.resumeText);
       setIsEditing(false);
-      showToast.success('이력서가 저장되었습니다.');
+      showToast.success('이력서가 저장되었습니다.', { autoClose: 2000 });
+      setTimeout(() => {
+        navigate('/');
+      }, 2000);
     } catch (error) {
       setError(error.message);
       showToast.error('이력서 저장 중 오류가 발생했습니다.');

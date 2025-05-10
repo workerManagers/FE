@@ -206,6 +206,7 @@ function EditJobPost() {
     const fetchJobPost = async () => {
       try {
         const token = localStorage.getItem('token');
+        console.log('현재 토큰:', token);
         if (!token) {
           setError('로그인이 필요합니다.');
           navigate('/login');
@@ -230,7 +231,13 @@ function EditJobPost() {
         }
 
         // 마감일 날짜 형식 변환 (YYYY-MM-DD)
-        const deadlineDate = data.deadline ? data.deadline.split('T')[0] : '';
+        let deadlineDate = '';
+        if (Array.isArray(data.deadline)) {
+          const [year, month, day] = data.deadline;
+          deadlineDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        } else if (data.deadline) {
+          deadlineDate = data.deadline.split('T')[0];
+        }
 
         setFormData({
           companyName: data.companyName,

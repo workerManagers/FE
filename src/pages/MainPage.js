@@ -272,8 +272,8 @@ const MainPage = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userInfo, setUserInfo] = useState(null);
   const [jobPosts, setJobPosts] = useState([]);
-  const [currentPage, setCurrentPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [authLoading, setAuthLoading] = useState(true);
   const [jobCategories, setJobCategories] = useState({});
@@ -305,7 +305,6 @@ const MainPage = () => {
           }
           setIsLoggedIn(true);
           
-          // 기업 사용자이고 모달을 오늘 보지 않기로 설정하지 않은 경우에만 모달 표시
           if (userData.userType === 'COMPANY') {
             const hideUntil = localStorage.getItem('hideSubscriptionModalUntil');
             const today = new Date().toISOString().split('T')[0];
@@ -388,6 +387,17 @@ const MainPage = () => {
     fetchBookmarks();
   }, [isLoggedIn, jobPosts]);
 
+  useEffect(() => {
+    if (location.state?.toast) {
+      const { message, type } = location.state.toast;
+      showToast[type](message, {
+        onClose: () => {
+          navigate(location.pathname, { replace: true, state: {} });
+        }
+      });
+    }
+  }, [location, navigate]);
+
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
   };
@@ -396,10 +406,8 @@ const MainPage = () => {
     navigate(`/jobpost/${jobId}`, { state: { from: '/' } });
   };
 
-  // 필터링 함수
   const filteredJobPosts = jobPosts.filter(post => {
     const jobCategory = jobCategories[post.jobName];
-    // 검색어 필터링 (직무명, 근무지역, 회사명 포함)
     if (searchText.trim() !== '') {
       const lower = searchText.trim().toLowerCase();
       const jobName = (post.jobName || '').toLowerCase();
@@ -409,22 +417,18 @@ const MainPage = () => {
         return false;
       }
     }
-    // 카테고리 필터링
     if (selectedCategory !== 'all') {
       if (!jobCategory || jobCategory.industryCategory !== selectedCategory) {
         return false;
       }
     }
-    // 세부 카테고리 필터링
     if (selectedSubcategory !== 'all') {
       if (!jobCategory || jobCategory.industrySubcategory !== selectedSubcategory) {
         return false;
       }
     }
-    // 경력 유형 필터링
     if (selectedCareerType !== 'ALL') {
       if (selectedCareerType === 'ANY') {
-        // 신입/경력 모두 포함
         if (!(post.careerType === 'NEWCOMER' || post.careerType === 'EXPERIENCED' || post.careerType === 'ANY')) {
           return false;
         }
@@ -435,8 +439,7 @@ const MainPage = () => {
     return true;
   });
 
-  // 현재 페이지에 표시할 채용공고 계산
-  const displayedJobs = filteredJobPosts.slice(currentPage * 6, (currentPage + 1) * 6);
+  const displayedJobs = filteredJobPosts.slice((currentPage - 1) * 6, currentPage * 6);
 
   if (authLoading) {
     return null;
@@ -542,22 +545,22 @@ const MainPage = () => {
               <PaginationContainer>
                 <PageButton
                   onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 0}
+                  disabled={currentPage === 1}
                 >
                   <FaChevronLeft />
                 </PageButton>
                 {Array.from({ length: totalPages }, (_, i) => (
                   <PageButton
-                    key={i}
-                    active={i === currentPage}
-                    onClick={() => handlePageChange(i)}
+                    key={i + 1}
+                    active={i + 1 === currentPage}
+                    onClick={() => handlePageChange(i + 1)}
                   >
                     {i + 1}
                   </PageButton>
                 ))}
                 <PageButton
                   onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages - 1}
+                  disabled={currentPage === totalPages}
                 >
                   <FaChevronRight />
                 </PageButton>

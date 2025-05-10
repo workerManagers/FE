@@ -3,8 +3,8 @@ import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
 import { showToast } from '../components/common/Toast';
 // API 기본 URL 설정
-const API_BASE_URL = 'https://port-0-workermangers-be-m9ax68es6a756190.sel4.cloudtype.app';
-// const API_BASE_URL = 'http://localhost:8080';
+// const API_BASE_URL = 'https://port-0-workermangers-be-m9ax68es6a756190.sel4.cloudtype.app';
+const API_BASE_URL = 'http://localhost:8080';
 
 // 토큰 관리 관련 상수
 const TOKEN_KEY = 'token';
@@ -260,6 +260,16 @@ export const userApi = {
     }
   },
 
+  // userId로 사용자 정보 조회
+  getUserById: async (userId) => {
+    try {
+      const response = await api.get(`/users/${userId}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
   extendSession: async () => {
     try {
       const response = await api.post('/auth/extend');
@@ -342,11 +352,31 @@ export const jobPostApi = {
   updateJobPost: async (jobPostId, jobPostData) => {
     try {
       const formattedData = {
-        ...jobPostData,
-        deadline: jobPostData.deadline + 'T23:59:59'
+        companyName: jobPostData.companyName,
+        jobName: jobPostData.jobName,
+        jobPostDescription: jobPostData.jobPostDescription,
+        mainTasks: jobPostData.mainTasks,
+        qualifications: jobPostData.qualifications,
+        preferredQualifications: jobPostData.preferredQualifications,
+        idealCandidate: jobPostData.idealCandidate,
+        jobPeriod: jobPostData.jobPeriod,
+        jobRegion: jobPostData.jobRegion,
+        deadline: jobPostData.deadline && jobPostData.deadline.includes('T')
+          ? jobPostData.deadline
+          : jobPostData.deadline + 'T23:59:59',
+        careerType: jobPostData.careerType
       };
 
-      const response = await api.put(`/job-posts/${jobPostId}`, formattedData);
+      const response = await api.put(
+        `/job-posts/${jobPostId}`,
+        formattedData,
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
       return response.data;
     } catch (error) {
       if (error.response?.status === 403) {
@@ -360,7 +390,11 @@ export const jobPostApi = {
   // 채용공고 삭제
   deleteJobPost: async (jobPostId) => {
     try {
-      const response = await api.delete(`/job-posts/${jobPostId}`);
+      const response = await api.delete(`/job-posts/${jobPostId}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
       return response.data;
     } catch (error) {
       throw error;
@@ -408,7 +442,40 @@ export const jobPostApi = {
       }
       throw error;
     }
-  }
+  },
+
+  // 사용자의 모집공고 조회
+  getUserJobPosts: async (userId) => {
+    try {
+      const response = await api.get(`/job-posts/user/${userId}`);
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 403) {
+        localStorage.removeItem('token');
+        throw new Error('세션이 만료되었습니다. 다시 로그인해주세요.');
+      }
+      throw error;
+    }
+  },
+
+  // 공고 상태 변경
+  updateRecruitmentStatus: async (jobPostId, status) => {
+    try {
+      const response = await api.put(
+        `/job-posts/${jobPostId}/recruitment-status`,
+        { status },
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
 };
 
 // 이력서 관련 API
@@ -450,6 +517,15 @@ export const resumeApi = {
       return response.data;
     } catch (error) {
       throw error.response.data;
+    }
+  },
+
+  getResumeByUserId: async (userId) => {
+    try {
+      const response = await api.get(`/resumes/user/${userId}`);
+      return response.data;
+    } catch (error) {
+      throw error;
     }
   },
 };
@@ -527,7 +603,39 @@ export const applicationApi = {
     } catch (error) {
       throw error;
     }
-  }
+  },
+
+  cancelApplication: async (applicationId) => {
+    try {
+      const response = await api.delete(`/applications/${applicationId}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // 지원 상태 변경
+  updateApplicationStatus: async (applicationId, status) => {
+    try {
+      const response = await api.put(
+        `/applications/${applicationId}/status`,
+        { status },
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
 };
 
 // 채팅 관련 API

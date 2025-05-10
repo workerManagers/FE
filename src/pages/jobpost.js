@@ -302,34 +302,36 @@ function JobPost() {
           const userData = await userApi.getUserInfo();
           setUserInfo(userData);
           setIsLoggedIn(true);
+
+          // 기업 사용자인 경우 자신의 공고만 가져오기
+          if (userData.userType === 'COMPANY') {
+            const userPosts = await jobPostApi.getUserJobPosts(userData.userId);
+            setJobPosts(userPosts);
+          } else {
+            // 일반 사용자인 경우 모든 공고 표시
+            const response = await jobPostApi.getJobPosts();
+            setJobPosts(response);
+          }
         } catch (error) {
           console.error('사용자 정보 조회 실패:', error);
           // 사용자 정보 조회 실패 시 로그인 상태 초기화
           setUserInfo(null);
           setIsLoggedIn(false);
+          // 비로그인 상태에서는 모든 공고 표시
+          const response = await jobPostApi.getJobPosts();
+          setJobPosts(response);
         }
       } else {
         setUserInfo(null);
         setIsLoggedIn(false);
-      }
-
-      // 채용공고 가져오기 (로그인 여부와 관계없이)
-      const response = await jobPostApi.getJobPosts();
-      
-      // 기업 사용자인 경우 자신의 공고만 필터링
-      if (userInfo?.userType === 'COMPANY') {
-        const filteredPosts = response.filter(post => 
-          post.companyName === userInfo.companyInfo.companyName
-        );
-        setJobPosts(filteredPosts);
-      } else {
-        // 일반 사용자이거나 비로그인 사용자인 경우 모든 공고 표시
+        // 비로그인 상태에서는 모든 공고 표시
+        const response = await jobPostApi.getJobPosts();
         setJobPosts(response);
       }
 
       // 채용공고 카테고리 정보 가져오기
       const categories = {};
-      for (const post of response) {
+      for (const post of jobPosts) {
         try {
           const jobCode = await jobPostApi.getJobCodeByJobName(post.jobName);
           if (jobCode) {
@@ -408,14 +410,28 @@ function JobPost() {
     }
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+  const formatDate = (deadline) => {
+    if (!deadline) return '';
+    try {
+      // deadline이 배열인 경우 처리
+      if (Array.isArray(deadline)) {
+        const [year, month, day] = deadline;
+        return `${year}년 ${month}월 ${day}일`;
+      }
+      // 기존 문자열 형식 처리
+      const date = new Date(deadline);
+      if (isNaN(date.getTime())) {
+        return '날짜 정보 없음';
+      }
+      return date.toLocaleDateString('ko-KR', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    } catch (error) {
+      console.error('날짜 변환 오류:', error);
+      return '날짜 정보 없음';
+    }
   };
 
   // 서브 카테고리 필터링을 위한 함수
