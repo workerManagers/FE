@@ -3,8 +3,7 @@ import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
 import { showToast } from '../components/common/Toast';
 // API 기본 URL 설정
-// const API_BASE_URL = 'https://port-0-workermangers-be-m9ax68es6a756190.sel4.cloudtype.app';
-const API_BASE_URL = 'http://localhost:8080';
+const API_BASE_URL = 'https://port-0-workermangers-be-m9ax68es6a756190.sel4.cloudtype.app';
 
 // 토큰 관리 관련 상수
 const TOKEN_KEY = 'token';
